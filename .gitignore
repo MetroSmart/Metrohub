@@ -1,4 +1,6 @@
-# Logs
+# ===========================================
+# Frontend (Node / Vite / React)
+# ===========================================
 logs
 *.log
 npm-debug.log*
@@ -7,18 +9,157 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+node_modules/
+dist/
+dist-ssr/
 *.local
 
-# Editor directories and files
+# Vite cache
+.vite/
+frontend/.vite/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+
+# Coverage
+coverage/
+*.lcov
+
+# ===========================================
+# Backend (Python / FastAPI)
+# ===========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+backend/venv/
+backend/.venv/
+
+# pyenv
+.python-version
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# mypy / type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Alembic local sqlite (si aplica)
+*.sqlite
+*.sqlite3
+*.db
+
+# ===========================================
+# Variables de entorno y secretos
+# ===========================================
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Llaves y certificados
+*.pem
+*.key
+*.crt
+*.p12
+
+# ===========================================
+# Docker
+# ===========================================
+docker-compose.override.yml
+.docker/
+
+# ===========================================
+# IA / Machine Learning (RF05 - Prophet, OR-Tools)
+# ===========================================
+# Modelos entrenados y datasets pesados
+*.pkl
+*.joblib
+*.h5
+*.onnx
+backend/app/ia/models/
+backend/app/ia/datasets/
+backend/app/ia/checkpoints/
+
+# ===========================================
+# Editores / IDEs
+# ===========================================
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*.sw?
+
+# ===========================================
+# Sistema operativo
+# ===========================================
 .DS_Store
+Thumbs.db
+desktop.ini
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+
+# ===========================================
+# Archivos temporales y de logs
+# ===========================================
+*.tmp
+*.temp
+*.bak
+logs/
+*.pid
