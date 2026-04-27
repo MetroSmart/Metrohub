@@ -1,6 +1,6 @@
-# MetroHub 🚌
+# MetroHub
 
-**Plataforma web de movilidad inteligente para el Metropolitano de Lima**
+Plataforma web de movilidad inteligente para el Metropolitano de Lima
 
 > Proyecto universitario — Universidad Nacional de Ingeniería  
 > Facultad de Ciencias · Escuela Profesional de Ciencia de la Computación  
@@ -11,7 +11,6 @@
 ## Tabla de contenidos
 
 - [Descripción general](#descripción-general)
-- [Características](#características)
 - [Equipo](#equipo)
 - [Tecnologías](#tecnologías)
 - [Arquitectura](#arquitectura)
@@ -27,64 +26,20 @@
 
 ## Descripción general
 
-MetroHub es una **aplicación web moderna y responsiva** que mejora significativamente la experiencia de los usuarios del Metropolitano de Lima proporcionando:
+MetroHub es una aplicación web moderna y responsiva que proporciona herramientas inteligentes para mejorar la experiencia de usuarios y administradores del Metropolitano de Lima.
 
-- **Información en tiempo real** sobre aglomeración de estaciones
-- **Rutas inteligentes** filtradas por hora y ubicación
-- **Predicción de tiempos de viaje** usando inteligencia artificial (Prophet)
-- **Dashboard administrativo** para gestión de rutas y horarios
+**Para pasajeros:** acceso a información en tiempo real sobre aglomeración de estaciones, rutas disponibles y predicción de tiempos de viaje usando inteligencia artificial.
+
+**Para administradores ATU:** dashboard de gestión de rutas, horarios, indicadores clave y exportación de reportes operacionales.
+
+El sistema reemplaza procesos manuales basados en hojas de cálculo con una plataforma integrada, escalable y segura, operando de forma paralela con los sistemas existentes.
 
 ### Usuarios del sistema
 
 | Perfil | Descripción |
 |--------|-------------|
-| **Pasajeros** | Consultan aglomeración, rutas disponibles y predicen tiempos de viaje sin necesidad de registro |
-| **Administrador ATU** | Acceso con credenciales institucionales. Gestiona rutas, horarios y visualiza indicadores clave |
-
----
-
-## Características
-
-### 🗺️ Mapa de Aglomeración en Tiempo Real (RF01)
-- Visualiza todas las estaciones con indicadores de color según ocupación
-- **Verde:** Bajo (< 40%) | **Amarillo:** Medio (40–70%) | **Naranja:** Alto (70–90%) | **Rojo:** Crítico (> 90%)
-- Actualización automática cada 5 minutos sin recargar
-- Mapa interactivo con Leaflet + OpenStreetMap
-- Sidebar con lista de estaciones y búsqueda
-
-### 🚌 Rutas Disponibles (RF02)
-- Detecta ubicación y muestra rutas activas en tiempo real
-- Filtrado por hora actual, ubicación y estación
-- Visualización de próximos horarios de salida
-- Panel de detalles con estadísticas de cada ruta
-- Integración con predictor de viaje
-
-### ⏱️ Predicción de Viaje con IA (RF03)
-- Modelo **Prophet** entrenado con datos históricos
-- Estima tiempo entre dos estaciones considerando:
-  - Hora del día
-  - Día de semana
-  - Aglomeración actual
-- Muestra porcentaje de confianza del modelo
-- Sugiere rutas alternativas con transbordo
-- Visualización de recorrido en tiempo real
-
-### 🔐 Autenticación y Dashboard (RF04-RF06)
-- Login seguro con correo institucional (@atu.gob.pe)
-- JWT con sesión de 8 horas
-- Bloqueo automático tras 5 intentos fallidos
-- **Dashboard administrativo con:**
-  - Gestión de rutas (CRUD)
-  - Configuración de horarios y estaciones
-  - KPIs en tiempo real
-  - Exportación de reportes (PDF/XLSX)
-
-### 🎨 Diseño Estilo Apple
-- Interfaz minimalista y elegante
-- Transiciones fluidas y animaciones suaves
-- Dark mode integrado
-- Totalmente responsivo (móvil, tablet, desktop)
-- Cumple WCAG 2.1 nivel AA
+| **Pasajeros** | Consultan aglomeración, rutas disponibles y predicen tiempos de viaje sin necesidad de registro. Acceso público total. |
+| **Administrador ATU** | Accede con credenciales institucionales. Gestiona rutas, horarios, indicadores y exporta reportes. Acceso restringido y auditado. |
 
 ---
 
@@ -92,13 +47,13 @@ MetroHub es una **aplicación web moderna y responsiva** que mejora significativ
 
 | Integrante | Código | Rol |
 |------------|--------|-----|
-| Erick Daniel Ortega Moran | 20210209H | Líder / Backend Dev |
-| Cesar Abrahan Correa Mullisaca | 20220305J | Frontend Dev / UX |
-| Isaac Antonio Martel Balvin | 20231462D | Data Eng. / Docs |
-| Diego Torres Picho | 20204113B | Colaborador Frontend |
-| Ivett Marinella Mera Amado | 20191471H | Colaboradora Docs |
+| Erick Daniel Ortega Moran | 20210209H | Líder / Backend Dev — Arquitectura, API REST, módulo IA |
+| Cesar Abrahan Correa Mullisaca | 20220305J | Frontend Dev / UX — Interfaz web y experiencia de usuario |
+| Isaac Antonio Martel Balvin | 20231462D | Data Eng. / Docs — Pipeline de datos, documentación, pruebas |
+| Diego Torres Picho | 20204113B | Colaborador — Soporte frontend y testing manual |
+| Ivett Marinella Mera Amado | 20191471H | Colaboradora — Documentación y diseño de arquitectura |
 
-**Docente:** Prof. Manuel Quispe Torres
+Docente: Prof. Manuel Quispe Torres
 
 ---
 
@@ -110,101 +65,125 @@ MetroHub es una **aplicación web moderna y responsiva** que mejora significativ
 | React | 18+ | Framework UI (SPA) |
 | Vite | 5+ | Bundler y dev server |
 | React Router | 6+ | Navegación entre páginas |
-| Leaflet | 1.9+ | Mapa interactivo |
+| Leaflet | 1.9+ | Mapas interactivos |
 | Axios | 1.4+ | Cliente HTTP |
 | CSS3 | — | Animaciones y transiciones |
 
 ### Backend *(en desarrollo)*
 | Tecnología | Versión | Uso |
 |------------|---------|-----|
-| Python | 3.10+ | Lenguaje principal |
+| Python | 3.11+ | Lenguaje principal |
 | FastAPI | 0.110+ | API REST |
-| PostgreSQL | 14+ | Base de datos |
-| Prophet | — | Predicción IA |
-| JWT + bcrypt | — | Autenticación segura |
+| PostgreSQL | 14+ | Base de datos principal |
+| Prophet | — | Predicción de demanda IA |
+| JWT (PyJWT) | — | Autenticación y sesiones |
+| bcrypt | — | Hash de contraseñas (factor >= 12) |
+
+### Base de datos y caché
+| Tecnología | Versión | Uso |
+|------------|---------|-----|
+| PostgreSQL | 14+ | Base de datos relacional |
+| Redis | 7+ | Caché de consultas frecuentes |
+
+### Módulo IA
+| Tecnología | Uso |
+|------------|-----|
+| OR-Tools / PuLP | Optimización de asignación (programación lineal entera) |
+| Prophet | Predicción de demanda por ruta, hora y día de la semana |
 
 ### DevOps
 | Tecnología | Uso |
 |------------|-----|
 | Docker + Docker Compose | Contenedores para despliegue |
-| GitHub | Control de versiones |
-| Jira | Gestión de sprints (Scrum) |
+| GitHub | Control de versiones y gestión de ramas |
+| Jira (Scrum) | Gestión de sprints y backlog |
 
 ---
 
 ## Arquitectura
 
-### Monorepo Structure
+El sistema se organiza en tres capas principales:
+
 ```
-┌─────────────────────────────────────────┐
-│        CAPA DE PRESENTACIÓN             │
-│   React SPA — Usuarios Públicos         │
-│              Administrador ATU          │
-└────────────────────┬────────────────────┘
-                     │ HTTPS / API REST
-┌────────────────────▼────────────────────┐
-│         CAPA DE NEGOCIO                 │
-│   FastAPI — Lógica de rutas             │
-│           — Validación                  │
-│           — Autenticación JWT           │
-└──────────┬──────────────────────┬───────┘
-           │                      │
-┌──────────▼──────────┐  ┌───────▼───────┐
-│  CAPA DE IA Y DATOS │  │     CACHÉ      │
-│  Prophet + OR-Tools │  │     Redis      │
-│  PostgreSQL         │  └───────────────┘
-└─────────────────────┘
+Capa de Presentación
+├── React SPA
+├── Landing page pública
+└── Dashboard administrativo
+
+        HTTPS / API REST
+
+Capa de Negocio
+├── FastAPI
+├── Lógica de rutas
+├── Validación de datos
+└── Autenticación JWT
+
+        Conexiones internas
+
+Capa de Datos e Inteligencia Artificial
+├── PostgreSQL (almacenamiento)
+├── Prophet (predicciones IA)
+├── OR-Tools (optimización)
+└── Redis (caché)
 ```
 
-### Comunicación
-- **Frontend → Backend:** HTTP REST con Axios
-- **Autenticación:** JWT (Bearer token)
-- **Tiempo real:** Polling cada 5 minutos para estaciones
-- **Validación:** Input en frontend + validación en backend
+### Patrón de Monorepo
+
+Frontend y Backend coexisten en la misma estructura de repositorio, permitiendo:
+- Desarrollo paralelo sincronizado
+- Testing de integración simplificado
+- Deploy coordinado mediante Docker Compose
+- Versionado compartido
 
 ---
 
 ## Requisitos funcionales
 
 ### RF01 — Mapa de Aglomeración en Tiempo Real
-- ✅ Visualización interactiva de estaciones
-- ✅ Indicadores de color por nivel de ocupación
-- ✅ Actualización cada 5 minutos
-- ✅ Sidebar con búsqueda de estaciones
-- ✅ Popup con información al hacer clic
+- Visualización interactiva de estaciones del Metropolitano con Leaflet
+- Indicadores de color según ocupación
+- Actualización cada 5 minutos sin recargar la página
+- Sidebar con búsqueda y filtrado de estaciones
+- Información detallada al hacer clic en marcadores
+- Geolocalización opcional del usuario
 
 ### RF02 — Rutas Disponibles
-- ✅ Listado dinámico de rutas activas
-- ✅ Filtrado por hora y ubicación
-- ✅ Panel de detalles con estadísticas
-- ✅ Próximos horarios de salida
-- ✅ Integración con predictor
+- Listado dinámico de rutas activas en tiempo real
+- Filtrado por hora actual y ubicación del usuario
+- Panel de detalles con estadísticas de cada ruta
+- Visualización de próximos horarios de salida
+- Información de frecuencia de servicio
+- Integración directa con predictor de viaje
 
 ### RF03 — Predicción de Viaje con IA
-- ✅ Formulario origen/destino/hora/día
-- ✅ Modelo Prophet para estimación
-- ✅ Muestra confianza del modelo
-- ✅ Sugerencias de rutas alternativas
-- ✅ Visualización del recorrido
+- Modelo Prophet entrenado con datos históricos del Metropolitano
+- Estima tiempo considerando hora del día, día de semana, aglomeración actual
+- Visualización de porcentaje de confianza del modelo
+- Sugerencias de rutas alternativas con información de transbordo
+- Gráfico del recorrido estimado
+- Hora de llegada predicha
 
 ### RF04 — Autenticación y Control de Roles
-- ✅ Login con correo y contraseña
-- ✅ JWT con expiración (8 horas)
-- ✅ Bloqueo tras 5 intentos fallidos
-- ✅ Rol Administrador ATU
-- 🔲 Rol Supervisor (próximamente)
+- Login con correo institucional y contraseña
+- Hash bcrypt con factor >= 12
+- Sesión con token JWT, expira a las 8 horas de inactividad
+- Bloqueo de cuenta tras 5 intentos fallidos consecutivos
+- Rol de Administrador ATU con acceso total
+- Recuperación segura de contraseña
 
-### RF05 — Gestión de Rutas (Admin)
-- 🔲 CRUD de rutas
-- 🔲 Activar/desactivar rutas
-- 🔲 Edición de paraderos
-- 🔲 Gestión de frecuencias
+### RF05 — Gestión de Rutas (Administrador)
+- CRUD completo de rutas: código, nombre, estaciones, paraderos, frecuencia
+- CRUD de estaciones: ubicación geográfica, capacidad, horarios por día
+- Activar y desactivar rutas
+- Los cambios impactan inmediatamente en el módulo de programación
 
-### RF06 — Dashboard de Indicadores
-- 🔲 KPIs en tiempo real
-- 🔲 Cobertura por ruta
-- 🔲 Panel de alertas
-- 🔲 Exportación PDF/XLSX
+### RF06 — Dashboard de Indicadores y Reportes
+- Actualización cada 5 minutos de KPIs operativos
+- Cobertura de rutas activas vs programadas
+- Porcentaje de choferes asignados vs disponibles
+- Conflictos de programación pendientes
+- Alertas de vencimiento de licencia
+- Exportación en PDF y XLSX
 
 ---
 
@@ -212,12 +191,12 @@ MetroHub es una **aplicación web moderna y responsiva** que mejora significativ
 
 | ID | Nombre | Descripción clave |
 |----|--------|-------------------|
-| RNF01 | Usabilidad | Interface intuitiva, accesible en 2 clics. WCAG 2.1 AA. |
-| RNF02 | Seguridad | HTTPS, JWT, bcrypt ≥12, OWASP Top 10, Ley 29733. |
-| RNF03 | Desempeño | API ≤2s, Mapa ≤3s, IA ≤30s. Soporta 100 usuarios. |
-| RNF04 | Disponibilidad | 99% uptime (07:00–19:00, lun–sáb). RTO ≤30min. |
-| RNF05 | Mantenibilidad | ≥70% cobertura tests. PEP 8, ESLint. Arquitectura modular. |
-| RNF06 | Portabilidad | Chrome 90+, Firefox 88+, Edge 90+, Safari 14+. Responsivo 360px–1920px. |
+| RNF01 | Usabilidad | Landing accesible en <= 2 clics. Dashboard <= 2 niveles de menú. WCAG 2.1 AA. |
+| RNF02 | Seguridad | HTTPS (TLS 1.2+), bcrypt >= 12, protección OWASP Top 10, aislamiento de datos, Ley 29733. |
+| RNF03 | Desempeño | API REST <= 2 s (p95). Mapa <= 3 s. Propuesta IA <= 30 s. 100 usuarios concurrentes. |
+| RNF04 | Disponibilidad | 99% uptime horario laboral (07:00-19:00, lun-sáb). RTO <= 30 min. Funcional sin módulo IA. |
+| RNF05 | Mantenibilidad | >= 70% cobertura pruebas en módulos críticos. PEP 8 (backend), ESLint (frontend). Arquitectura modular. |
+| RNF06 | Portabilidad | Chrome 90+, Firefox 88+, Edge 90+ en escritorios y tablets. Responsivo 360px-1920px. Backend en Docker. |
 
 ---
 
@@ -226,25 +205,26 @@ MetroHub es una **aplicación web moderna y responsiva** que mejora significativ
 ```
 MetroHub/
 ├── frontend/                      # React + Vite
+│   ├── public/
 │   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Landing.jsx        # Landing page estilo Apple
-│   │   │   ├── Landing.css
-│   │   │   ├── Login.jsx          # RF04 — Autenticación
-│   │   │   ├── Login.css
-│   │   │   ├── MapPage.jsx        # RF01 — Mapa
-│   │   │   ├── Routes.jsx         # RF02 — Rutas
-│   │   │   ├── Predict.jsx        # RF03 — Predicción
-│   │   │   └── Dashboard.jsx      # RF05-RF06 — Admin
+│   │   ├── assets/
 │   │   ├── components/
 │   │   │   ├── Navbar.jsx
-│   │   │   ├── ServiceCard.jsx
-│   │   │   └── ...
+│   │   │   └── ServiceCard.jsx
+│   │   ├── pages/
+│   │   │   ├── Landing.jsx       # RF01 — Landing page
+│   │   │   ├── Landing.css
+│   │   │   ├── Login.jsx         # RF04 — Autenticación
+│   │   │   ├── Login.css
+│   │   │   ├── MapPage.jsx       # RF01 — Mapa aglomeración
+│   │   │   ├── Routes.jsx        # RF02 — Rutas disponibles
+│   │   │   ├── Predict.jsx       # RF03 — Predicción IA
+│   │   │   └── Dashboard.jsx     # RF05-RF06 — Admin
 │   │   ├── services/
-│   │   │   └── api.js            # Cliente HTTP con Axios
-│   │   ├── App.jsx               # Router principal
-│   │   ├── main.jsx
-│   │   └── index.css
+│   │   │   └── api.js
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── main.jsx
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
@@ -254,9 +234,12 @@ MetroHub/
 │   │   ├── api/
 │   │   │   ├── auth.py           # RF04 — JWT + bcrypt
 │   │   │   ├── estaciones.py     # RF01 — Datos estaciones
-│   │   │   ├── rutas.py          # RF02 — Gestión rutas
-│   │   │   ├── prediccion.py     # RF03 — Prophet IA
+│   │   │   ├── rutas.py          # RF02-RF05 — CRUD rutas
+│   │   │   ├── prediccion.py     # RF03 — Prophet
 │   │   │   └── dashboard.py      # RF06 — KPIs
+│   │   ├── ia/
+│   │   │   ├── prediccion.py
+│   │   │   └── optimizador.py
 │   │   ├── models/
 │   │   │   ├── usuario.py
 │   │   │   ├── ruta.py
@@ -267,7 +250,7 @@ MetroHub/
 │   └── .env.example
 │
 ├── docker-compose.yml
-├── package.json                   # Scripts para todo el monorepo
+├── package.json
 ├── .gitignore
 └── README.md
 ```
@@ -277,10 +260,10 @@ MetroHub/
 ## Instalación y ejecución
 
 ### Prerrequisitos
+
 - Node.js 18+
 - npm 9+
 - Git
-- Python 3.10+ *(para backend, opcional)*
 
 ### Frontend (desarrollo local)
 
@@ -289,7 +272,7 @@ MetroHub/
 git clone https://github.com/MetroSmart/Metrohub.git
 cd Metrohub
 
-# 2. Instalar dependencias del frontend
+# 2. Instalar dependencias
 cd frontend
 npm install
 
@@ -297,7 +280,17 @@ npm install
 npm run dev
 ```
 
-La aplicación estará disponible en **`http://localhost:5173`**
+El servidor estará disponible en `http://localhost:5173`
+
+### Credenciales de demo
+
+| Campo | Valor |
+|-------|-------|
+| Correo | Cualquier correo `@atu.gob.pe` |
+| Contraseña | Cualquier valor |
+| Bloqueo | Tras 5 intentos fallidos |
+
+En producción las credenciales se validan contra la API FastAPI con bcrypt.
 
 ### Build para producción
 
@@ -318,97 +311,85 @@ docker-compose up --build
 
 ## Uso del sistema
 
-### Para Pasajeros
+### 1. Landing page
+Explora los servicios disponibles en la plataforma: mapa de aglomeración, rutas inteligentes, predicción con IA y dashboard administrativo.
 
-1. **Landing Page** — Explora los servicios disponibles
-2. **Mapa** — Visualiza la aglomeración en tiempo real
-3. **Rutas** — Descubre rutas activas cerca de ti
-4. **Predictor** — Estima tu tiempo de viaje con IA
+### 2. Mapa (RF01)
+Visualiza en tiempo real la aglomeración de todas las estaciones del Metropolitano. Busca estaciones específicas y obtén información detallada.
 
-### Para Administradores
+### 3. Rutas (RF02)
+Descubre rutas activas cercanas a ti según tu hora actual. Visualiza próximos horarios y estadísticas de cada ruta.
 
-1. **Login** — Accede con credenciales institucionales (@atu.gob.pe)
-2. **Dashboard** — Visualiza KPIs y alertas
-3. **Gestión** — Administra rutas, horarios y estaciones
-4. **Reportes** — Exporta datos en PDF o Excel
+### 4. Predictor (RF03)
+Selecciona origen, destino, hora y día para obtener una estimación de tiempo de viaje con IA. Visualiza rutas alternativas.
+
+### 5. Login (RF04)
+Accede con tu correo institucional para usar el dashboard administrativo. La sesión expira tras 8 horas de inactividad.
+
+### 6. Dashboard admin *(en desarrollo — RF05-RF06)*
+- Gestión de rutas y horarios
+- Visualización de indicadores clave
+- Exportación de reportes en PDF/XLSX
 
 ---
 
 ## Gestión del proyecto — Scrum
 
-El proyecto usa **Scrum** con sprints de 2 semanas.
+El proyecto se gestiona con metodología Scrum con sprints de 2 semanas.
 
-### Repositorio
-- **GitHub:** [MetroSmart/Metrohub](https://github.com/MetroSmart/Metrohub)
-- **Rama principal:** `main`
-- **Rama de desarrollo:** `version1`
+- GitHub: https://github.com/MetroSmart/Metrohub
+- Rama principal: main
+- Rama de desarrollo: version1
 
-### Sprints
+### Product Backlog
 
-#### Sprint 1 — Inicialización y Landing (27 abr – 10 may)
-| Ticket | Tarea | Estado |
-|--------|-------|--------|
-| SCRUM-30 | Landing page estilo Apple | ✅ En progreso |
-| SCRUM-31 | Login moderna | ✅ En progreso |
-| SCRUM-32 | Arquitectura Frontend | ✅ Completado |
-
-#### Sprint 2 — Funcionalidades Públicas (11 may – 24 may)
-| Ticket | Tarea | Estado |
-|--------|-------|--------|
-| SCRUM-33 | RF01 — Mapa interactivo | 🔲 Por hacer |
-| SCRUM-34 | RF02 — Rutas disponibles | 🔲 Por hacer |
-| SCRUM-35 | RF03 — Predicción IA | 🔲 Por hacer |
-
-#### Sprint 3 — Backend y Admin (25 may – 7 jun)
-| Ticket | Tarea | Estado |
-|--------|-------|--------|
-| SCRUM-36 | Backend FastAPI setup | 🔲 Por hacer |
-| SCRUM-37 | API REST endpoints | 🔲 Por hacer |
-| SCRUM-38 | RF04 — Autenticación | 🔲 Por hacer |
-
-#### Sprint 4 — Dashboard Admin (8 jun – 21 jun)
-| Ticket | Tarea | Estado |
-|--------|-------|--------|
-| SCRUM-39 | RF05 — Gestión rutas | 🔲 Por hacer |
-| SCRUM-40 | RF06 — Dashboard KPIs | 🔲 Por hacer |
-| SCRUM-41 | Reportes PDF/XLSX | 🔲 Por hacer |
+| Ticket | Historia | Épica | Fecha objetivo |
+|--------|----------|-------|----------------|
+| SCRUM-30 | Landing page estilo Apple | RF01 | 27 abr |
+| SCRUM-31 | Login moderna y segura | RF04 | 1 may |
+| SCRUM-32 | Arquitectura Frontend Monorepo | — | 3 may |
+| SCRUM-33 | Mapa interactivo con Leaflet | RF01 | 10 may |
+| SCRUM-34 | Listado dinámico de rutas | RF02 | 17 may |
+| SCRUM-35 | Predicción de demanda (Prophet) | RF03 | 24 may |
+| SCRUM-36 | Backend FastAPI setup | — | 31 may |
+| SCRUM-37 | API REST endpoints | — | 7 jun |
+| SCRUM-38 | Integración frontend-backend | — | 14 jun |
+| SCRUM-39 | Gestión de rutas (CRUD) | RF05 | 21 jun |
+| SCRUM-40 | Dashboard de KPIs | RF06 | 28 jun |
+| SCRUM-41 | Exportación PDF/XLSX | RF06 | 5 jul |
 
 ---
 
 ## Estado actual del sprint
 
-**Sprint 1** — Inicialización y Landing  
-**Período:** 27 abril – 10 mayo 2026  
-**Objetivo:** Arquitectura base + Landing page estilo Apple operativa
+### Sprint 1 — Inicialización y Landing
 
-### Progreso
-- ✅ **Monorepo structure** completada
-- ✅ **Frontend React + Vite** configurado
-- ✅ **Landing page** con servicios y animaciones
-- ✅ **Login page** moderna
-- 🔲 Backend API (próximo sprint)
+Período: 27 abril – 10 mayo 2026
+Objetivo: Arquitectura base Frontend operativa + Landing page estilo Apple
 
-### Próximos pasos
-1. Integrar React Router completamente
-2. Crear componentes reutilizables
-3. Implementar mapa interactivo (Leaflet)
-4. Comenzar desarrollo del backend
+| Ticket | Tarea | Responsable | Estado |
+|--------|-------|-------------|--------|
+| SCRUM-30 | Landing page estilo Apple | Cesar Correa | En progreso |
+| SCRUM-31 | Login moderna | Cesar Correa | En progreso |
+| SCRUM-32 | Arquitectura Monorepo | Erick Ortega | Completado |
+| SCRUM-33 | Setup React Router | Cesar Correa | Por hacer |
+| SCRUM-34 | Componentes reutilizables | Diego Torres | Por hacer |
 
 ---
 
 ## Estándares de código
 
 ### Frontend
-- **Linter:** ESLint
-- **Formato:** Prettier
-- **Naming:** camelCase para variables, PascalCase para componentes
-- **Estructura:** Funcionales + Hooks
+- Linter: ESLint
+- Formato: Prettier
+- Naming: camelCase (variables), PascalCase (componentes)
+- Estructura: Funcionales con Hooks
 
 ### Backend
-- **Linter:** PEP 8
-- **Framework:** FastAPI
-- **ORM:** SQLAlchemy
-- **Documentación:** Docstrings en español
+- Linter: PEP 8
+- Framework: FastAPI
+- ORM: SQLAlchemy
+- Documentación: Docstrings en español
 
 ---
 
@@ -433,12 +414,12 @@ git push origin SCRUM-XX-descripcion-corta
 
 - IEEE Std 830-1998 — Recommended Practice for Software Requirements Specifications
 - ISO/IEC/IEEE 29148:2011 — Systems and Software Engineering: Requirements Engineering
-- [Datos públicos del Metropolitano de Lima — ATU](https://www.atu.gob.pe)
-- Ley N.° 29733 — Ley de Protección de Datos Personales del Perú
-- [FastAPI Documentation](https://fastapi.tiangolo.com)
-- [Prophet Documentation](https://facebook.github.io/prophet/)
-- [React Documentation](https://react.dev)
+- Datos públicos del Metropolitano de Lima — ATU
+- Ley No. 29733 — Ley de Protección de Datos Personales del Perú
+- FastAPI Documentation (https://fastapi.tiangolo.com)
+- OR-Tools — Google (https://developers.google.com/optimization)
+- Prophet — Meta (https://facebook.github.io/prophet/)
 
 ---
 
-*MetroHub v1.0 · Universidad Nacional de Ingeniería · Lima, Perú · 2026*
+MetroHub v1.0 · Universidad Nacional de Ingeniería · Lima, Perú · 2026
