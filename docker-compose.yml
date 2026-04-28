@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+
+  # ── Base de datos PostgreSQL ─────────────────
+  db:
+    image: postgres:16
+    container_name: metrosmart_db
+    restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - metrosmart_net
+
+  # ── Caché Redis ──────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: metrosmart_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - metrosmart_net
+
+  # ── Backend FastAPI ───────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: metrosmart_backend
+    restart: always
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+    networks:
+      - metrosmart_net
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# ── Volúmenes ────────────────────────────────────
+volumes:
+  postgres_data:
+
+# ── Red interna ──────────────────────────────────
+networks:
+  metrosmart_net:
+    driver: bridge
