@@ -1,6 +1,6 @@
 from datetime import date
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.horario_servicio import HorarioServicio
 from app.models.asignacion import Asignacion
 from app.models.conflicto import Conflicto
@@ -14,13 +14,50 @@ def _a_minutos(t: str) -> int:
 
 # ── Horarios ──────────────────────────────────────────────────
 
-def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[int] = None) -> List[HorarioServicio]:
-    q = db.query(HorarioServicio)
+def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[int] = None) -> List[dict]:
+    q = (
+        db.query(HorarioServicio)
+        .options(
+            joinedload(HorarioServicio.asignaciones).joinedload(Asignacion.conflictos),
+            joinedload(HorarioServicio.asignaciones).joinedload(Asignacion.chofer),
+        )
+    )
     if fecha:
         q = q.filter(HorarioServicio.fecha == fecha)
     if ruta_id:
         q = q.filter(HorarioServicio.ruta_id == ruta_id)
-    return q.all()
+
+    resultado = []
+    for h in q.order_by(HorarioServicio.hora_salida).all():
+        conflicto_activo = None
+        chofer_info = None
+        for asig in h.asignaciones:
+            if chofer_info is None and asig.chofer:
+                chofer_info = {
+                    "id":     asig.chofer.id,
+                    "nombre": f"{asig.chofer.nombres} {asig.chofer.apellidos}",
+                }
+            for c in asig.conflictos:
+                if not c.resuelto and conflicto_activo is None:
+                    conflicto_activo = {
+                        "id":           c.id,
+                        "asignacion_id": c.asignacion_id,
+                        "tipo":         c.tipo,
+                        "severidad":    c.severidad,
+                        "descripcion":  c.descripcion,
+                    }
+        resultado.append({
+            "id":              h.id,
+            "ruta_id":         h.ruta_id,
+            "fecha":           str(h.fecha),
+            "hora_salida":     str(h.hora_salida)[:5],
+            "turno":           h.turno,
+            "duracion_est_min": h.duracion_est_min,
+            "activo":          h.activo,
+            "chofer":          chofer_info,
+            "conflicto":       conflicto_activo,
+        })
+    return resultado
 
 
 def obtener_horario(db: Session, horario_id: int) -> Optional[HorarioServicio]:

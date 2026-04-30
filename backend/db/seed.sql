@@ -17,11 +17,11 @@ INSERT INTO concesionarios (ruc, razon_social, nombre_corto, telefono, email_con
 -- 2. USUARIOS (1 admin ATU + 4 supervisores, uno por concesionario)
 -- -----------------------------------------------------------------------------
 INSERT INTO usuarios (email, password_hash, nombre, apellidos, dni, rol, concesionario_id) VALUES
-('admin.atu@metrosmart.gob.pe',     '$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef', 'María',   'Quispe Rivera',     '72839401', 'admin_atu', NULL),
-('sup.limavias@metrosmart.gob.pe',  '$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef', 'Carlos',  'Ramírez Torres',    '45892013', 'supervisor_concesionario', 1),
-('sup.limabus@metrosmart.gob.pe',   '$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef', 'Lucía',   'Morales Salinas',   '41203987', 'supervisor_concesionario', 2),
-('sup.transvial@metrosmart.gob.pe', '$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef', 'Jorge',   'Vega Mendoza',      '43897201', 'supervisor_concesionario', 3),
-('sup.perumasivo@metrosmart.gob.pe','$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef', 'Ana',     'Ccahuana Pérez',    '47123890', 'supervisor_concesionario', 4);
+('admin.atu@metrosmart.gob.pe',     '$2b$12$/AeChPKE1TQAUab7o1HKwO3lH9RfGcX3.3NMdRGzAPtjE4q5HF31m', 'María',   'Quispe Rivera',     '72839401', 'admin_atu', NULL),
+('sup.limavias@metrosmart.gob.pe',  '$2b$12$OFC4W1UdQr.KnyEa6r27LuB7OULfwAjMOzoI7YezFBT6xWmmKsiou', 'Carlos',  'Ramírez Torres',    '45892013', 'supervisor_concesionario', 1),
+('sup.limabus@metrosmart.gob.pe',   '$2b$12$amWPw9JfxPrek9P0aomWsuG53GLsn1a591POfjsVBw8zAGARQcb7C', 'Lucía',   'Morales Salinas',   '41203987', 'supervisor_concesionario', 2),
+('sup.transvial@metrosmart.gob.pe', '$2b$12$5.SsXIRbctIEXjnWom4sN.b4dt.i4d7fb5nQx/oxX.oc8z7NbcL1q', 'Jorge',   'Vega Mendoza',      '43897201', 'supervisor_concesionario', 3),
+('sup.perumasivo@metrosmart.gob.pe','$2b$12$Q3jY6rXAiH/0cwL53280q.WuQ9uCQGw4uvEpXvgrgoTHeaNE7txQ2', 'Ana',     'Ccahuana Pérez',    '47123890', 'supervisor_concesionario', 4);
 
 -- -----------------------------------------------------------------------------
 -- 3. ESTACIONES TRONCALES (subset representativo)
@@ -157,19 +157,74 @@ INSERT INTO programaciones (nombre, fecha_inicio, fecha_fin, estado, creado_por,
 ('Semana 17 - Abril 2026', '2026-04-20', '2026-04-26', 'borrador', 1, 'Programación inicial para validación del sistema');
 
 -- -----------------------------------------------------------------------------
--- 9. HORARIOS_SERVICIO (ejemplo: Ruta A del lunes 21-abr)
+-- 9. HORARIOS_SERVICIO — todas las rutas del 21-abr-2026
 -- -----------------------------------------------------------------------------
 INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, turno, duracion_est_min) VALUES
+-- Ruta A (id=1)
 (1, 1, '2026-04-21', '05:00', 'manana', 35),
 (1, 1, '2026-04-21', '05:30', 'manana', 35),
 (1, 1, '2026-04-21', '06:00', 'manana', 40),
 (1, 1, '2026-04-21', '06:30', 'manana', 40),
 (1, 1, '2026-04-21', '07:00', 'manana', 45),
-(1, 1, '2026-04-21', '13:00', 'tarde', 40),
-(1, 1, '2026-04-21', '13:30', 'tarde', 40),
-(1, 1, '2026-04-21', '14:00', 'tarde', 40),
-(1, 1, '2026-04-21', '18:00', 'tarde', 45),
-(1, 1, '2026-04-21', '18:30', 'tarde', 45);
+(1, 1, '2026-04-21', '13:00', 'tarde',  40),
+(1, 1, '2026-04-21', '13:30', 'tarde',  40),
+(1, 1, '2026-04-21', '14:00', 'tarde',  40),
+(1, 1, '2026-04-21', '18:00', 'tarde',  45),
+(1, 1, '2026-04-21', '18:30', 'tarde',  45),
+-- Ruta B (id=2)
+(1, 2, '2026-04-21', '05:00', 'manana', 50),
+(1, 2, '2026-04-21', '05:30', 'manana', 50),
+(1, 2, '2026-04-21', '06:00', 'manana', 55),
+(1, 2, '2026-04-21', '07:00', 'manana', 55),
+(1, 2, '2026-04-21', '13:00', 'tarde',  50),
+(1, 2, '2026-04-21', '14:00', 'tarde',  50),
+(1, 2, '2026-04-21', '18:00', 'tarde',  55),
+(1, 2, '2026-04-21', '19:00', 'tarde',  55),
+-- Ruta C (id=3)
+(1, 3, '2026-04-21', '05:00', 'manana', 75),
+(1, 3, '2026-04-21', '05:30', 'manana', 75),
+(1, 3, '2026-04-21', '06:00', 'manana', 80),
+(1, 3, '2026-04-21', '07:00', 'manana', 80),
+(1, 3, '2026-04-21', '13:00', 'tarde',  75),
+(1, 3, '2026-04-21', '14:00', 'tarde',  75),
+(1, 3, '2026-04-21', '18:30', 'tarde',  80),
+-- Expreso 1 (id=4)
+(1, 4, '2026-04-21', '05:30', 'manana', 68),
+(1, 4, '2026-04-21', '06:00', 'manana', 68),
+(1, 4, '2026-04-21', '06:30', 'manana', 68),
+(1, 4, '2026-04-21', '13:00', 'tarde',  68),
+(1, 4, '2026-04-21', '14:00', 'tarde',  68),
+(1, 4, '2026-04-21', '18:00', 'tarde',  68),
+-- Expreso 2 (id=5)
+(1, 5, '2026-04-21', '05:30', 'manana', 55),
+(1, 5, '2026-04-21', '06:00', 'manana', 55),
+(1, 5, '2026-04-21', '13:30', 'tarde',  55),
+(1, 5, '2026-04-21', '18:30', 'tarde',  55),
+-- Expreso 5 (id=6)
+(1, 6, '2026-04-21', '05:30', 'manana', 48),
+(1, 6, '2026-04-21', '06:30', 'manana', 48),
+(1, 6, '2026-04-21', '14:00', 'tarde',  48),
+(1, 6, '2026-04-21', '18:00', 'tarde',  48),
+-- Expreso 7 (id=7)
+(1, 7, '2026-04-21', '06:00', 'manana', 45),
+(1, 7, '2026-04-21', '07:00', 'manana', 45),
+(1, 7, '2026-04-21', '14:00', 'tarde',  45),
+(1, 7, '2026-04-21', '19:00', 'tarde',  45),
+-- Expreso 8 (id=8)
+(1, 8, '2026-04-21', '05:30', 'manana', 52),
+(1, 8, '2026-04-21', '06:00', 'manana', 52),
+(1, 8, '2026-04-21', '13:30', 'tarde',  52),
+(1, 8, '2026-04-21', '18:30', 'tarde',  52),
+-- Expreso 9 (id=9)
+(1, 9, '2026-04-21', '05:30', 'manana', 52),
+(1, 9, '2026-04-21', '06:30', 'manana', 52),
+(1, 9, '2026-04-21', '14:00', 'tarde',  52),
+(1, 9, '2026-04-21', '18:00', 'tarde',  52),
+-- Ruta Nocturna (id=10)
+(1, 10, '2026-04-21', '23:30', 'noche', 35),
+(1, 10, '2026-04-22', '00:30', 'noche', 35),
+(1, 10, '2026-04-22', '01:30', 'noche', 35),
+(1, 10, '2026-04-22', '02:30', 'noche', 35);
 
 -- -----------------------------------------------------------------------------
 -- 10. ASIGNACIONES (con choferes y buses de Lima Vías)
@@ -192,7 +247,9 @@ INSERT INTO disponibilidad_chofer (chofer_id, fecha, hora_desde, hora_hasta, mot
 -- 12. CONFLICTO de ejemplo
 -- -----------------------------------------------------------------------------
 INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion) VALUES
-(4, 'certif_prot_vencida', 'alta', 'La certificación Protransporte del chofer Luis Gonzales vence el 2026-07-18, dentro de 90 días.');
+(4, 'certif_prot_vencida', 'alta',   'La certificación Protransporte del chofer Luis Gonzales vence el 2026-07-18, dentro de 90 días.'),
+(3, 'solapamiento_turno',  'alta',   'El bus C1J-985 ya está asignado a la asignación #1 en el mismo horario del 21-abr. Se requiere reasignar unidad.'),
+(5, 'bus_no_operativo',    'media',  'Sin bus asignado para Ruta A turno 07:00. Pendiente confirmar unidad operativa antes de aprobar programación.');
 
 -- =============================================================================
 -- VERIFICACIÓN
