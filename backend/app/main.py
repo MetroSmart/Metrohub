@@ -3,9 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from app.routers import auth, rutas, horarios, choferes, dashboard
-
 load_dotenv()
+
+import app.models  # noqa: F401 — registra todos los modelos en SQLAlchemy
+
+from app.database import engine, Base
+from app.routers import auth, rutas, horarios, choferes, dashboard
 
 # ── Instancia principal de FastAPI ────────────
 app = FastAPI(
