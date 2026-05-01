@@ -22,7 +22,10 @@ app = FastAPI(
 # Permite que el frontend React se comunique con este backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # puerto de Vite (React)
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],  # puerto de Vite (React)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
