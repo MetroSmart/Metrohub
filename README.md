@@ -350,19 +350,19 @@ El proyecto se gestiona con metodología Scrum con sprints semanales.
 | Ticket | Historia | Épica | Responsable | Estado |
 |--------|----------|-------|-------------|--------|
 | SCRUM-30 | Frontend — primera versión SPA | — | Erick | Resuelto |
-| SCRUM-29 | Login con JWT y sesión persistente | RF01 | Isaac | Completado |
+| SCRUM-29 | Login con JWT y sesión persistente | RF01 | Cesar | Completado |
 | SCRUM-28 | Autorización por roles | RF01 | Isaac | Completado |
-| SCRUM-27 | Bloqueo por intentos fallidos y bcrypt | RF01 | Isaac | Completado |
+| SCRUM-27 | Bloqueo por intentos fallidos y bcrypt | RF01 | Isaac/Cesar | Completado |
 | SCRUM-23 | CRUD de rutas con atributos completos | RF02 | Isaac | Completado |
 | SCRUM-22 | Activar/desactivar rutas | RF02 | Isaac/Cesar | Completado |
 | SCRUM-24 | Gestión de estaciones | RF02 | Isaac | Parcial |
 | SCRUM-19 | Grilla conectada al backend | RF03 | Cesar | Completado |
 | SCRUM-18 | Validación y resolución de conflictos | RF03 | Isaac/Cesar | Completado |
 | SCRUM-17 | Publicación aprobada para Supervisores | RF03 | Isaac | Pendiente |
-| SCRUM-14 | Registro de choferes | RF04 | Isaac | Completado |
+| SCRUM-14 | Registro de choferes | RF04 | Cesar | Completado |
 | SCRUM-16 | Asignación con reglas 8h y solapamiento | RF04 | Isaac | Completado |
-| SCRUM-15 | Alertas de documentos por vencer | RF04 | Isaac/Cesar | Completado |
-| SCRUM-20 | Predicción de demanda (Prophet) | RF05 | Isaac | Pendiente |
+| SCRUM-15 | Alertas de documentos por vencer | RF04 | Cesar | Completado |
+| SCRUM-20 | Predicción de demanda (Prophet) | RF05 | Isaac/Cesar | Pendiente |
 | SCRUM-21 | Optimizador OR-Tools | RF05 | Isaac | Pendiente |
 | SCRUM-25 | Dashboard de KPIs desde BD | RF06 | Cesar | Completado |
 | SCRUM-26 | Exportación PDF/XLSX | RF06 | Erick | Pendiente |
