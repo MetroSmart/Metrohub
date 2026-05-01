@@ -147,9 +147,9 @@ export default function Login({ onLogin }) {
           </div>
         </Field>
 
-        {error && (
-          <div style={BLOCKED ? styles.boxDanger : styles.boxWarn}>
-            {error}
+        {!error && attempts === 0 && (
+          <div style={styles.boxWarn}>
+            Tras 5 intentos fallidos el acceso se bloquea temporalmente.
           </div>
         )}
 
