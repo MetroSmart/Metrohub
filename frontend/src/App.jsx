@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Grilla from "./pages/Grilla";
+import Rutas from "./pages/Rutas";
+import Choferes from "./pages/Choferes";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -61,7 +63,11 @@ export default function App() {
 
   if (checkingSession) return null;
 
-  if (page === "login") return <Login onLogin={handleLogin} />;
-  if (page === "grilla") return <Grilla user={user} onNav={setPage} onLogout={handleLogout} />;
-  return <Dashboard user={user} onNav={setPage} onLogout={handleLogout} />;
+  const props = { user, onNav: setPage, onLogout: handleLogout };
+
+  if (page === "login")    return <Login onLogin={handleLogin} />;
+  if (page === "grilla")   return <Grilla   {...props} />;
+  if (page === "rutas")    return <Rutas    {...props} />;
+  if (page === "choferes") return <Choferes {...props} />;
+  return <Dashboard {...props} />;
 }
