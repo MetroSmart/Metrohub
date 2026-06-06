@@ -1,4 +1,3 @@
-from datetime import date
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from app.models.horario_servicio import HorarioServicio
@@ -6,13 +5,6 @@ from app.models.asignacion import Asignacion
 from app.models.conflicto import Conflicto
 from app.builders.programacion_builder import ProgramacionBuilder
 from app.schemas.horario import HorarioCrear, AsignacionCrear, ProgramacionCompletaCrear
-
-
-def _a_minutos(t: str) -> int:
-    hh, mm = str(t)[:5].split(":")
-    return int(hh) * 60 + int(mm)
-
-
 # ── Horarios ──────────────────────────────────────────────────
 
 def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[int] = None) -> List[dict]:
@@ -79,41 +71,6 @@ def eliminar_horario(db: Session, horario_id: int) -> bool:
 
 
 # ── Asignaciones ──────────────────────────────────────────────
-
-def detectar_solapamiento(
-    db: Session, chofer_id: int, fecha: date, hora_salida: str, duracion_min: int,
-    excluir_asig_id: Optional[int] = None,
-) -> bool:
-    inicio_nuevo = _a_minutos(hora_salida)
-    fin_nuevo    = inicio_nuevo + duracion_min
-
-    asigs = (
-        db.query(Asignacion)
-        .join(HorarioServicio)
-        .filter(HorarioServicio.fecha == fecha, Asignacion.chofer_id == chofer_id)
-    )
-    if excluir_asig_id:
-        asigs = asigs.filter(Asignacion.id != excluir_asig_id)
-
-    for a in asigs.all():
-        inicio = _a_minutos(a.horario.hora_salida)
-        fin    = inicio + a.horario.duracion_est_min
-        if inicio_nuevo < fin and fin_nuevo > inicio:
-            return True
-    return False
-
-
-def calcular_horas_dia(db: Session, chofer_id: int, fecha: date, duracion_min: int) -> int:
-    total = duracion_min
-    for a in (
-        db.query(Asignacion)
-        .join(HorarioServicio)
-        .filter(HorarioServicio.fecha == fecha, Asignacion.chofer_id == chofer_id)
-        .all()
-    ):
-        total += a.horario.duracion_est_min
-    return total // 60
-
 
 def crear_asignacion(db: Session, datos: AsignacionCrear, asignado_por: int) -> Asignacion:
     return (

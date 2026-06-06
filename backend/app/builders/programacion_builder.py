@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.models.asignacion import Asignacion
 from app.models.horario_servicio import HorarioServicio
 from app.schemas.horario import AsignacionCrear, HorarioCrear
-from app.services import horario_service
+from app.services.horario_validacion import calcular_horas_dia, detectar_solapamiento
 
 
 class ProgramacionBuilderError(Exception):
@@ -87,7 +87,7 @@ class ProgramacionBuilder:
 
     def _validar_asignacion(self, horario: HorarioServicio, datos: AsignacionCrear) -> None:
         hora = str(horario.hora_salida)[:5]
-        if horario_service.detectar_solapamiento(
+        if detectar_solapamiento(
             self._db,
             datos.chofer_id,
             horario.fecha,
@@ -97,7 +97,7 @@ class ProgramacionBuilder:
             raise ProgramacionBuilderError(
                 f"El chofer {datos.chofer_id} tiene un turno solapado ese día"
             )
-        if horario_service.calcular_horas_dia(
+        if calcular_horas_dia(
             self._db,
             datos.chofer_id,
             horario.fecha,
@@ -142,7 +142,11 @@ class ProgramacionBuilder:
         if not self._asignado_por:
             raise ProgramacionBuilderError("asignado_por es obligatorio")
 
-        horario = horario_service.obtener_horario(self._db, datos.horario_id)
+        horario = (
+            self._db.query(HorarioServicio)
+            .filter(HorarioServicio.id == datos.horario_id)
+            .first()
+        )
         if not horario:
             raise ProgramacionBuilderError(f"Horario {datos.horario_id} no encontrado")
 
