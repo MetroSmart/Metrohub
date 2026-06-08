@@ -1,5 +1,5 @@
 -- =============================================================================
--- MetroSmart v2.0 - Script de Creación de Base de Datos
+-- MetroHub v2.0 - Script de Creación de Base de Datos
 -- Universidad Nacional de Ingeniería - EPCC
 -- Motor: PostgreSQL 14+
 -- Versión del esquema: v3 (sin módulo IA, con tabla buses)

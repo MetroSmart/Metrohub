@@ -9,12 +9,6 @@ const NAV = [
     ],
   },
   {
-    section: "IA",
-    items: [
-      { key: "optimizador", label: "Optimizador", icon: <IconAI /> },
-    ],
-  },
-  {
     section: "Reportes",
     items: [
       { key: "reportes", label: "Exportar PDF/XLSX", icon: <IconDoc /> },
@@ -34,7 +28,7 @@ export default function Sidebar({ active, onNav, onLogout, user }) {
         <div>
           <div style={styles.userName}>{user?.name ?? "Usuario"}</div>
           <div style={styles.userRole}>
-            {user?.role === "admin" ? "Admin ATU" : "Supervisor"}
+            {user?.role === "admin_atu" ? "Admin ATU" : "Supervisor"}
           </div>
         </div>
       </div>

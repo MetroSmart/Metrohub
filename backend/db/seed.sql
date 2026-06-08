@@ -1,7 +1,7 @@
 -- =============================================================================
--- MetroSmart v2.0 - Datos de Prueba
+-- MetroHub v2.0 - Datos de Prueba
 -- Datos basados en información pública del Metropolitano de Lima (ATU)
--- Ejecutar DESPUÉS de 01_schema_metrosmart.sql
+-- Ejecutar DESPUÉS de 01_schema_metrohub.sql
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -17,11 +17,11 @@ INSERT INTO concesionarios (ruc, razon_social, nombre_corto, telefono, email_con
 -- 2. USUARIOS (1 admin ATU + 4 supervisores, uno por concesionario)
 -- -----------------------------------------------------------------------------
 INSERT INTO usuarios (email, password_hash, nombre, apellidos, dni, rol, concesionario_id) VALUES
-('admin.atu@metrosmart.gob.pe',     '$2b$12$/AeChPKE1TQAUab7o1HKwO3lH9RfGcX3.3NMdRGzAPtjE4q5HF31m', 'María',   'Quispe Rivera',     '72839401', 'admin_atu', NULL),
-('sup.limavias@metrosmart.gob.pe',  '$2b$12$OFC4W1UdQr.KnyEa6r27LuB7OULfwAjMOzoI7YezFBT6xWmmKsiou', 'Carlos',  'Ramírez Torres',    '45892013', 'supervisor_concesionario', 1),
-('sup.limabus@metrosmart.gob.pe',   '$2b$12$amWPw9JfxPrek9P0aomWsuG53GLsn1a591POfjsVBw8zAGARQcb7C', 'Lucía',   'Morales Salinas',   '41203987', 'supervisor_concesionario', 2),
-('sup.transvial@metrosmart.gob.pe', '$2b$12$5.SsXIRbctIEXjnWom4sN.b4dt.i4d7fb5nQx/oxX.oc8z7NbcL1q', 'Jorge',   'Vega Mendoza',      '43897201', 'supervisor_concesionario', 3),
-('sup.perumasivo@metrosmart.gob.pe','$2b$12$Q3jY6rXAiH/0cwL53280q.WuQ9uCQGw4uvEpXvgrgoTHeaNE7txQ2', 'Ana',     'Ccahuana Pérez',    '47123890', 'supervisor_concesionario', 4);
+('admin.atu@metrohub.gob.pe',     '$2b$12$/AeChPKE1TQAUab7o1HKwO3lH9RfGcX3.3NMdRGzAPtjE4q5HF31m', 'María',   'Quispe Rivera',     '72839401', 'admin_atu', NULL),
+('sup.limavias@metrohub.gob.pe',  '$2b$12$OFC4W1UdQr.KnyEa6r27LuB7OULfwAjMOzoI7YezFBT6xWmmKsiou', 'Carlos',  'Ramírez Torres',    '45892013', 'supervisor_concesionario', 1),
+('sup.limabus@metrohub.gob.pe',   '$2b$12$amWPw9JfxPrek9P0aomWsuG53GLsn1a591POfjsVBw8zAGARQcb7C', 'Lucía',   'Morales Salinas',   '41203987', 'supervisor_concesionario', 2),
+('sup.transvial@metrohub.gob.pe', '$2b$12$5.SsXIRbctIEXjnWom4sN.b4dt.i4d7fb5nQx/oxX.oc8z7NbcL1q', 'Jorge',   'Vega Mendoza',      '43897201', 'supervisor_concesionario', 3),
+('sup.perumasivo@metrohub.gob.pe','$2b$12$Q3jY6rXAiH/0cwL53280q.WuQ9uCQGw4uvEpXvgrgoTHeaNE7txQ2', 'Ana',     'Ccahuana Pérez',    '47123890', 'supervisor_concesionario', 4);
 
 -- -----------------------------------------------------------------------------
 -- 3. ESTACIONES TRONCALES (subset representativo)

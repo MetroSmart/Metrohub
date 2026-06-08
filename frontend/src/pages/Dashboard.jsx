@@ -66,7 +66,7 @@ export default function Dashboard({ user, onNav, onLogout }) {
               {rutas.length === 0
                 ? <div style={styles.empty}>Cargando rutas…</div>
                 : rutas.map(r => (
-                    <RouteBar key={r.id} code={r.codigo} name={r.nombre} pct={100} />
+                    <RouteBar key={r.id} code={r.codigo} name={r.nombre} tipo={r.tipo} />
                   ))
               }
             </div>

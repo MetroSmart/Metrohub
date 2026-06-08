@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("admin");
+  const [role, setRole] = useState("admin_atu");
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -132,7 +132,7 @@ export default function Login({ onLogin }) {
 
         <Field label="Rol">
           <div style={styles.roleRow}>
-            {[ ["admin","Admin ATU"], ["supervisor","Supervisor"] ].map(([val, label]) => (
+            {[ ["admin_atu","Admin ATU"], ["supervisor_concesionario","Supervisor"] ].map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setRole(val)}
@@ -147,15 +147,21 @@ export default function Login({ onLogin }) {
           </div>
         </Field>
 
-        {!error && attempts === 0 && (
+        {!error && !BLOCKED && attempts === 0 && (
           <div style={styles.boxWarn}>
             Tras 5 intentos fallidos el acceso se bloquea temporalmente.
           </div>
         )}
 
-        {!error && (
+        {!error && attempts >= 3 && !BLOCKED && (
           <div style={styles.boxWarn}>
-            Acceso bloqueado tras 5 intentos fallidos
+            Advertencia: {attempts}/5 intentos fallidos. La cuenta se bloqueará pronto.
+          </div>
+        )}
+
+        {error && (
+          <div style={BLOCKED ? styles.boxDanger : styles.boxWarn}>
+            {error}
           </div>
         )}
 

@@ -17,13 +17,16 @@ const SEV_STYLE = {
 };
 
 export default function Grilla({ user, onNav, onLogout }) {
-  const [horarios, setHorarios] = useState([]);
-  const [rutas, setRutas]       = useState([]);
-  const [rutaId, setRutaId]     = useState("");
-  const [fecha, setFecha]       = useState(new Date().toISOString().slice(0, 10));
-  const [loading, setLoading]   = useState(true);
-  const [saved, setSaved]       = useState(false);
-  const [resolving, setResolving] = useState(null);
+  const [horarios, setHorarios]       = useState([]);
+  const [rutas, setRutas]             = useState([]);
+  const [rutaId, setRutaId]           = useState("");
+  const [fecha, setFecha]             = useState(new Date().toISOString().slice(0, 10));
+  const [loading, setLoading]         = useState(true);
+  const [programacionId, setProgramacionId] = useState(null);
+  const [actionStatus, setActionStatus]     = useState(null); // { ok: bool, msg: string }
+  const [saving, setSaving]           = useState(false);
+  const [approving, setApproving]     = useState(false);
+  const [resolving, setResolving]     = useState(null);
   const [duplicating, setDuplicating] = useState(false);
 
   useEffect(() => {
@@ -36,13 +39,29 @@ export default function Grilla({ user, onNav, onLogout }) {
     if (fecha)  params.set("fecha",   fecha);
     if (rutaId) params.set("ruta_id", rutaId);
     api.get(`/api/horarios?${params}`)
-      .then(d => { setHorarios(d.horarios ?? []); setLoading(false); })
+      .then(d => {
+        const lista = d.horarios ?? [];
+        setHorarios(lista);
+        setProgramacionId(lista[0]?.programacion_id ?? null);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [fecha, rutaId]);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleEstadoProgram = async (estado) => {
+    if (!programacionId) return;
+    estado === "borrador" ? setSaving(true) : setApproving(true);
+    setActionStatus(null);
+    try {
+      await api.patch(`/api/horarios/programacion/${programacionId}/estado?estado=${estado}`);
+      setActionStatus({ ok: true, msg: `Programación marcada como "${estado}".` });
+    } catch (e) {
+      setActionStatus({ ok: false, msg: e.message || "Error al actualizar el estado." });
+    } finally {
+      setSaving(false);
+      setApproving(false);
+      setTimeout(() => setActionStatus(null), 3500);
+    }
   };
 
   const handleDuplicarSemana = async () => {
@@ -126,8 +145,12 @@ export default function Grilla({ user, onNav, onLogout }) {
             onChange={e => setFecha(e.target.value)}
             style={styles.select}
           />
-          <button style={styles.btnSecondary} onClick={handleSave}>
-            {saved ? "✓ Guardado" : "Guardar borrador"}
+          <button
+            style={{ ...styles.btnSecondary, opacity: (!programacionId || saving) ? 0.5 : 1 }}
+            onClick={() => handleEstadoProgram("borrador")}
+            disabled={!programacionId || saving}
+          >
+            {saving ? "Guardando…" : "Guardar borrador"}
           </button>
           {user?.role === "admin_atu" && (
             <button
@@ -138,12 +161,23 @@ export default function Grilla({ user, onNav, onLogout }) {
               {duplicating ? "Duplicando…" : "Duplicar semana"}
             </button>
           )}
-          <button style={styles.btnPrimary}>
-            Aprobar programación
-          </button>
+          {user?.role === "admin_atu" && (
+            <button
+              style={{ ...styles.btnPrimary, opacity: (!programacionId || approving) ? 0.5 : 1 }}
+              onClick={() => handleEstadoProgram("aprobada")}
+              disabled={!programacionId || approving}
+            >
+              {approving ? "Aprobando…" : "Aprobar programación"}
+            </button>
+          )}
           {conflictCount > 0 && (
             <span style={styles.conflictBadge}>
               {conflictCount} conflicto{conflictCount > 1 ? "s" : ""}
+            </span>
+          )}
+          {actionStatus && (
+            <span style={actionStatus.ok ? styles.actionOk : styles.actionErr}>
+              {actionStatus.msg}
             </span>
           )}
         </div>
@@ -331,5 +365,13 @@ const styles = {
   successBanner: {
     background: "#EAF3DE", border: "0.5px solid #C0DD97", borderRadius: 8,
     padding: "11px 16px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#27500A",
+  },
+  actionOk: {
+    background: "#EAF3DE", border: "1px solid #C0DD97", borderRadius: 6,
+    padding: "5px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#27500A",
+  },
+  actionErr: {
+    background: "#FCEBEB", border: "1px solid #F7C1C1", borderRadius: 6,
+    padding: "5px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#791F1F",
   },
 };

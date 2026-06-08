@@ -279,7 +279,7 @@ MetroHub/
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/MetroSmart/Metrohub.git
+git clone https://github.com/MetroHub/Metrohub.git
 cd Metrohub
 
 # 2. Copiar variables de entorno
@@ -313,11 +313,11 @@ npm run dev
 
 | Correo | Rol |
 |--------|-----|
-| admin.atu@metrosmart.gob.pe | Administrador ATU |
-| sup.limavias@metrosmart.gob.pe | Supervisor Lima Vías Express |
-| sup.limabus@metrosmart.gob.pe | Supervisor Lima Bus |
-| sup.transvial@metrosmart.gob.pe | Supervisor Transvial |
-| sup.perumasivo@metrosmart.gob.pe | Supervisor Perú Masivo |
+| admin.atu@metrohub.gob.pe | Administrador ATU |
+| sup.limavias@metrohub.gob.pe | Supervisor Lima Vías Express |
+| sup.limabus@metrohub.gob.pe | Supervisor Lima Bus |
+| sup.transvial@metrohub.gob.pe | Supervisor Transvial |
+| sup.perumasivo@metrohub.gob.pe | Supervisor Perú Masivo |
 
 > Las contraseñas están configuradas en el `.env` o son sus iniciales junto con un 123(Ej. limavias123 o admin123). La cuenta se bloquea tras 5 intentos fallidos (RF01).
 
@@ -352,7 +352,7 @@ Propuestas automáticas de programación usando Prophet y OR-Tools.
 
 El proyecto se gestiona con metodología Scrum con sprints semanales.
 
-- GitHub: https://github.com/MetroSmart/Metrohub
+- GitHub: https://github.com/MetroHub/Metrohub
 - Rama activa: `main`
 - Gestión de backlog: Jira (proyecto SCRUM)
 

@@ -48,15 +48,16 @@ def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[
                         "descripcion":  c.descripcion,
                     }
         resultado.append({
-            "id":              h.id,
-            "ruta_id":         h.ruta_id,
-            "fecha":           str(h.fecha),
-            "hora_salida":     str(h.hora_salida)[:5],
-            "turno":           h.turno,
+            "id":               h.id,
+            "programacion_id":  h.programacion_id,
+            "ruta_id":          h.ruta_id,
+            "fecha":            str(h.fecha),
+            "hora_salida":      str(h.hora_salida)[:5],
+            "turno":            h.turno,
             "duracion_est_min": h.duracion_est_min,
-            "activo":          h.activo,
-            "chofer":          chofer_info,
-            "conflicto":       conflicto_activo,
+            "activo":           h.activo,
+            "chofer":           chofer_info,
+            "conflicto":        conflicto_activo,
         })
     return resultado
 

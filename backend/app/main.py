@@ -12,7 +12,7 @@ from app.routers import auth, rutas, horarios, choferes, dashboard, conflictos, 
 
 # ── Instancia principal de FastAPI ────────────
 app = FastAPI(
-    title="MetroSmart API",
+    title="MetroHub API",
     description="Backend de programación inteligente de horarios "
                 "y asignación de choferes para el Metropolitano de Lima",
     version="2.0.0",
@@ -44,7 +44,7 @@ app.include_router(reportes.router,    prefix="/api/reportes",    tags=["Reporte
 @app.get("/")
 def root():
     return {
-        "sistema": "MetroSmart API",
+        "sistema": "MetroHub API",
         "version": "2.0.0",
         "estado": "activo",
         "docs": "/docs"

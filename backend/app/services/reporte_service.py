@@ -17,7 +17,7 @@ def exportar_dashboard(
 ) -> tuple[bytes, str, str]:
     kpis = dashboard_service.obtener_kpis(db)
     datos = {
-        "sistema": "MetroSmart",
+        "sistema": "MetroHub",
         "fecha": str(kpis.get("fecha", date.today())),
         "kpis": {k: v for k, v in kpis.items() if k != "fecha"},
         "extras": extras or {},

@@ -2,7 +2,7 @@ services:
 
   db:
     image: postgres:16
-    container_name: metrosmart_db
+    container_name: metrohub_db
     restart: always
     env_file: .env
     environment:
@@ -16,22 +16,22 @@ services:
       - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
       - ./backend/db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
     networks:
-      - metrosmart_net
+      - metrohub_net
 
   redis:
     image: redis:7-alpine
-    container_name: metrosmart_redis
+    container_name: metrohub_redis
     restart: always
     ports:
       - "6379:6379"
     networks:
-      - metrosmart_net
+      - metrohub_net
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: metrosmart_backend
+    container_name: metrohub_backend
     restart: always
     env_file: .env
     ports:
@@ -42,14 +42,14 @@ services:
       - db
       - redis
     networks:
-      - metrosmart_net
+      - metrohub_net
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: metrosmart_frontend
+    container_name: metrohub_frontend
     restart: always
     environment:
       VITE_API_URL: http://localhost:8000
@@ -61,11 +61,11 @@ services:
     depends_on:
       - backend
     networks:
-      - metrosmart_net
+      - metrohub_net
 
 volumes:
   postgres_data:
 
 networks:
-  metrosmart_net:
+  metrohub_net:
     driver: bridge
