@@ -1,5 +1,5 @@
 """Prototipo concreto — horario de servicio (RF03 duplicar semana)."""
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 
 from app.models.horario_servicio import HorarioServicio

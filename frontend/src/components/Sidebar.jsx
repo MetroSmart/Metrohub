@@ -1,22 +1,27 @@
-const NAV = [
-  {
-    section: "Principal",
-    items: [
-      { key: "dashboard", label: "Dashboard", icon: <IconGrid /> },
-      { key: "rutas", label: "Rutas y Estaciones", icon: <IconRoutes /> },
-      { key: "grilla", label: "Programación", icon: <IconCal /> },
-      { key: "choferes", label: "Choferes", icon: <IconUser /> },
-    ],
-  },
-  {
-    section: "Reportes",
-    items: [
-      { key: "reportes", label: "Exportar PDF/XLSX", icon: <IconDoc /> },
-    ],
-  },
+const NAV_PRINCIPAL = [
+  { key: "dashboard",      label: "Dashboard",          icon: <IconGrid /> },
+  { key: "rutas",          label: "Rutas y Estaciones", icon: <IconRoutes /> },
+  { key: "grilla",         label: "Programación",       icon: <IconCal /> },
+  { key: "choferes",       label: "Choferes",           icon: <IconUser /> },
+  { key: "buses",          label: "Flota",              icon: <IconBus /> },
+];
+const NAV_REPORTES = [
+  { key: "reportes",       label: "Exportar PDF/XLSX",  icon: <IconDoc /> },
+];
+const NAV_ADMIN = [
+  { key: "usuarios",       label: "Usuarios",           icon: <IconTeam /> },
+  { key: "concesionarios", label: "Concesionarios",     icon: <IconBuilding /> },
 ];
 
 export default function Sidebar({ active, onNav, onLogout, user }) {
+  const isAdmin = user?.role === "admin_atu";
+
+  const sections = [
+    { label: "Principal",   items: NAV_PRINCIPAL },
+    { label: "Reportes",    items: NAV_REPORTES  },
+    ...(isAdmin ? [{ label: "Administración", items: NAV_ADMIN }] : []),
+  ];
+
   return (
     <aside style={styles.sidebar}>
       <div style={styles.brand}>
@@ -28,15 +33,15 @@ export default function Sidebar({ active, onNav, onLogout, user }) {
         <div>
           <div style={styles.userName}>{user?.name ?? "Usuario"}</div>
           <div style={styles.userRole}>
-            {user?.role === "admin_atu" ? "Admin ATU" : "Supervisor"}
+            {isAdmin ? "Admin ATU" : "Supervisor"}
           </div>
         </div>
       </div>
 
-      {NAV.map(({ section, items }) => (
-        <div key={section} style={styles.section}>
-          <div style={styles.sectionLabel}>{section}</div>
-          {items.map(({ key, label, icon }) => (
+      {sections.map(({ label, items }) => (
+        <div key={label} style={styles.section}>
+          <div style={styles.sectionLabel}>{label}</div>
+          {items.map(({ key, label: lbl, icon }) => (
             <button
               key={key}
               onClick={() => onNav(key)}
@@ -46,7 +51,7 @@ export default function Sidebar({ active, onNav, onLogout, user }) {
               }}
             >
               <span style={styles.navIcon}>{icon}</span>
-              {label}
+              {lbl}
             </button>
           ))}
         </div>
@@ -93,11 +98,14 @@ function IconUser() {
     </svg>
   );
 }
-function IconAI() {
+function IconBus() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M3 12L8 4L13 12" stroke="currentColor" strokeWidth="1.2"/>
-      <path d="M5 9h6" stroke="currentColor" strokeWidth="1.2"/>
+      <rect x="2" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M2 7h12" stroke="currentColor" strokeWidth="1.2"/>
+      <circle cx="5" cy="13" r="1.2" fill="currentColor"/>
+      <circle cx="11" cy="13" r="1.2" fill="currentColor"/>
+      <path d="M5 3V2M11 3V2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   );
 }
@@ -106,6 +114,24 @@ function IconDoc() {
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <rect x="3" y="1" width="10" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
       <path d="M6 5h4M6 8h4M6 11h2" stroke="currentColor" strokeWidth="1.2"/>
+    </svg>
+  );
+}
+function IconTeam() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M1 14c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M11 7c1.1 0 2 .9 2 2M13 14c0-1.5-1-2.5-2.5-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+function IconBuilding() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="4" width="12" height="11" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M5 15V9h6v6" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M6 1h4v3H6z" stroke="currentColor" strokeWidth="1.2"/>
     </svg>
   );
 }
@@ -154,7 +180,7 @@ const styles = {
   },
   userName: { fontSize: 13, fontWeight: 500, color: "#E6F1FB" },
   userRole: { fontSize: 11, color: "#85B7EB", marginTop: 1 },
-  section: { marginBottom: 20 },
+  section:  { marginBottom: 20 },
   sectionLabel: {
     fontSize: 10, fontWeight: 500,
     color: "#378ADD",
@@ -176,7 +202,7 @@ const styles = {
     color: "#E6F1FB",
     fontWeight: 500,
   },
-  navIcon: { display: "flex", alignItems: "center", color: "inherit" },
+  navIcon:  { display: "flex", alignItems: "center", color: "inherit" },
   logoutBtn: {
     display: "flex", alignItems: "center",
     marginTop: "auto",

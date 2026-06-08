@@ -15,7 +15,7 @@ def _a_minutos(t: str) -> int:
 
 # ── Horarios ──────────────────────────────────────────────────
 
-def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[int] = None) -> List[dict]:
+def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[int] = None, programacion_id: Optional[int] = None) -> List[dict]:
     q = (
         db.query(HorarioServicio)
         .options(
@@ -27,13 +27,17 @@ def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[
         q = q.filter(HorarioServicio.fecha == fecha)
     if ruta_id:
         q = q.filter(HorarioServicio.ruta_id == ruta_id)
+    if programacion_id:
+        q = q.filter(HorarioServicio.programacion_id == programacion_id)
 
     resultado = []
     for h in q.order_by(HorarioServicio.hora_salida).all():
         conflicto_activo = None
         chofer_info = None
+        asignacion_id = None
         for asig in h.asignaciones:
             if chofer_info is None and asig.chofer:
+                asignacion_id = asig.id
                 chofer_info = {
                     "id":     asig.chofer.id,
                     "nombre": f"{asig.chofer.nombres} {asig.chofer.apellidos}",
@@ -41,12 +45,13 @@ def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[
             for c in asig.conflictos:
                 if not c.resuelto and conflicto_activo is None:
                     conflicto_activo = {
-                        "id":           c.id,
+                        "id":            c.id,
                         "asignacion_id": c.asignacion_id,
-                        "tipo":         c.tipo,
-                        "severidad":    c.severidad,
-                        "descripcion":  c.descripcion,
+                        "tipo":          c.tipo,
+                        "severidad":     c.severidad,
+                        "descripcion":   c.descripcion,
                     }
+        bus_placa = next((a.bus_placa for a in h.asignaciones if a.bus_placa), None)
         resultado.append({
             "id":               h.id,
             "programacion_id":  h.programacion_id,
@@ -57,6 +62,8 @@ def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[
             "duracion_est_min": h.duracion_est_min,
             "activo":           h.activo,
             "chofer":           chofer_info,
+            "asignacion_id":    asignacion_id,
+            "bus_placa":        bus_placa,
             "conflicto":        conflicto_activo,
         })
     return resultado

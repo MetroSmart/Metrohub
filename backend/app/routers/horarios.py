@@ -8,7 +8,9 @@ from app.database import get_db
 from app.routers.auth import obtener_usuario_actual
 from app.builders.programacion_builder import ProgramacionBuilderError
 from app.models.programacion import Programacion
+from app.models.asignacion import Asignacion
 from app.schemas.horario import (
+    AsignacionActualizar,
     AsignacionCrear,
     DuplicarSemanaRequest,
     HorarioCrear,
@@ -41,10 +43,14 @@ def listar_conflictos(db: Session = Depends(get_db),
 
 
 @router.get("/")
-def listar_horarios(fecha: Optional[str] = None, ruta_id: Optional[int] = None,
-                    db: Session = Depends(get_db),
-                    usuario: dict = Depends(obtener_usuario_actual)):
-    resultado = horario_service.listar_horarios(db, fecha, ruta_id)
+def listar_horarios(
+    fecha: Optional[str] = None,
+    ruta_id: Optional[int] = None,
+    programacion_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    resultado = horario_service.listar_horarios(db, fecha, ruta_id, programacion_id)
     return {"total": len(resultado), "horarios": resultado}
 
 
@@ -152,6 +158,35 @@ def eliminar_horario(horario_id: int, db: Session = Depends(get_db),
                             detail=f"Horario {horario_id} no encontrado")
 
 
+@router.get("/asignaciones")
+def listar_asignaciones(
+    horario_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    q = db.query(Asignacion)
+    if horario_id:
+        q = q.filter(Asignacion.horario_id == horario_id)
+    asignaciones = q.order_by(Asignacion.created_at).all()
+    return {
+        "total": len(asignaciones),
+        "asignaciones": [
+            {
+                "id":               a.id,
+                "horario_id":       a.horario_id,
+                "chofer_id":        a.chofer_id,
+                "bus_placa":        a.bus_placa,
+                "concesionario_id": a.concesionario_id,
+                "estado":           a.estado,
+                "notas":            a.notas,
+                "asignado_por":     a.asignado_por,
+                "created_at":       str(a.created_at),
+            }
+            for a in asignaciones
+        ],
+    }
+
+
 @router.post("/asignaciones", status_code=status.HTTP_201_CREATED)
 def crear_asignacion(datos: AsignacionCrear, db: Session = Depends(get_db),
                      usuario: dict = Depends(obtener_usuario_actual)):
@@ -167,3 +202,44 @@ def crear_asignacion(datos: AsignacionCrear, db: Session = Depends(get_db),
         if "solapado" in str(e).lower():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.patch("/asignaciones/{asignacion_id}")
+def actualizar_asignacion(
+    asignacion_id: int,
+    datos: AsignacionActualizar,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    _solo_admin(usuario)
+    _ESTADOS_ASIG = {"propuesta", "confirmada", "cancelada", "reemplazada"}
+    if datos.estado and datos.estado not in _ESTADOS_ASIG:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Estado inválido. Válidos: {sorted(_ESTADOS_ASIG)}")
+    asig = db.query(Asignacion).filter(Asignacion.id == asignacion_id).first()
+    if not asig:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Asignación {asignacion_id} no encontrada")
+    for campo, valor in datos.model_dump(exclude_none=True).items():
+        setattr(asig, campo, valor)
+    db.commit()
+    db.refresh(asig)
+    return {
+        "id": asig.id, "horario_id": asig.horario_id,
+        "bus_placa": asig.bus_placa, "estado": asig.estado, "notas": asig.notas,
+    }
+
+
+@router.delete("/asignaciones/{asignacion_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_asignacion(
+    asignacion_id: int,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    _solo_admin(usuario)
+    asig = db.query(Asignacion).filter(Asignacion.id == asignacion_id).first()
+    if not asig:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Asignación {asignacion_id} no encontrada")
+    db.delete(asig)
+    db.commit()

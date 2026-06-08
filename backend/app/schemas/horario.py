@@ -52,6 +52,12 @@ class DuplicarSemanaRequest(BaseModel):
     omitir_existentes: bool = True
 
 
+class AsignacionActualizar(BaseModel):
+    bus_placa: Optional[str] = None
+    estado:    Optional[str] = None
+    notas:     Optional[str] = None
+
+
 class ProgramacionCompletaCrear(BaseModel):
     """RF03 — horario + asignación opcional (patrón Builder)."""
 

@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
 import app.models  # noqa: F401 — registra todos los modelos en SQLAlchemy
 
-from app.database import engine, Base
-from app.routers import auth, rutas, horarios, choferes, dashboard, conflictos, reportes
+from app.routers import (
+    auth, rutas, horarios, choferes, dashboard, conflictos, reportes,
+    programaciones, buses, concesionarios, estaciones, disponibilidad, usuarios,
+)
 
 # ── Instancia principal de FastAPI ────────────
 app = FastAPI(
@@ -38,7 +39,13 @@ app.include_router(horarios.router, prefix="/api/horarios", tags=["Horarios"])
 app.include_router(choferes.router, prefix="/api/choferes", tags=["Choferes"])
 app.include_router(dashboard.router,   prefix="/api/dashboard",   tags=["Dashboard"])
 app.include_router(conflictos.router,  prefix="/api/conflictos",  tags=["Conflictos"])
-app.include_router(reportes.router,    prefix="/api/reportes",    tags=["Reportes"])
+app.include_router(reportes.router,       prefix="/api/reportes",       tags=["Reportes"])
+app.include_router(programaciones.router, prefix="/api/programaciones", tags=["Programaciones"])
+app.include_router(buses.router,          prefix="/api/buses",          tags=["Buses"])
+app.include_router(concesionarios.router, prefix="/api/concesionarios", tags=["Concesionarios"])
+app.include_router(estaciones.router,     prefix="/api/estaciones",     tags=["Estaciones"])
+app.include_router(disponibilidad.router, prefix="/api/disponibilidad", tags=["Disponibilidad"])
+app.include_router(usuarios.router,       prefix="/api/usuarios",       tags=["Usuarios"])
 
 # ── Endpoint raíz ─────────────────────────────
 @app.get("/")

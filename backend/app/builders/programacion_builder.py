@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.models.asignacion import Asignacion
 from app.models.horario_servicio import HorarioServicio
 from app.schemas.horario import AsignacionCrear, HorarioCrear
-from app.services import horario_service
 
 
 class ProgramacionBuilderError(Exception):
@@ -86,6 +85,7 @@ class ProgramacionBuilder:
         return self
 
     def _validar_asignacion(self, horario: HorarioServicio, datos: AsignacionCrear) -> None:
+        from app.services import horario_service
         hora = str(horario.hora_salida)[:5]
         if horario_service.detectar_solapamiento(
             self._db,
@@ -137,6 +137,7 @@ class ProgramacionBuilder:
         raise ProgramacionBuilderError("Configure la asignación antes de build_asignacion()")
 
     def build_asignacion(self, horario_id: Optional[int] = None) -> Asignacion:
+        from app.services import horario_service
         datos = self._resolver_asignacion(horario_id)
 
         if not self._asignado_por:
