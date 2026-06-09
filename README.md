@@ -311,15 +311,15 @@ npm run dev
 
 ### Credenciales de demo
 
-| Correo | Rol |
-|--------|-----|
-| admin.atu@metrohub.gob.pe | Administrador ATU |
-| sup.limavias@metrohub.gob.pe | Supervisor Lima Vías Express |
-| sup.limabus@metrohub.gob.pe | Supervisor Lima Bus |
-| sup.transvial@metrohub.gob.pe | Supervisor Transvial |
-| sup.perumasivo@metrohub.gob.pe | Supervisor Perú Masivo |
+| Correo | Contraseña | Rol |
+|--------|------------|-----|
+| admin.atu@metrohub.gob.pe | admin123 | Administrador ATU |
+| sup.limavias@metrohub.gob.pe | limavias123 | Supervisor Lima Vías Express |
+| sup.limabus@metrohub.gob.pe | limabus123 | Supervisor Lima Bus |
+| sup.transvial@metrohub.gob.pe | transvial123 | Supervisor Transvial |
+| sup.perumasivo@metrohub.gob.pe | perumasivo123 | Supervisor Perú Masivo |
 
-> Las contraseñas están configuradas en el `.env` o son sus iniciales junto con un 123(Ej. limavias123 o admin123). La cuenta se bloquea tras 5 intentos fallidos (RF01).
+> La cuenta se bloquea tras 5 intentos fallidos consecutivos (RF01).
 
 ---
 
