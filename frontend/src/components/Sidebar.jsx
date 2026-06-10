@@ -9,7 +9,8 @@ const NAV_REPORTES = [
   { key: "reportes",       label: "Exportar PDF/XLSX",  icon: <IconDoc /> },
 ];
 const NAV_ADMIN = [
-  { key: "usuarios", label: "Usuarios", icon: <IconTeam /> },
+  { key: "usuarios", label: "Usuarios",          icon: <IconTeam /> },
+  { key: "areas",    label: "Áreas Operativas",  icon: <IconBuilding /> },
 ];
 
 const NAV_CHOFER = [
@@ -129,6 +130,15 @@ function IconTeam() {
       <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
       <path d="M1 14c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" strokeWidth="1.2"/>
       <path d="M11 7c1.1 0 2 .9 2 2M13 14c0-1.5-1-2.5-2.5-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+function IconBuilding() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="4" width="12" height="11" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M5 15V9h6v6" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M6 1h4v3H6z" stroke="currentColor" strokeWidth="1.2"/>
     </svg>
   );
 }
