@@ -13,7 +13,7 @@ from app.models.asignacion import Asignacion
 from app.models.horario_servicio import HorarioServicio
 from app.prototypes.asignacion_prototype import AsignacionPrototype
 from app.prototypes.horario_prototype import HorarioPrototype
-from app.services import horario_service
+from app.services.horario_validacion import calcular_horas_dia, detectar_solapamiento
 
 
 class DuplicarSemanaError(Exception):
@@ -97,7 +97,7 @@ def duplicar_semana(
             )
             try:
                 hora = str(nuevo.hora_salida)[:5]
-                if horario_service.detectar_solapamiento(
+                if detectar_solapamiento(
                     db,
                     datos_asig.chofer_id,
                     nuevo.fecha,
@@ -108,7 +108,7 @@ def duplicar_semana(
                         f"Chofer {datos_asig.chofer_id} solapado el {nuevo.fecha} — asignación omitida"
                     )
                     continue
-                if horario_service.calcular_horas_dia(
+                if calcular_horas_dia(
                     db,
                     datos_asig.chofer_id,
                     nuevo.fecha,
