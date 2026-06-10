@@ -227,6 +227,9 @@ def actualizar_asignacion(
     if not asig:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Asignación {asignacion_id} no encontrada")
+    if usuario["rol"] == "supervisor_area" and asig.area_id != usuario.get("area_id"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Solo puede modificar asignaciones de su área operativa")
     for campo, valor in datos.model_dump(exclude_none=True).items():
         setattr(asig, campo, valor)
     db.commit()

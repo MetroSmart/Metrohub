@@ -35,6 +35,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         "rol":       sesion["rol"],
         "nombre":    sesion["nombre"],
         "chofer_id": sesion["chofer_id"],
+        "area_id":   sesion.get("area_id"),
     })
     return TokenResponse(
         access_token=token,
@@ -42,6 +43,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         rol=sesion["rol"],
         nombre=sesion["nombre"],
         chofer_id=sesion["chofer_id"],
+        area_id=sesion.get("area_id"),
         debe_cambiar_password=sesion.get("debe_cambiar_password", False),
     )
 
@@ -77,6 +79,7 @@ def obtener_perfil(usuario: dict = Depends(obtener_usuario_actual),
         nombre=registro.nombre,
         apellidos=registro.apellidos,
         chofer_id=None,
+        area_id=registro.area_id,
         debe_cambiar_password=False,
     )
 

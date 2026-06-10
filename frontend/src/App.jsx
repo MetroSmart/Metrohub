@@ -19,6 +19,7 @@ function buildUser(data) {
     role: data.rol,
     name: `${data.nombre} ${data.apellidos || ""}`.trim() || data.email.split("@")[0],
     chofer_id: data.chofer_id ?? null,
+    area_id: data.area_id ?? null,
     mustChangePassword: Boolean(data.debe_cambiar_password),
   };
 }

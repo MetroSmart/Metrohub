@@ -105,7 +105,7 @@ export default function Grilla({ user, onNav, onLogout }) {
 
   const abrirAsignar = async (horario) => {
     setAsigTarget(horario);
-    setFormAsig({ chofer_id: "", area_id: "", bus_placa: "", notas: "" });
+    setFormAsig({ chofer_id: "", area_id: user?.role === "supervisor_area" ? String(user.area_id) : "", bus_placa: "", notas: "" });
     setFormAsigErr("");
     const [ch, co, bu] = await Promise.all([
       api.get("/api/choferes?estado=activo").catch(() => []),
@@ -465,7 +465,7 @@ export default function Grilla({ user, onNav, onLogout }) {
                               </span>
                               <span>{h.chofer.nombre}</span>
                             </div>
-                            {user?.role === "admin_atu" && h.asignacion_id && (
+                            {(user?.role === "admin_atu" || user?.role === "supervisor_area") && h.asignacion_id && (
                               <button
                                 style={styles.removeBtn}
                                 onClick={() => handleQuitarAsignacion(h.asignacion_id, h.id)}
@@ -478,7 +478,7 @@ export default function Grilla({ user, onNav, onLogout }) {
                         : (
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <span style={{ color: "#bbb", fontSize: 12 }}>Sin asignar</span>
-                            {user?.role === "admin_atu" && (
+                            {(user?.role === "admin_atu" || user?.role === "supervisor_area") && (
                               <button
                                 style={styles.assignBtn}
                                 onClick={() => abrirAsignar(h)}
@@ -631,6 +631,7 @@ export default function Grilla({ user, onNav, onLogout }) {
                 style={styles.input}
                 value={formAsig.area_id}
                 onChange={e => setFormAsig(f => ({ ...f, area_id: e.target.value }))}
+                disabled={user?.role === "supervisor_area"}
               >
                 <option value="">— Selecciona un área —</option>
                 {asigConcs.map(c => (

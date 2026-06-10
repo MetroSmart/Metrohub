@@ -169,7 +169,10 @@ export default function Choferes({ user, onNav, onLogout }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {canCreate && tab === "choferes" && (
-              <button style={styles.btnPrimary} onClick={() => setModal(true)}>+ Registrar chofer</button>
+              <button style={styles.btnPrimary} onClick={() => {
+                setForm({ ...FORM_INIT, area_id: user?.role === "supervisor_area" ? String(user.area_id) : "" });
+                setModal(true);
+              }}>+ Registrar chofer</button>
             )}
             {canCreate && tab === "disponibilidad" && (
               <button style={styles.btnPrimary} onClick={() => setModalDisp(true)}>+ Registrar indisponibilidad</button>
@@ -369,10 +372,11 @@ export default function Choferes({ user, onNav, onLogout }) {
               </Field>
               <Field label="Área">
                 <select name="area_id" value={form.area_id}
-                  onChange={handleField} style={styles.input}>
+                  onChange={handleField} style={styles.input}
+                  disabled={user?.role === "supervisor_area"}>
                   <option value="">— Seleccionar —</option>
                   {areas.map(c => (
-                    <option key={c.id} value={c.id}>{c.nombre_corto} — {c.ruc}</option>
+                    <option key={c.id} value={c.id}>{c.nombre_corto}</option>
                   ))}
                 </select>
               </Field>

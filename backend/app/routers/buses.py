@@ -90,16 +90,15 @@ def actualizar_bus(
     db: Session = Depends(get_db),
     usuario: dict = Depends(obtener_usuario_actual),
 ):
-    _solo_admin(usuario)
-    if datos.estado and datos.estado not in _ESTADOS_VALIDOS:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"Estado inválido. Válidos: {sorted(_ESTADOS_VALIDOS)}")
-    campos = datos.model_dump(exclude_none=True)
-    bus = bus_service.actualizar_bus(db, placa, campos)
+    bus = bus_service.obtener_bus(db, placa)
     if not bus:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Bus {placa} no encontrado")
-    return _serializar(bus)
+    _admin_o_supervisor_mismo_area(usuario, bus.area_id)
+    if datos.estado and datos.estado not in _ESTADOS_VALIDOS:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Estado inválido. Válidos: {sorted(_ESTADOS_VALIDOS)}")
+    return _serializar(bus_service.actualizar_bus(db, placa, datos.model_dump(exclude_none=True)))
 
 
 @router.delete("/{placa}", status_code=status.HTTP_204_NO_CONTENT)
@@ -108,7 +107,9 @@ def eliminar_bus(
     db: Session = Depends(get_db),
     usuario: dict = Depends(obtener_usuario_actual),
 ):
-    _solo_admin(usuario)
-    if not bus_service.eliminar_bus(db, placa):
+    bus = bus_service.obtener_bus(db, placa)
+    if not bus:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Bus {placa} no encontrado")
+    _admin_o_supervisor_mismo_area(usuario, bus.area_id)
+    bus_service.eliminar_bus(db, placa)
