@@ -7,7 +7,6 @@ import Choferes from "./pages/Choferes";
 import Reportes from "./pages/Reportes";
 import Buses from "./pages/Buses";
 import Usuarios from "./pages/Usuarios";
-import Concesionarios from "./pages/Concesionarios";
 import MisRutas from "./pages/MisRutas";
 import CambioPasswordPrimerIngreso from "./components/CambioPasswordPrimerIngreso";
 
@@ -100,6 +99,5 @@ export default function App() {
   if (page === "reportes")       return <Reportes       {...props} />;
   if (page === "buses")          return <Buses          {...props} />;
   if (page === "usuarios")       return <Usuarios       {...props} />;
-  if (page === "concesionarios") return <Concesionarios {...props} />;
   return <Dashboard {...props} />;
 }

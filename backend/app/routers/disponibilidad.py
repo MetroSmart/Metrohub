@@ -48,9 +48,19 @@ def registrar_disponibilidad(
     db: Session = Depends(get_db),
     usuario: dict = Depends(obtener_usuario_actual),
 ):
+    if usuario["rol"] not in {"admin_atu", "supervisor_area"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Sin permisos para registrar disponibilidad")
     if datos.motivo not in _MOTIVOS_VALIDOS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"Motivo inválido. Válidos: {sorted(_MOTIVOS_VALIDOS)}")
+    if usuario["rol"] == "supervisor_area":
+        row = db.execute(
+            text("SELECT area_id FROM choferes WHERE id = :id"), {"id": datos.chofer_id}
+        ).fetchone()
+        if not row or row[0] != usuario.get("area_id"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="Solo puede registrar disponibilidad de choferes de su área")
     registrado_por = _id_usuario(db, usuario["email"])
     return _serializar(disponibilidad_service.crear(db, datos, registrado_por))
 

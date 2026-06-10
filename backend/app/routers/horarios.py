@@ -176,7 +176,7 @@ def listar_asignaciones(
                 "horario_id":       a.horario_id,
                 "chofer_id":        a.chofer_id,
                 "bus_placa":        a.bus_placa,
-                "concesionario_id": a.concesionario_id,
+                "area_id": a.area_id,
                 "estado":           a.estado,
                 "notas":            a.notas,
                 "asignado_por":     a.asignado_por,
@@ -190,7 +190,12 @@ def listar_asignaciones(
 @router.post("/asignaciones", status_code=status.HTTP_201_CREATED)
 def crear_asignacion(datos: AsignacionCrear, db: Session = Depends(get_db),
                      usuario: dict = Depends(obtener_usuario_actual)):
-    _solo_admin(usuario)
+    if usuario["rol"] not in {"admin_atu", "supervisor_area"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Sin permisos para crear asignaciones")
+    if usuario["rol"] == "supervisor_area" and usuario.get("area_id") != datos.area_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Solo puede asignar choferes de su área operativa")
     horario = horario_service.obtener_horario(db, datos.horario_id)
     if not horario:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -211,7 +216,9 @@ def actualizar_asignacion(
     db: Session = Depends(get_db),
     usuario: dict = Depends(obtener_usuario_actual),
 ):
-    _solo_admin(usuario)
+    if usuario["rol"] not in {"admin_atu", "supervisor_area"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Sin permisos para modificar asignaciones")
     _ESTADOS_ASIG = {"propuesta", "confirmada", "cancelada", "reemplazada"}
     if datos.estado and datos.estado not in _ESTADOS_ASIG:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,

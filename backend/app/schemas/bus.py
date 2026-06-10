@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class BusCrear(BaseModel):
     placa: str
-    concesionario_id: int
+    area_id: int
     tipo: str  # articulado | convencional
     anio: Optional[int] = None
     capacidad_pasajeros: Optional[int] = None

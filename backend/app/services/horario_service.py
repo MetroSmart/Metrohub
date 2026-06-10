@@ -143,10 +143,10 @@ def crear_programacion_completa(
         duracion_est_min=datos.duracion_est_min,
     )
     builder = ProgramacionBuilder(db).desde_horario(horario_data)
-    if datos.chofer_id and datos.concesionario_id and asignado_por:
+    if datos.chofer_id and datos.area_id and asignado_por:
         builder.asignacion(
             chofer_id=datos.chofer_id,
-            concesionario_id=datos.concesionario_id,
+            area_id=datos.area_id,
             bus_placa=datos.bus_placa,
             notas=datos.notas,
             asignado_por=asignado_por,

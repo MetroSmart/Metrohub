@@ -20,7 +20,7 @@ const MOTIVO_STYLE = {
 
 const FORM_INIT = {
   dni: "", nombres: "", apellidos: "", email: "",
-  fecha_nacimiento: "", concesionario_id: "",
+  fecha_nacimiento: "", area_id: "",
   numero_licencia: "", tipo_licencia: "A-IIIA",
   fec_vence_licencia: "", fec_vence_certif_prot: "",
 };
@@ -31,7 +31,7 @@ const DISP_INIT = {
 
 export default function Choferes({ user, onNav, onLogout }) {
   const [choferes, setChoferes]     = useState([]);
-  const [concesionarios, setConces] = useState([]);
+  const [areas, setConces] = useState([]);
   const [disponibilidades, setDisps]= useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
@@ -51,11 +51,11 @@ export default function Choferes({ user, onNav, onLogout }) {
   const [dispSaving, setDispSaving] = useState(false);
   const [filtroChofer, setFiltroChofer] = useState("");
 
-  const canCreate = user?.role === "admin_atu" || user?.role === "supervisor_concesionario";
+  const canCreate = user?.role === "admin_atu" || user?.role === "supervisor_area";
 
   useEffect(() => {
-    api.get("/api/concesionarios?solo_activos=true")
-      .then(d => setConces(d.concesionarios ?? []))
+    api.get("/api/areas?solo_activos=true")
+      .then(d => setConces(d.areas ?? []))
       .catch(() => {});
   }, []);
 
@@ -85,7 +85,7 @@ export default function Choferes({ user, onNav, onLogout }) {
   const handleRegistrar = async (e) => {
     e.preventDefault();
     setFormError("");
-    const required = ["dni","nombres","apellidos","fecha_nacimiento","concesionario_id",
+    const required = ["dni","nombres","apellidos","fecha_nacimiento","area_id",
                       "numero_licencia","fec_vence_licencia","fec_vence_certif_prot"];
     for (const k of required) {
       if (!form[k]?.toString().trim()) {
@@ -99,7 +99,7 @@ export default function Choferes({ user, onNav, onLogout }) {
       const nuevo = await api.post("/api/choferes", {
         ...form,
         email: email || null,
-        concesionario_id: Number(form.concesionario_id),
+        area_id: Number(form.area_id),
       });
       setChoferes(prev => [...prev, nuevo]);
       setModal(false);
@@ -367,11 +367,11 @@ export default function Choferes({ user, onNav, onLogout }) {
                   placeholder="opcional — si no se indica, se usará el DNI@metrohub.gob.pe"
                   style={styles.input} />
               </Field>
-              <Field label="Concesionario">
-                <select name="concesionario_id" value={form.concesionario_id}
+              <Field label="Área">
+                <select name="area_id" value={form.area_id}
                   onChange={handleField} style={styles.input}>
                   <option value="">— Seleccionar —</option>
-                  {concesionarios.map(c => (
+                  {areas.map(c => (
                     <option key={c.id} value={c.id}>{c.nombre_corto} — {c.ruc}</option>
                   ))}
                 </select>

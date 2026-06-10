@@ -96,6 +96,7 @@ def autenticar(db: Session, email: str, password: str) -> Optional[dict]:
             "email":                 usuario.email,
             "nombre":                f"{usuario.nombre} {usuario.apellidos}",
             "chofer_id":             None,
+            "area_id":               usuario.area_id,
             "debe_cambiar_password": False,
         }
 
@@ -152,4 +153,5 @@ def decodificar_token(token: str) -> dict:
         "rol":       payload.get("rol"),
         "nombre":    payload.get("nombre"),
         "chofer_id": payload.get("chofer_id"),
+        "area_id":   payload.get("area_id"),
     }

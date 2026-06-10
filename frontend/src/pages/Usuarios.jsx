@@ -4,17 +4,17 @@ import { api } from "../api";
 
 const ROL_STYLE = {
   admin_atu:                { bg: "#E6F1FB", color: "#0C447C" },
-  supervisor_concesionario: { bg: "#EAF3DE", color: "#27500A" },
+  supervisor_area: { bg: "#EAF3DE", color: "#27500A" },
 };
 
 const FORM_INIT = {
   email: "", password: "", nombre: "", apellidos: "",
-  dni: "", rol: "supervisor_concesionario", concesionario_id: "",
+  dni: "", rol: "supervisor_area", area_id: "",
 };
 
 export default function Usuarios({ user, onNav, onLogout }) {
   const [usuarios, setUsuarios]       = useState([]);
-  const [concesionarios, setConces]   = useState([]);
+  const [areas, setConces]   = useState([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
   const [filtroRol, setFiltroRol]     = useState("");
@@ -28,8 +28,8 @@ export default function Usuarios({ user, onNav, onLogout }) {
   const [pwdSaving, setPwdSaving]     = useState(false);
 
   useEffect(() => {
-    api.get("/api/concesionarios?solo_activos=true")
-      .then(d => setConces(d.concesionarios ?? []))
+    api.get("/api/areas?solo_activos=true")
+      .then(d => setConces(d.areas ?? []))
       .catch(() => {});
   }, []);
 
@@ -55,8 +55,8 @@ export default function Usuarios({ user, onNav, onLogout }) {
         return;
       }
     }
-    if (form.rol === "supervisor_concesionario" && !form.concesionario_id) {
-      setFormError("El supervisor debe tener un concesionario asignado.");
+    if (form.rol === "supervisor_area" && !form.area_id) {
+      setFormError("El supervisor debe tener un área asignado.");
       return;
     }
     setSubmitting(true);
@@ -68,7 +68,7 @@ export default function Usuarios({ user, onNav, onLogout }) {
         apellidos:        form.apellidos.trim(),
         dni:              form.dni.trim(),
         rol:              form.rol,
-        concesionario_id: form.concesionario_id ? Number(form.concesionario_id) : null,
+        area_id: form.area_id ? Number(form.area_id) : null,
       });
       setUsuarios(prev => [...prev, nuevo]);
       setModal(false);
@@ -130,7 +130,7 @@ export default function Usuarios({ user, onNav, onLogout }) {
           <select value={filtroRol} onChange={e => setFiltroRol(e.target.value)} style={styles.select}>
             <option value="">Todos los roles</option>
             <option value="admin_atu">Admin ATU</option>
-            <option value="supervisor_concesionario">Supervisor concesionario</option>
+            <option value="supervisor_area">Supervisor área</option>
           </select>
         </div>
 
@@ -142,7 +142,7 @@ export default function Usuarios({ user, onNav, onLogout }) {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {["Nombre","Email","DNI","Rol","Concesionario","Estado",""].map(h => (
+                  {["Nombre","Email","DNI","Rol","Área","Estado",""].map(h => (
                     <th key={h} style={styles.th}>{h}</th>
                   ))}
                 </tr>
@@ -157,7 +157,7 @@ export default function Usuarios({ user, onNav, onLogout }) {
                 )}
                 {usuarios.map(u => {
                   const rs = ROL_STYLE[u.rol] ?? { bg: "#f0f0f0", color: "#444" };
-                  const conc = concesionarios.find(c => c.id === u.concesionario_id);
+                  const conc = areas.find(c => c.id === u.area_id);
                   return (
                     <tr key={u.id}>
                       <td style={styles.td}>
@@ -173,7 +173,7 @@ export default function Usuarios({ user, onNav, onLogout }) {
                           {u.rol === "admin_atu" ? "Admin ATU" : "Supervisor"}
                         </span>
                       </td>
-                      <td style={styles.td}>{conc ? conc.nombre_corto : (u.concesionario_id ? `#${u.concesionario_id}` : "—")}</td>
+                      <td style={styles.td}>{conc ? conc.nombre_corto : (u.area_id ? `#${u.area_id}` : "—")}</td>
                       <td style={styles.td}>
                         <span style={{
                           ...styles.tag,
@@ -238,16 +238,16 @@ export default function Usuarios({ user, onNav, onLogout }) {
               <div style={{ display: "flex", gap: 12 }}>
                 <Field label="Rol *" style={{ flex: 1 }}>
                   <select name="rol" value={form.rol} onChange={handleField} style={styles.input}>
-                    <option value="supervisor_concesionario">Supervisor concesionario</option>
+                    <option value="supervisor_area">Supervisor área</option>
                     <option value="admin_atu">Admin ATU</option>
                   </select>
                 </Field>
-                {form.rol === "supervisor_concesionario" && (
-                  <Field label="Concesionario *" style={{ flex: 1 }}>
-                    <select name="concesionario_id" value={form.concesionario_id}
+                {form.rol === "supervisor_area" && (
+                  <Field label="Área *" style={{ flex: 1 }}>
+                    <select name="area_id" value={form.area_id}
                       onChange={handleField} style={styles.input}>
                       <option value="">— Seleccionar —</option>
-                      {concesionarios.map(c => (
+                      {areas.map(c => (
                         <option key={c.id} value={c.id}>{c.nombre_corto}</option>
                       ))}
                     </select>

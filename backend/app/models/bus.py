@@ -14,7 +14,7 @@ class Bus(Base):
     )
 
     placa               = Column(String(10), primary_key=True)
-    concesionario_id    = Column(Integer, ForeignKey("concesionarios.id", ondelete="RESTRICT"), nullable=False)
+    area_id             = Column(Integer, ForeignKey("areas_operativas.id", ondelete="RESTRICT"), nullable=False)
     tipo                = Column(String(20), nullable=False)
     anio                = Column(SmallInteger)
     capacidad_pasajeros = Column(SmallInteger)
@@ -22,5 +22,5 @@ class Bus(Base):
     created_at          = Column(TIMESTAMP, nullable=False, server_default=func.now())
     updated_at          = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
 
-    concesionario = relationship("Concesionario", back_populates="buses")
+    area         = relationship("AreaOperativa", back_populates="buses")
     asignaciones  = relationship("Asignacion", back_populates="bus")

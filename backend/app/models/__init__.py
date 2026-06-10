@@ -1,4 +1,4 @@
-from app.models.concesionario import Concesionario
+from app.models.area_operativa import AreaOperativa
 from app.models.usuario import Usuario
 from app.models.estacion import Estacion
 from app.models.ruta import Ruta, RutaEstacion

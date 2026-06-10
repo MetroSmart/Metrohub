@@ -14,13 +14,13 @@ const TIPO_STYLE = {
 };
 
 const FORM_INIT = {
-  placa: "", concesionario_id: "", tipo: "articulado",
+  placa: "", area_id: "", tipo: "articulado",
   anio: "", capacidad_pasajeros: "", estado: "operativo",
 };
 
 export default function Buses({ user, onNav, onLogout }) {
   const [buses, setBuses]               = useState([]);
-  const [concesionarios, setConces]     = useState([]);
+  const [areas, setConces]     = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
   const [filtroEstado, setFiltroEstado] = useState("");
@@ -32,8 +32,8 @@ export default function Buses({ user, onNav, onLogout }) {
   const isAdmin = user?.role === "admin_atu";
 
   useEffect(() => {
-    api.get("/api/concesionarios?solo_activos=true")
-      .then(d => setConces(d.concesionarios ?? []))
+    api.get("/api/areas?solo_activos=true")
+      .then(d => setConces(d.areas ?? []))
       .catch(() => {});
   }, []);
 
@@ -52,15 +52,15 @@ export default function Buses({ user, onNav, onLogout }) {
   const handleCrear = async (e) => {
     e.preventDefault();
     setFormError("");
-    if (!form.placa.trim() || !form.concesionario_id) {
-      setFormError("Placa y concesionario son obligatorios.");
+    if (!form.placa.trim() || !form.area_id) {
+      setFormError("Placa y área son obligatorios.");
       return;
     }
     setSubmitting(true);
     try {
       const nuevo = await api.post("/api/buses", {
         placa:               form.placa.trim().toUpperCase(),
-        concesionario_id:    Number(form.concesionario_id),
+        area_id:    Number(form.area_id),
         tipo:                form.tipo,
         anio:                form.anio ? Number(form.anio) : null,
         capacidad_pasajeros: form.capacidad_pasajeros ? Number(form.capacidad_pasajeros) : null,
@@ -133,7 +133,7 @@ export default function Buses({ user, onNav, onLogout }) {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {["Placa","Tipo","Año","Capacidad","Concesionario","Estado",""].map(h => (
+                  {["Placa","Tipo","Año","Capacidad","Área","Estado",""].map(h => (
                     <th key={h} style={styles.th}>{h}</th>
                   ))}
                 </tr>
@@ -149,7 +149,7 @@ export default function Buses({ user, onNav, onLogout }) {
                 {buses.map(b => {
                   const est = ESTADO_STYLE[b.estado] ?? ESTADO_STYLE.baja;
                   const tip = TIPO_STYLE[b.tipo]   ?? {};
-                  const conc = concesionarios.find(c => c.id === b.concesionario_id);
+                  const conc = areas.find(c => c.id === b.area_id);
                   return (
                     <tr key={b.placa}>
                       <td style={styles.td}>
@@ -164,7 +164,7 @@ export default function Buses({ user, onNav, onLogout }) {
                       </td>
                       <td style={styles.td}>{b.anio ?? "—"}</td>
                       <td style={styles.td}>{b.capacidad_pasajeros ? `${b.capacidad_pasajeros} pax` : "—"}</td>
-                      <td style={styles.td}>{conc ? conc.nombre_corto : `#${b.concesionario_id}`}</td>
+                      <td style={styles.td}>{conc ? conc.nombre_corto : `#${b.area_id}`}</td>
                       <td style={styles.td}>
                         <span style={{ ...styles.tag, background: est.bg, color: est.color }}>
                           {b.estado}
@@ -212,11 +212,11 @@ export default function Buses({ user, onNav, onLogout }) {
                 <input name="placa" value={form.placa} onChange={handleField}
                   placeholder="Ej. ABC-123" style={styles.input} maxLength={10} />
               </Field>
-              <Field label="Concesionario *">
-                <select name="concesionario_id" value={form.concesionario_id}
+              <Field label="Área *">
+                <select name="area_id" value={form.area_id}
                   onChange={handleField} style={styles.input}>
                   <option value="">— Seleccionar —</option>
-                  {concesionarios.map(c => (
+                  {areas.map(c => (
                     <option key={c.id} value={c.id}>{c.nombre_corto} — {c.ruc}</option>
                   ))}
                 </select>

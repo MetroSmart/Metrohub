@@ -6,24 +6,24 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1. CONCESIONARIOS (los 4 operadores reales del Metropolitano)
+-- 1. ÁREAS OPERATIVAS (divisiones internas del Metropolitano)
 -- -----------------------------------------------------------------------------
-INSERT INTO concesionarios (ruc, razon_social, nombre_corto, telefono, email_contacto) VALUES
-('20513967720', 'Lima Vías Express S.A.',      'Lima Vías Express', '014567890', 'contacto@limaviasexpress.pe'),
-('20524893451', 'Lima Bus Internacional S.A.', 'Lima Bus',          '014789012', 'operaciones@limabus.pe'),
-('20545678901', 'Transvial Lima S.A.C.',        'Transvial',         '014234567', 'contacto@transvial.pe'),
-('20556789234', 'Perú Masivo S.A.',             'Perú Masivo',       '014345678', 'info@perumasivo.pe');
+INSERT INTO areas_operativas (nombre, nombre_corto, descripcion) VALUES
+('Operaciones Norte',    'Op. Norte',    'Gestión de rutas, choferes y buses del tramo norte del Metropolitano'),
+('Operaciones Sur',      'Op. Sur',      'Gestión de rutas, choferes y buses del tramo sur del Metropolitano'),
+('Mantenimiento de Flota', 'Mantenimiento', 'Supervisión del estado operativo de la flota de buses'),
+('Turnos y Guardias',   'Turnos',       'Coordinación de turnos noche, guardias y servicios especiales');
 
 -- -----------------------------------------------------------------------------
--- 2. USUARIOS (1 admin ATU + 4 supervisores)
--- Contraseña admin: admin2026 | supervisores: supervisor2026
+-- 2. USUARIOS (1 admin ATU + 4 supervisores de área)
+-- Contraseña admin: admin123 | supervisores: ver README
 -- -----------------------------------------------------------------------------
-INSERT INTO usuarios (email, password_hash, nombre, apellidos, dni, rol, concesionario_id) VALUES
-('admin.atu@metrohub.gob.pe',      '$2b$12$/AeChPKE1TQAUab7o1HKwO3lH9RfGcX3.3NMdRGzAPtjE4q5HF31m', 'María',   'Quispe Rivera',   '72839401', 'admin_atu',              NULL),
-('sup.limavias@metrohub.gob.pe',   '$2b$12$OFC4W1UdQr.KnyEa6r27LuB7OULfwAjMOzoI7YezFBT6xWmmKsiou', 'Carlos',  'Ramírez Torres',  '45892013', 'supervisor_concesionario', 1),
-('sup.limabus@metrohub.gob.pe',    '$2b$12$amWPw9JfxPrek9P0aomWsuG53GLsn1a591POfjsVBw8zAGARQcb7C', 'Lucía',   'Morales Salinas', '41203987', 'supervisor_concesionario', 2),
-('sup.transvial@metrohub.gob.pe',  '$2b$12$5.SsXIRbctIEXjnWom4sN.b4dt.i4d7fb5nQx/oxX.oc8z7NbcL1q', 'Jorge',   'Vega Mendoza',    '43897201', 'supervisor_concesionario', 3),
-('sup.perumasivo@metrohub.gob.pe', '$2b$12$Q3jY6rXAiH/0cwL53280q.WuQ9uCQGw4uvEpXvgrgoTHeaNE7txQ2', 'Ana',     'Ccahuana Pérez',  '47123890', 'supervisor_concesionario', 4);
+INSERT INTO usuarios (email, password_hash, nombre, apellidos, dni, rol, area_id) VALUES
+('admin.atu@metrohub.gob.pe',         '$2b$12$/AeChPKE1TQAUab7o1HKwO3lH9RfGcX3.3NMdRGzAPtjE4q5HF31m', 'María',   'Quispe Rivera',   '72839401', 'admin_atu',       NULL),
+('sup.norte@metrohub.gob.pe',         '$2b$12$jAHMoWqWX5x8CaWNw/5dvuVHQ5fxcbcz5N8tYf4gEWReJMYgyn9jq', 'Carlos',  'Ramírez Torres',  '45892013', 'supervisor_area', 1),
+('sup.sur@metrohub.gob.pe',           '$2b$12$T3j5aI3I9WfuciRro.zwuusamaldXryYSlPBNOp0NHmiZ.zshK1x2',  'Lucía',   'Morales Salinas', '41203987', 'supervisor_area', 2),
+('sup.mantenimiento@metrohub.gob.pe', '$2b$12$N9pjZBb/WGLA9YVJMGpkTe./GiYMgYrcMZcWkdWp7IhtX66glPKF6','Jorge',   'Vega Mendoza',    '43897201', 'supervisor_area', 3),
+('sup.turnos@metrohub.gob.pe',        '$2b$12$FpFAYTtgbvJsORa6E6bYe.NLn7qBSoDpE/uiUS9xX1dx07fpAk2Zu', 'Ana',     'Ccahuana Pérez',  '47123890', 'supervisor_area', 4);
 
 -- -----------------------------------------------------------------------------
 -- 3. ESTACIONES TRONCALES (recorrido norte-sur)
@@ -93,7 +93,7 @@ INSERT INTO ruta_estacion (ruta_id, estacion_id, orden, tiempo_est_min) VALUES
 -- 6. CHOFERES (20 choferes — estados y vencimientos variados para prueba)
 --    Algunos vencimientos ya pasados (muestran alerta), otros próximos, otros lejanos
 -- -----------------------------------------------------------------------------
-INSERT INTO choferes (dni, nombres, apellidos, fecha_nacimiento, telefono, email, concesionario_id, numero_licencia, tipo_licencia, fec_vence_licencia, fec_vence_certif_prot, estado, anios_experiencia) VALUES
+INSERT INTO choferes (dni, nombres, apellidos, fecha_nacimiento, telefono, email, area_id, numero_licencia, tipo_licencia, fec_vence_licencia, fec_vence_certif_prot, estado, anios_experiencia) VALUES
 -- Lima Vías Express — id 1-5
 ('44156789', 'Juan Manuel',  'Huamán Flores',     '1985-03-12', '987654321', 'jhuaman@limaviasexpress.pe',    1, 'Q12345678', 'A-IIIA', '2027-06-30', '2026-12-15', 'activo',        12),
 ('45892314', 'Roberto',      'Castillo Vera',      '1979-11-23', '987123456', 'rcastillo@limaviasexpress.pe',  1, 'Q23456789', 'A-IIIA', '2026-12-15', '2026-07-10', 'activo',        15),
@@ -128,7 +128,7 @@ INSERT INTO accesos_chofer (chofer_id, email, password_hash, creado_por, debe_ca
 -- -----------------------------------------------------------------------------
 -- 7. BUSES (16 unidades — estados variados)
 -- -----------------------------------------------------------------------------
-INSERT INTO buses (placa, concesionario_id, tipo, anio, capacidad_pasajeros, estado) VALUES
+INSERT INTO buses (placa, area_id, tipo, anio, capacidad_pasajeros, estado) VALUES
 ('C1J-985', 1, 'articulado',  2018, 160, 'operativo'),
 ('C1J-986', 1, 'articulado',  2019, 160, 'operativo'),
 ('C1K-112', 1, 'articulado',  2020, 160, 'mantenimiento'),
@@ -202,7 +202,7 @@ INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, tur
 -- -----------------------------------------------------------------------------
 -- 10. ASIGNACIONES para lunes 09-jun
 -- -----------------------------------------------------------------------------
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas) VALUES
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas) VALUES
 (1,  1, 'C1J-985', 1, 'confirmada', 2, 'Turno mañana Ruta A 05:00'),
 (2,  2, 'C1J-986', 1, 'confirmada', 2, 'Turno mañana Ruta A 05:30'),
 (3,  3, 'C2K-334', 1, 'confirmada', 2, 'Turno mañana Ruta A 06:00'),
@@ -345,155 +345,155 @@ INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, tur
 -- -----------------------------------------------------------------------------
 
 -- 11-Jun: Ruta 1 (chofer2 médico 07:00-12:00 → solo asignado a 13:00T)
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C1J-985',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-11' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C2K-334',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-11' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C1J-986',1,'confirmada',1,'Ruta A tarde (retorno de médico)'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-11' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C1J-985',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-11' AND h.hora_salida='18:30:00';
 -- 11-Jun: Ruta 2
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1L-201',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-11' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,7,'C1L-202',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-11' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,9,'C1M-450',2,'confirmada',1,'Ruta B tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-11' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,10,'C1L-201',2,'confirmada',1,'Ruta B tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-11' AND h.hora_salida='18:30:00';
 -- 11-Jun: Ruta 3 (chofer11 en capacitación)
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-001',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-11' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C3A-002',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-11' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C4B-556',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-11' AND h.hora_salida='14:00:00';
 -- 11-Jun: Ruta 4
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-11' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-11' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-11' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5D-702',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=5 AND h.fecha='2026-06-11' AND h.hora_salida='06:30:00';
 
 -- 12-Jun: Ruta 1 (chofer5 personal 14:00-18:00 → 13:00T OK termina 13:40)
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C1J-985',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-12' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C2K-334',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-12' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C1J-986',1,'confirmada',1,'Ruta A tarde (antes de cita)'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-12' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C1J-985',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-12' AND h.hora_salida='18:30:00';
 -- 12-Jun: Ruta 2
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1L-201',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-12' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,7,'C1L-202',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-12' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,9,'C1M-450',2,'confirmada',1,'Ruta B tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-12' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,10,'C1L-201',2,'confirmada',1,'Ruta B tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-12' AND h.hora_salida='18:30:00';
 -- 12-Jun: Ruta 3 (chofer11 disponible desde hoy)
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,11,'C3A-001',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-12' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-002',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-12' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C4B-556',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-12' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C3A-001',3,'confirmada',1,'Ruta C noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-12' AND h.hora_salida='19:00:00';
 -- 12-Jun: Ruta 4 y 5
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-12' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-12' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-12' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5D-702',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=5 AND h.fecha='2026-06-12' AND h.hora_salida='06:30:00';
 
 -- 13-Jun: Ruta 1
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C1J-985',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-13' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C2K-334',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-13' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C1J-986',1,'confirmada',1,'Ruta A tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-13' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C1J-985',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=1 AND h.fecha='2026-06-13' AND h.hora_salida='18:30:00';
 -- 13-Jun: Ruta 2 (chofer10 descanso, chofer8 vacaciones)
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1L-201',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-13' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,7,'C1L-202',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-13' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,9,'C1M-450',2,'confirmada',1,'Ruta B tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=2 AND h.fecha='2026-06-13' AND h.hora_salida='14:00:00';
 -- 13-Jun: Ruta 3
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,11,'C3A-001',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-13' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-002',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-13' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C4B-556',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-13' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C3A-001',3,'confirmada',1,'Ruta C noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=3 AND h.fecha='2026-06-13' AND h.hora_salida='19:00:00';
 -- 13-Jun: Ruta 4 y 5
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-13' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-13' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=4 AND h.fecha='2026-06-13' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5D-702',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=5 AND h.fecha='2026-06-13' AND h.hora_salida='06:30:00';
 
@@ -502,267 +502,267 @@ FROM horarios_servicio h WHERE h.programacion_id=1 AND h.ruta_id=5 AND h.fecha='
 -- -----------------------------------------------------------------------------
 
 -- 16-Jun: Ruta 1
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C1J-985',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-16' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C2K-334',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-16' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C1J-986',1,'confirmada',1,'Ruta A tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-16' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C1J-985',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-16' AND h.hora_salida='18:30:00';
 -- 16-Jun: Ruta 2 (chofer8 regresa de vacaciones)
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1L-201',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-16' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,7,'C1L-202',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-16' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,8,'C1M-450',2,'confirmada',1,'Ruta B tarde (regreso de vacaciones)'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-16' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,10,'C1L-201',2,'confirmada',1,'Ruta B tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-16' AND h.hora_salida='18:30:00';
 -- 16-Jun: Ruta 3
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,11,'C3A-001',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-16' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-002',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-16' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C4B-556',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-16' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C3A-001',3,'confirmada',1,'Ruta C noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-16' AND h.hora_salida='19:00:00';
 -- 16-Jun: Ruta 4 y 5
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-16' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-16' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-16' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5D-702',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=5 AND h.fecha='2026-06-16' AND h.hora_salida='06:30:00';
 
 -- 17-Jun: Ruta 1
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C1J-985',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-17' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C2K-334',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-17' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C1J-986',1,'confirmada',1,'Ruta A tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-17' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C1J-985',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-17' AND h.hora_salida='18:30:00';
 -- 17-Jun: Ruta 2
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,7,'C1L-202',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-17' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1L-201',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-17' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,9,'C1M-450',2,'confirmada',1,'Ruta B tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-17' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,8,'C1L-202',2,'confirmada',1,'Ruta B tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-17' AND h.hora_salida='18:30:00';
 -- 17-Jun: Ruta 3
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-002',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-17' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,11,'C3A-001',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-17' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C4B-556',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-17' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C3A-002',3,'confirmada',1,'Ruta C noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-17' AND h.hora_salida='19:00:00';
 -- 17-Jun: Ruta 4 y 5
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-17' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-17' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-17' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5E-890',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=5 AND h.fecha='2026-06-17' AND h.hora_salida='06:30:00';
 
 -- 18-Jun: Ruta 1
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C1J-986',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-18' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C2K-334',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-18' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C1J-985',1,'confirmada',1,'Ruta A tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-18' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C1J-986',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-18' AND h.hora_salida='18:30:00';
 -- 18-Jun: Ruta 2
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,8,'C1L-201',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-18' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,9,'C1L-202',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-18' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,10,'C1M-450',2,'confirmada',1,'Ruta B tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-18' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1L-201',2,'confirmada',1,'Ruta B tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-18' AND h.hora_salida='18:30:00';
 -- 18-Jun: Ruta 3
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C4B-556',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-18' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C3A-001',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-18' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,11,'C3A-002',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-18' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-001',3,'confirmada',1,'Ruta C noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-18' AND h.hora_salida='19:00:00';
 -- 18-Jun: Ruta 4 y 5
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-18' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-18' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-18' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5D-702',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=5 AND h.fecha='2026-06-18' AND h.hora_salida='06:30:00';
 
 -- 19-Jun: Ruta 1
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C2K-334',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-19' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C1J-985',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-19' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C1J-986',1,'confirmada',1,'Ruta A tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-19' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C1J-985',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-19' AND h.hora_salida='18:30:00';
 -- 19-Jun: Ruta 2
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,9,'C1L-201',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-19' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,10,'C1L-202',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-19' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1M-450',2,'confirmada',1,'Ruta B tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-19' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,7,'C1L-201',2,'confirmada',1,'Ruta B tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-19' AND h.hora_salida='18:30:00';
 -- 19-Jun: Ruta 3
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C4B-556',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-19' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C3A-001',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-19' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-002',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-19' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,11,'C3A-001',3,'confirmada',1,'Ruta C noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-19' AND h.hora_salida='19:00:00';
 -- 19-Jun: Ruta 4 y 5
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-19' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-19' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-19' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5D-702',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=5 AND h.fecha='2026-06-19' AND h.hora_salida='06:30:00';
 
 -- 20-Jun: Ruta 1
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,2,'C1J-985',1,'confirmada',1,'Ruta A mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-20' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,5,'C2K-334',1,'confirmada',1,'Ruta A mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-20' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,3,'C1J-986',1,'confirmada',1,'Ruta A tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-20' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,1,'C1J-985',1,'confirmada',1,'Ruta A tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=1 AND h.fecha='2026-06-20' AND h.hora_salida='18:30:00';
 -- 20-Jun: Ruta 2
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,6,'C1L-201',2,'confirmada',1,'Ruta B mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-20' AND h.hora_salida='05:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,8,'C1L-202',2,'confirmada',1,'Ruta B mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-20' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,7,'C1M-450',2,'confirmada',1,'Ruta B tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-20' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,9,'C1L-201',2,'confirmada',1,'Ruta B tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=2 AND h.fecha='2026-06-20' AND h.hora_salida='18:30:00';
 -- 20-Jun: Ruta 3
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,11,'C3A-001',3,'confirmada',1,'Ruta C mañana temprano'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-20' AND h.hora_salida='05:30:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,12,'C3A-002',3,'confirmada',1,'Ruta C mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-20' AND h.hora_salida='07:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,13,'C4B-556',3,'confirmada',1,'Ruta C tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-20' AND h.hora_salida='14:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,15,'C3A-001',3,'confirmada',1,'Ruta C noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=3 AND h.fecha='2026-06-20' AND h.hora_salida='19:00:00';
 -- 20-Jun: Ruta 4 y 5
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,17,'C5D-701',4,'confirmada',1,'Expreso 1 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-20' AND h.hora_salida='06:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,16,'C5D-702',4,'confirmada',1,'Expreso 1 tarde'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-20' AND h.hora_salida='13:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,18,'C5E-890',4,'confirmada',1,'Expreso 1 tarde noche'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=4 AND h.fecha='2026-06-20' AND h.hora_salida='18:00:00';
-INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, concesionario_id, estado, asignado_por, notas)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
 SELECT h.id,19,'C5E-890',4,'confirmada',1,'Expreso 2 mañana'
 FROM horarios_servicio h WHERE h.programacion_id=2 AND h.ruta_id=5 AND h.fecha='2026-06-20' AND h.hora_salida='06:30:00';
 
@@ -780,7 +780,7 @@ INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion) VALUES
 -- =============================================================================
 -- VERIFICACIÓN
 -- =============================================================================
-SELECT 'Concesionarios: '   || COUNT(*) FROM concesionarios
+SELECT 'Áreas operativas: ' || COUNT(*) FROM areas_operativas
 UNION ALL SELECT 'Usuarios: '        || COUNT(*) FROM usuarios
 UNION ALL SELECT 'Estaciones: '      || COUNT(*) FROM estaciones
 UNION ALL SELECT 'Rutas: '           || COUNT(*) FROM rutas

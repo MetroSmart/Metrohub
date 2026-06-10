@@ -61,7 +61,7 @@ class ProgramacionBuilder:
         self,
         *,
         chofer_id: int,
-        concesionario_id: int,
+        area_id: int,
         bus_placa: Optional[str] = None,
         notas: Optional[str] = None,
         asignado_por: int,
@@ -69,7 +69,7 @@ class ProgramacionBuilder:
         self._asignado_por = asignado_por
         self._asignacion_pendiente = {
             "chofer_id": chofer_id,
-            "concesionario_id": concesionario_id,
+            "area_id": area_id,
             "bus_placa": bus_placa,
             "notas": notas,
         }
@@ -130,7 +130,7 @@ class ProgramacionBuilder:
             return AsignacionCrear(
                 horario_id=hid,
                 chofer_id=p["chofer_id"],
-                concesionario_id=p["concesionario_id"],
+                area_id=p["area_id"],
                 bus_placa=p.get("bus_placa"),
                 notas=p.get("notas"),
             )

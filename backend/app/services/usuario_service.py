@@ -38,7 +38,7 @@ def crear_usuario(db: Session, datos: UsuarioCrear) -> Usuario:
         apellidos=datos.apellidos,
         dni=datos.dni,
         rol=datos.rol,
-        concesionario_id=datos.concesionario_id,
+        area_id=datos.area_id,
         activo=True,
     )
     db.add(usuario)

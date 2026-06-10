@@ -19,10 +19,19 @@ def _solo_admin(usuario: dict):
                             detail="Solo el Administrador ATU puede realizar esta acción")
 
 
+def _admin_o_supervisor_mismo_area(usuario: dict, area_id: int):
+    if usuario["rol"] == "admin_atu":
+        return
+    if usuario["rol"] == "supervisor_area" and usuario.get("area_id") == area_id:
+        return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Solo puede gestionar buses de su área operativa")
+
+
 def _serializar(b) -> dict:
     return {
         "placa":               b.placa,
-        "concesionario_id":    b.concesionario_id,
+        "area_id":             b.area_id,
         "tipo":                b.tipo,
         "anio":                b.anio,
         "capacidad_pasajeros": b.capacidad_pasajeros,
@@ -33,12 +42,12 @@ def _serializar(b) -> dict:
 
 @router.get("/")
 def listar_buses(
-    concesionario_id: Optional[int] = None,
+    area_id: Optional[int] = None,
     estado: Optional[str] = None,
     db: Session = Depends(get_db),
     usuario: dict = Depends(obtener_usuario_actual),
 ):
-    buses = bus_service.listar_buses(db, concesionario_id, estado)
+    buses = bus_service.listar_buses(db, area_id, estado)
     return {"total": len(buses), "buses": [_serializar(b) for b in buses]}
 
 
@@ -61,7 +70,7 @@ def crear_bus(
     db: Session = Depends(get_db),
     usuario: dict = Depends(obtener_usuario_actual),
 ):
-    _solo_admin(usuario)
+    _admin_o_supervisor_mismo_area(usuario, datos.area_id)
     if datos.tipo not in _TIPOS_VALIDOS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"Tipo inválido. Válidos: {sorted(_TIPOS_VALIDOS)}")

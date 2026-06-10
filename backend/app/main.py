@@ -8,7 +8,7 @@ import app.models  # noqa: F401 — registra todos los modelos en SQLAlchemy
 
 from app.routers import (
     auth, rutas, horarios, choferes, dashboard, conflictos, reportes,
-    programaciones, buses, concesionarios, estaciones, disponibilidad, usuarios,
+    programaciones, buses, areas, estaciones, disponibilidad, usuarios,
 )
 
 # ── Instancia principal de FastAPI ────────────
@@ -42,7 +42,7 @@ app.include_router(conflictos.router,  prefix="/api/conflictos",  tags=["Conflic
 app.include_router(reportes.router,       prefix="/api/reportes",       tags=["Reportes"])
 app.include_router(programaciones.router, prefix="/api/programaciones", tags=["Programaciones"])
 app.include_router(buses.router,          prefix="/api/buses",          tags=["Buses"])
-app.include_router(concesionarios.router, prefix="/api/concesionarios", tags=["Concesionarios"])
+app.include_router(areas.router,          prefix="/api/areas",          tags=["Áreas Operativas"])
 app.include_router(estaciones.router,     prefix="/api/estaciones",     tags=["Estaciones"])
 app.include_router(disponibilidad.router, prefix="/api/disponibilidad", tags=["Disponibilidad"])
 app.include_router(usuarios.router,       prefix="/api/usuarios",       tags=["Usuarios"])

@@ -35,8 +35,9 @@ El sistema **no está orientado al pasajero final** y no expone funcionalidades 
 
 | Perfil | Descripción |
 |--------|-------------|
-| **Administrador ATU** | Accede con credenciales institucionales. Configura rutas y estaciones, aprueba programaciones, gestiona concesionarios, visualiza KPIs globales y genera reportes oficiales. Acceso total. |
-| **Supervisor de Concesionario** | Registra y actualiza la disponibilidad de choferes y unidades de su empresa. Visualiza la programación aprobada de su concesionario. Acceso limitado a sus propios datos. |
+| **Administrador ATU** | Accede con credenciales institucionales. Configura rutas y estaciones, aprueba programaciones, gestiona áreas operativas, visualiza KPIs globales y genera reportes oficiales. Acceso total. |
+| **Supervisor de Área** | Gestiona choferes y buses de su área operativa. Registra disponibilidades, asigna choferes a turnos y visualiza la programación completa del sistema. Escritura restringida a su propia área. |
+| **Chofer** | Accede al portal de choferes con sus credenciales personales. Visualiza sus rutas y turnos asignados del día. |
 
 ---
 
@@ -314,12 +315,22 @@ npm run dev
 | Correo | Contraseña | Rol |
 |--------|------------|-----|
 | admin.atu@metrohub.gob.pe | admin123 | Administrador ATU |
-| sup.limavias@metrohub.gob.pe | limavias123 | Supervisor Lima Vías Express |
-| sup.limabus@metrohub.gob.pe | limabus123 | Supervisor Lima Bus |
-| sup.transvial@metrohub.gob.pe | transvial123 | Supervisor Transvial |
-| sup.perumasivo@metrohub.gob.pe | perumasivo123 | Supervisor Perú Masivo |
+| sup.norte@metrohub.gob.pe | norte123 | Supervisor — Operaciones Norte |
+| sup.sur@metrohub.gob.pe | sur123 | Supervisor — Operaciones Sur |
+| sup.mantenimiento@metrohub.gob.pe | mantenimiento123 | Supervisor — Mantenimiento de Flota |
+| sup.turnos@metrohub.gob.pe | turnos123 | Supervisor — Turnos y Guardias |
 
 > La cuenta se bloquea tras 5 intentos fallidos consecutivos (RF01).
+
+### Credenciales choferes demo
+
+| Correo | Contraseña | Chofer |
+|--------|------------|--------|
+| jhuaman@metrohub.gob.pe | 44156789 | Juan Manuel Huamán Flores |
+| rcastillo@metrohub.gob.pe | 45892314 | Roberto Castillo Vera |
+| mtorres@metrohub.gob.pe | 43678912 | Miguel Ángel Torres Huanca |
+
+> La contraseña inicial del chofer es su DNI. No se requiere cambio de contraseña en el primer ingreso (demo).
 
 ---
 

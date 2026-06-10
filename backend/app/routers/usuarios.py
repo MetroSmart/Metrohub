@@ -9,7 +9,7 @@ from app.services import usuario_service
 
 router = APIRouter()
 
-_ROLES_VALIDOS = {"admin_atu", "supervisor_concesionario"}
+_ROLES_VALIDOS = {"admin_atu", "supervisor_area"}
 
 
 def _solo_admin(usuario: dict):
@@ -26,7 +26,7 @@ def _serializar(u) -> dict:
         "apellidos":        u.apellidos,
         "dni":              u.dni,
         "rol":              u.rol,
-        "concesionario_id": u.concesionario_id,
+        "area_id":          u.area_id,
         "activo":           u.activo,
         "ultimo_login":     str(u.ultimo_login) if u.ultimo_login else None,
         "created_at":       str(u.created_at),
@@ -69,12 +69,12 @@ def crear_usuario(
     if datos.rol not in _ROLES_VALIDOS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"Rol inválido. Válidos: {sorted(_ROLES_VALIDOS)}")
-    if datos.rol == "supervisor_concesionario" and not datos.concesionario_id:
+    if datos.rol == "supervisor_area" and not datos.area_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="El supervisor debe tener concesionario_id")
-    if datos.rol == "admin_atu" and datos.concesionario_id:
+                            detail="El supervisor debe tener area_id")
+    if datos.rol == "admin_atu" and datos.area_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="El admin ATU no puede tener concesionario_id")
+                            detail="El admin ATU no puede tener area_id")
     if len(datos.dni) != 8 or not datos.dni.isdigit():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="El DNI debe tener exactamente 8 dígitos numéricos")

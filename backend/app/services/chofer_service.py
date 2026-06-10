@@ -15,12 +15,12 @@ _ESTADOS_VALIDOS = {"activo", "suspendido", "licencia_medica", "vacaciones", "in
 
 def listar_choferes(
     db: Session,
-    concesionario_id: Optional[int] = None,
+    area_id: Optional[int] = None,
     estado: Optional[str] = None,
 ) -> List[Chofer]:
     q = db.query(Chofer)
-    if concesionario_id:
-        q = q.filter(Chofer.concesionario_id == concesionario_id)
+    if area_id:
+        q = q.filter(Chofer.area_id == area_id)
     if estado:
         q = q.filter(Chofer.estado == estado)
     return q.all()
@@ -40,10 +40,10 @@ def _email_acceso(dni: str, email_contacto: Optional[str]) -> str:
     return f"{dni}@metrohub.gob.pe"
 
 
-def validar_concesionario_supervisor(db: Session, usuario_email: str, concesionario_id: int) -> None:
+def validar_area_supervisor(db: Session, usuario_email: str, area_id: int) -> None:
     registro = db.query(Usuario).filter(Usuario.email == usuario_email).first()
-    if registro and registro.concesionario_id != concesionario_id:
-        raise PermissionError("Solo puede registrar choferes de su concesionario")
+    if registro and registro.area_id != area_id:
+        raise PermissionError("Solo puede registrar choferes de su área operativa")
 
 
 def crear_chofer(
@@ -81,7 +81,7 @@ def serializar_chofer_con_acceso(db: Session, chofer: Chofer) -> dict:
         "fecha_nacimiento":      str(chofer.fecha_nacimiento),
         "telefono":              chofer.telefono,
         "email":                 chofer.email,
-        "concesionario_id":      chofer.concesionario_id,
+        "area_id":               chofer.area_id,
         "numero_licencia":       chofer.numero_licencia,
         "tipo_licencia":         chofer.tipo_licencia,
         "fec_vence_licencia":    str(chofer.fec_vence_licencia),

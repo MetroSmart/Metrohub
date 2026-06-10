@@ -10,7 +10,7 @@ class ChoferCrear(BaseModel):
     fecha_nacimiento:      date
     telefono:              Optional[str] = None
     email:                 Optional[str] = None
-    concesionario_id:      int
+    area_id:               int
     numero_licencia:       str
     tipo_licencia:         str  # A-IIIA | A-IIIB | A-IIIC
     fec_vence_licencia:    date

@@ -8,8 +8,8 @@ class UsuarioCrear(BaseModel):
     nombre: str
     apellidos: str
     dni: str  # 8 dígitos
-    rol: str  # admin_atu | supervisor_concesionario
-    concesionario_id: Optional[int] = None
+    rol: str  # admin_atu | supervisor_area
+    area_id: Optional[int] = None
 
 
 class UsuarioActualizar(BaseModel):

@@ -62,7 +62,7 @@ export default function Grilla({ user, onNav, onLogout }) {
   const [asigChoferes, setAsigChoferes]     = useState([]);
   const [asigConcs, setAsigConcs]           = useState([]);
   const [asigBuses, setAsigBuses]           = useState([]);
-  const [formAsig, setFormAsig]             = useState({ chofer_id: "", concesionario_id: "", bus_placa: "", notas: "" });
+  const [formAsig, setFormAsig]             = useState({ chofer_id: "", area_id: "", bus_placa: "", notas: "" });
   const [formAsigErr, setFormAsigErr]       = useState("");
   const [formAsigSaving, setFormAsigSaving] = useState(false);
 
@@ -105,23 +105,23 @@ export default function Grilla({ user, onNav, onLogout }) {
 
   const abrirAsignar = async (horario) => {
     setAsigTarget(horario);
-    setFormAsig({ chofer_id: "", concesionario_id: "", bus_placa: "", notas: "" });
+    setFormAsig({ chofer_id: "", area_id: "", bus_placa: "", notas: "" });
     setFormAsigErr("");
     const [ch, co, bu] = await Promise.all([
       api.get("/api/choferes?estado=activo").catch(() => []),
-      api.get("/api/concesionarios").catch(() => ({ concesionarios: [] })),
+      api.get("/api/areas").catch(() => ({ areas: [] })),
       api.get("/api/buses?estado=operativo").catch(() => ({ buses: [] })),
     ]);
     setAsigChoferes(Array.isArray(ch) ? ch : (ch.choferes ?? ch));
-    setAsigConcs(co.concesionarios ?? co);
+    setAsigConcs(co.areas ?? co);
     setAsigBuses(bu.buses ?? bu);
   };
 
   const handleCrearAsignacion = async (e) => {
     e.preventDefault();
     setFormAsigErr("");
-    if (!formAsig.chofer_id || !formAsig.concesionario_id) {
-      setFormAsigErr("Chofer y concesionario son obligatorios.");
+    if (!formAsig.chofer_id || !formAsig.area_id) {
+      setFormAsigErr("Chofer y área son obligatorios.");
       return;
     }
     setFormAsigSaving(true);
@@ -129,7 +129,7 @@ export default function Grilla({ user, onNav, onLogout }) {
       await api.post("/api/horarios/asignaciones", {
         horario_id:       asigTarget.id,
         chofer_id:        Number(formAsig.chofer_id),
-        concesionario_id: Number(formAsig.concesionario_id),
+        area_id: Number(formAsig.area_id),
         bus_placa:        formAsig.bus_placa || null,
         notas:            formAsig.notas || null,
       });
@@ -626,13 +626,13 @@ export default function Grilla({ user, onNav, onLogout }) {
                   </option>
                 ))}
               </select>
-              <label style={styles.label}>Concesionario *</label>
+              <label style={styles.label}>Área *</label>
               <select
                 style={styles.input}
-                value={formAsig.concesionario_id}
-                onChange={e => setFormAsig(f => ({ ...f, concesionario_id: e.target.value }))}
+                value={formAsig.area_id}
+                onChange={e => setFormAsig(f => ({ ...f, area_id: e.target.value }))}
               >
-                <option value="">— Selecciona un concesionario —</option>
+                <option value="">— Selecciona un área —</option>
                 {asigConcs.map(c => (
                   <option key={c.id} value={c.id}>{c.nombre}</option>
                 ))}

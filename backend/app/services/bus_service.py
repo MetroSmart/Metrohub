@@ -6,12 +6,12 @@ from app.schemas.bus import BusCrear
 
 def listar_buses(
     db: Session,
-    concesionario_id: Optional[int] = None,
+    area_id: Optional[int] = None,
     estado: Optional[str] = None,
 ) -> List[Bus]:
     q = db.query(Bus)
-    if concesionario_id:
-        q = q.filter(Bus.concesionario_id == concesionario_id)
+    if area_id:
+        q = q.filter(Bus.area_id == area_id)
     if estado:
         q = q.filter(Bus.estado == estado)
     return q.order_by(Bus.placa).all()
