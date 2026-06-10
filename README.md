@@ -4,7 +4,7 @@ Plataforma web de programación inteligente de horarios y asignación de chofere
 
 > Proyecto universitario — Universidad Nacional de Ingeniería  
 > Facultad de Ciencias · Escuela Profesional de Ciencia de la Computación  
-> Versión 1.0 · Abril 2026
+> **Versión 2.0 (V2)** · Junio 2026
 
 ---
 
@@ -20,24 +20,36 @@ Plataforma web de programación inteligente de horarios y asignación de chofere
 - [Instalación y ejecución](#instalación-y-ejecución)
 - [Uso del sistema](#uso-del-sistema)
 - [Gestión del proyecto — Scrum](#gestión-del-proyecto--scrum)
-- [Estado actual del sprint](#estado-actual-del-sprint)
+- [Estado actual — Sprint 2 (V2)](#estado-actual--sprint-2-v2)
+- [Roadmap — Sprint 3 (Módulo IA)](#roadmap--sprint-3-módulo-ia)
 - [Patrones creacionales](#patrones-creacionales)
 
 ---
 
 ## Descripción general
 
-MetroHub es una aplicación web de uso **interno y restringido** diseñada para la Autoridad de Transporte Urbano (ATU) de Lima. Reemplaza el flujo manual basado en hojas de cálculo con el que actualmente la ATU y los concesionarios programan los horarios del Metropolitano y asignan choferes por ruta y turno.
+MetroHub es una aplicación web de uso **interno y restringido** diseñada para la Autoridad de Transporte Urbano (ATU) de Lima. Reemplaza el flujo manual basado en hojas de cálculo con el que actualmente la ATU programa los horarios del Metropolitano y asigna choferes por ruta y turno.
 
 El sistema **no está orientado al pasajero final** y no expone funcionalidades públicas. El acceso está restringido a redes internas autorizadas o VPN.
 
 ### Usuarios del sistema
 
-| Perfil | Descripción |
-|--------|-------------|
-| **Administrador ATU** | Accede con credenciales institucionales. Configura rutas y estaciones, aprueba programaciones, gestiona áreas operativas, visualiza KPIs globales y genera reportes oficiales. Acceso total. |
-| **Supervisor de Área** | Gestiona choferes y buses de su área operativa. Registra disponibilidades, asigna choferes a turnos y visualiza la programación completa del sistema. Escritura restringida a su propia área. |
-| **Chofer** | Accede al portal de choferes con sus credenciales personales. Visualiza sus rutas y turnos asignados del día. |
+| Perfil | Rol en BD | Descripción |
+|--------|-----------|-------------|
+| **Administrador ATU** | `admin_atu` | Configura rutas y estaciones, aprueba programaciones, gestiona áreas operativas, usuarios y flota. Visualiza KPIs globales y genera reportes. Acceso total. |
+| **Supervisor de Área** | `supervisor_area` | Gestiona choferes, buses y disponibilidades de su área operativa. Asigna choferes en la grilla (solo su área). Lectura global del sistema; escritura restringida por `area_id`. |
+| **Chofer** | `chofer` *(tabla `accesos_chofer`)* | Accede al portal con credenciales personales. Visualiza sus rutas y turnos asignados. Contraseña inicial = DNI; cambio obligatorio en primer ingreso. |
+
+### Áreas operativas (V2)
+
+En la versión 2 el modelo de **concesionarios privados** fue reemplazado por **áreas operativas internas** del Metropolitano:
+
+| ID | Área | Nombre corto |
+|----|------|--------------|
+| 1 | Operaciones Norte | Op. Norte |
+| 2 | Operaciones Sur | Op. Sur |
+| 3 | Mantenimiento de Flota | Mantenimiento |
+| 4 | Turnos y Guardias | Turnos |
 
 ---
 
@@ -69,7 +81,7 @@ Docente: Prof. Manuel Quispe Torres
 | Tecnología | Versión | Uso |
 |------------|---------|-----|
 | Python | 3.11+ | Lenguaje principal |
-| FastAPI | 0.111+ | API REST |
+| FastAPI | 0.111+ | API REST (versión API **2.0.0**) |
 | SQLAlchemy | 2.0 | ORM conectado a PostgreSQL |
 | python-jose | 3.3+ | Autenticación JWT y sesiones |
 | passlib + bcrypt | 1.7+ | Hash de contraseñas (factor >= 12) |
@@ -81,7 +93,7 @@ Docente: Prof. Manuel Quispe Torres
 | PostgreSQL | 16 | Base de datos principal |
 | Redis | 7+ | Caché de consultas frecuentes |
 
-### Módulo IA *(pendiente — Sprint 2)*
+### Módulo IA *(planificado — Sprint 3)*
 | Tecnología | Uso |
 |------------|-----|
 | OR-Tools / PuLP | Optimización de asignación de choferes (programación lineal entera) |
@@ -104,22 +116,24 @@ El sistema se organiza en tres capas:
 Capa de Presentación
 ├── React 19 SPA (uso interno — red ATU o VPN)
 ├── Panel Administrador ATU
-└── Panel Supervisor de Concesionario
+├── Panel Supervisor de Área
+└── Portal Chofer (Mis Rutas)
 
         HTTPS / API REST
 
 Capa de Negocio
-├── FastAPI (patrón MVC)
-├── Routers: auth, rutas, horarios, choferes, dashboard, conflictos
+├── FastAPI 2.0 (patrón MVC)
+├── Routers: auth, rutas, horarios, choferes, areas, buses, usuarios,
+│            dashboard, conflictos, programaciones, disponibilidad, reportes
 ├── Services: lógica de negocio y queries SQLAlchemy
-└── Autenticación JWT + control de roles
+└── Autenticación JWT + control de roles (admin_atu | supervisor_area | chofer)
 
         Conexiones internas
 
 Capa de Datos e Inteligencia Artificial
-├── PostgreSQL 16 (11 tablas, triggers, vista v_dashboard_kpis)
-├── OR-Tools (optimización de asignación — pendiente)
-├── Prophet (predicción de demanda — pendiente)
+├── PostgreSQL 16 (tablas, triggers, vista v_dashboard_kpis)
+├── OR-Tools (optimización de asignación — Sprint 3)
+├── Prophet (predicción de demanda — Sprint 3)
 └── Redis (caché)
 ```
 
@@ -136,39 +150,43 @@ Frontend y Backend coexisten en el mismo repositorio, permitiendo:
 ## Requisitos funcionales
 
 ### RF01 — Autenticación y Control de Roles
-- Login con correo institucional y contraseña
+- Login con correo institucional y contraseña (staff) o correo de acceso chofer
 - Hash bcrypt con factor >= 12
-- Sesión con token JWT, expira a las 8 horas de inactividad
+- Sesión con token JWT (`area_id` incluido para supervisores), expira a las 8 horas
 - Bloqueo de cuenta tras 5 intentos fallidos consecutivos
-- Administrador ATU: acceso total al sistema
-- Supervisor de Concesionario: acceso restringido a su concesionario
+- **Administrador ATU:** acceso total al sistema
+- **Supervisor de Área:** lectura global; escritura solo en su `area_id`
+- **Chofer:** acceso independiente vía tabla `accesos_chofer`; cambio de contraseña en primer ingreso
 
 ### RF02 — Gestión de Rutas y Estaciones
-- CRUD completo de rutas: código, nombre, estaciones, paraderos, frecuencia base y concesionario asignado
-- CRUD de estaciones: ubicación geográfica (GPS), capacidad operativa, horarios por día de semana
+- CRUD completo de rutas: código, nombre, tipo, frecuencia base y horario de operación
+- CRUD de estaciones: ubicación geográfica (GPS), tramo y orden troncal
 - Activar y desactivar rutas
 - Los cambios impactan inmediatamente en el módulo de programación
 
 ### RF03 — Programación de Horarios
-- Grilla visual interactiva de horarios por ruta y rango de fechas
+- Grilla visual interactiva de horarios por ruta, fecha y programación
 - Validación en tiempo real: solapamiento de turnos, disponibilidad del chofer, horas máximas (8 h)
-- Resolución interactiva de conflictos desde la UI (solo Administrador ATU)
-- Publicación de programación aprobada visible para los Supervisores del concesionario correspondiente
+- Resolución interactiva de conflictos desde la UI (Administrador ATU)
+- Asignación de choferes y buses por turno (admin y supervisor de área)
+- Duplicar semana (patrón Prototype) hacia otra fecha de inicio
 
 ### RF04 — Gestión de Choferes y Asignación
 - Registro de choferes con datos personales, licencia tipo A-III y certificación Protransporte
+- Creación automática de acceso al portal (`accesos_chofer`) al registrar un chofer
 - Asignación a turnos y rutas con control de horas máximas (8 h/jornada)
 - Alertas automáticas de documentos por vencer (licencia y certificación Protransporte)
-- Control de disponibilidad: activo, vacaciones, licencia médica, suspendido, inactivo
+- Control de disponibilidad e indisponibilidades (descanso, vacaciones, médico, etc.)
+- Vista **Mis Rutas** para el chofer con sus asignaciones del día
 
-### RF05 — Optimización con IA *(pendiente — Sprint 2)*
+### RF05 — Optimización con IA *(planificado — Sprint 3)*
 - Predicción de demanda por ruta, hora y día con modelo Prophet
 - Optimización de asignación de choferes y buses con OR-Tools
 - Propuesta automática revisable y aprobable por el Administrador ATU
 
 ### RF06 — Dashboard de Indicadores y Reportes
 - KPIs operativos actualizados desde la BD: rutas activas, choferes disponibles, buses operativos, conflictos pendientes, certificaciones por vencer en 30 días
-- Exportación de reportes en PDF y XLSX *(pendiente — Sprint 2)*
+- Exportación de reportes en PDF y XLSX (stubs implementados con patrones creacionales)
 
 ---
 
@@ -177,7 +195,7 @@ Frontend y Backend coexisten en el mismo repositorio, permitiendo:
 | ID | Nombre | Descripción clave |
 |----|--------|-------------------|
 | RNF01 | Usabilidad | Programación semanal en <= 15 min. Dashboard <= 2 niveles de menú. WCAG 2.1 AA. |
-| RNF02 | Seguridad | HTTPS (TLS 1.2+), bcrypt >= 12, OWASP Top 10, aislamiento por concesionario, Ley 29733. |
+| RNF02 | Seguridad | HTTPS (TLS 1.2+), bcrypt >= 12, OWASP Top 10, aislamiento por área operativa, Ley 29733. |
 | RNF03 | Desempeño | API REST <= 2 s (p95). Validación de conflictos <= 1 s. Propuesta IA <= 30 s. 100 usuarios concurrentes. |
 | RNF04 | Disponibilidad | 99% uptime horario operativo (07:00-19:00, lun-sáb). RTO <= 30 min. Funcional sin módulo IA. |
 | RNF05 | Mantenibilidad | >= 70% cobertura en módulos críticos. PEP 8 (backend), ESLint (frontend). Arquitectura MVC modular. |
@@ -189,81 +207,67 @@ Frontend y Backend coexisten en el mismo repositorio, permitiendo:
 
 ```
 MetroHub/
-├── frontend/                      # React 19 + Vite 8
-│   ├── public/
+├── frontend/                          # React 19 + Vite 8
 │   ├── src/
-│   │   ├── api.js                # Cliente HTTP centralizado (Fetch + JWT)
+│   │   ├── api.js                    # Cliente HTTP centralizado (Fetch + JWT)
 │   │   ├── components/
-│   │   │   ├── Sidebar.jsx       # Menú lateral de navegación
-│   │   │   ├── KpiCard.jsx       # Tarjeta de indicador KPI
-│   │   │   ├── RouteBar.jsx      # Barra de cobertura por ruta
-│   │   │   └── AlertPanel.jsx    # Panel de alertas activas
+│   │   │   ├── Sidebar.jsx           # Menú lateral por rol
+│   │   │   ├── KpiCard.jsx
+│   │   │   ├── RouteBar.jsx
+│   │   │   ├── AlertPanel.jsx
+│   │   │   └── CambioPasswordPrimerIngreso.jsx
 │   │   ├── pages/
-│   │   │   ├── Login.jsx         # RF01 — Autenticación contra API
-│   │   │   ├── Dashboard.jsx     # RF06 — KPIs desde PostgreSQL
-│   │   │   ├── Grilla.jsx        # RF03 — Horarios + resolución de conflictos
-│   │   │   ├── Rutas.jsx         # RF02 — Catálogo de rutas desde BD
-│   │   │   └── Choferes.jsx      # RF04 — Choferes con alertas de documentos
-│   │   ├── App.jsx               # Router SPA + restauración de sesión JWT
+│   │   │   ├── Login.jsx             # RF01 — Autenticación
+│   │   │   ├── Dashboard.jsx         # RF06 — KPIs
+│   │   │   ├── Grilla.jsx            # RF03 — Horarios + asignaciones
+│   │   │   ├── Rutas.jsx             # RF02 — Catálogo de rutas
+│   │   │   ├── Choferes.jsx          # RF04 — Choferes + disponibilidad
+│   │   │   ├── MisRutas.jsx          # RF04 — Portal chofer
+│   │   │   ├── Buses.jsx             # Flota por área operativa
+│   │   │   ├── Areas.jsx             # CRUD áreas operativas (admin)
+│   │   │   ├── Usuarios.jsx          # Gestión de usuarios staff (admin)
+│   │   │   └── Reportes.jsx          # RF06 — Exportación PDF/XLSX
+│   │   ├── App.jsx                   # Router SPA + sesión JWT + portal chofer
 │   │   └── main.jsx
-│   ├── Dockerfile
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
+│   └── Dockerfile
 │
-├── backend/                       # FastAPI + SQLAlchemy (patrón MVC)
+├── backend/                           # FastAPI 2.0 + SQLAlchemy
 │   ├── app/
 │   │   ├── routers/
-│   │   │   ├── auth.py           # RF01 — JWT + bcrypt
-│   │   │   ├── rutas.py          # RF02 — CRUD rutas
-│   │   │   ├── horarios.py       # RF03 — Programación + asignaciones
-│   │   │   ├── choferes.py       # RF04 — Gestión de choferes
-│   │   │   ├── dashboard.py      # RF06 — KPIs
-│   │   │   └── conflictos.py     # RF03 — Listado y resolución de conflictos
+│   │   │   ├── auth.py               # JWT + login staff/chofer
+│   │   │   ├── rutas.py              # RF02
+│   │   │   ├── estaciones.py
+│   │   │   ├── horarios.py           # RF03 — Programación + asignaciones
+│   │   │   ├── programaciones.py
+│   │   │   ├── choferes.py           # RF04 + GET /me/asignaciones
+│   │   │   ├── disponibilidad.py
+│   │   │   ├── buses.py
+│   │   │   ├── areas.py              # Áreas operativas
+│   │   │   ├── usuarios.py
+│   │   │   ├── dashboard.py          # RF06
+│   │   │   ├── conflictos.py
+│   │   │   └── reportes.py           # RF06
 │   │   ├── services/
-│   │   │   ├── auth_service.py
-│   │   │   ├── ruta_service.py
-│   │   │   ├── horario_service.py
-│   │   │   ├── chofer_service.py
-│   │   │   ├── dashboard_service.py
-│   │   │   └── conflicto_service.py
-│   │   ├── models/               # 11 modelos SQLAlchemy
-│   │   │   ├── concesionario.py
+│   │   ├── models/
+│   │   │   ├── area_operativa.py
 │   │   │   ├── usuario.py
-│   │   │   ├── estacion.py
-│   │   │   ├── ruta.py
-│   │   │   ├── chofer.py
-│   │   │   ├── bus.py
-│   │   │   ├── disponibilidad_chofer.py
-│   │   │   ├── programacion.py
-│   │   │   ├── horario_servicio.py
-│   │   │   ├── asignacion.py
-│   │   │   └── conflicto.py
-│   │   ├── schemas/              # Validación Pydantic entrada/salida
-│   │   ├── builders/             # Patrón Builder — RF03
-│   │   │   └── programacion_builder.py
-│   │   ├── prototypes/           # Patrón Prototype — RF03 (duplicar semana)
-│   │   │   ├── horario_prototype.py
-│   │   │   └── asignacion_prototype.py
-│   │   ├── export/               # Patrón Factory Method — RF06
-│   │   │   ├── factory.py
-│   │   │   ├── pdf_exporter.py
-│   │   │   └── xlsx_exporter.py
-│   │   ├── factories/            # Patrón Abstract Factory — RF06
-│   │   │   └── reporte_atu_factory.py
-│   │   ├── routers/
-│   │   │   └── reportes.py
-│   │   ├── database.py           # Conexión PostgreSQL + SessionLocal
-│   │   └── main.py               # Instancia FastAPI + CORS + routers
+│   │   │   ├── acceso_chofer.py      # Auth independiente choferes
+│   │   │   ├── chofer.py, bus.py, ruta.py, estacion.py
+│   │   │   ├── programacion.py, horario_servicio.py
+│   │   │   ├── asignacion.py, conflicto.py
+│   │   │   └── disponibilidad_chofer.py
+│   │   ├── builders/                 # Patrón Builder — RF03
+│   │   ├── prototypes/               # Patrón Prototype — RF03
+│   │   ├── export/                   # Patrón Factory Method — RF06
+│   │   ├── factories/                # Patrón Abstract Factory — RF06
+│   │   └── main.py                   # API v2.0.0
 │   ├── db/
-│   │   ├── schema.sql            # 11 tablas, triggers, vista v_dashboard_kpis
-│   │   └── seed.sql              # Datos reales del Metropolitano
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── .env.example
+│   │   ├── schema.sql
+│   │   ├── seed.sql                  # Datos demo Metropolitano (jun 2026)
+│   │   └── migrations/               # 002_accesos_chofer, 003_debe_cambiar_password
+│   └── Dockerfile
 │
-├── docker-compose.yml             # 4 servicios: backend, frontend, db, redis
-├── .gitignore
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -280,15 +284,18 @@ MetroHub/
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/MetroHub/Metrohub.git
+git clone https://github.com/MetroSmart/Metrohub.git
 cd Metrohub
 
 # 2. Copiar variables de entorno
 cp .env.example .env
 
 # 3. Levantar todos los servicios
-docker-compose up --build
+docker compose up --build
 ```
+
+> **Nota V2:** Si migras desde una versión anterior con concesionarios, recrea el volumen de PostgreSQL:
+> `docker compose down -v && docker compose up --build`
 
 Los servicios quedan disponibles en:
 
@@ -330,32 +337,44 @@ npm run dev
 | rcastillo@metrohub.gob.pe | 45892314 | Roberto Castillo Vera |
 | mtorres@metrohub.gob.pe | 43678912 | Miguel Ángel Torres Huanca |
 
-> La contraseña inicial del chofer es su DNI. No se requiere cambio de contraseña en el primer ingreso (demo).
+> La contraseña inicial del chofer es su DNI. Los choferes demo no requieren cambio de contraseña. Los choferes **nuevos** registrados desde el panel deben cambiarla en su primer ingreso.
 
 ---
 
 ## Uso del sistema
 
 ### 1. Login (RF01)
-Accede con tu correo institucional desde la red interna ATU o VPN. El token JWT se almacena localmente y restaura la sesión automáticamente al recargar la página.
+Accede con tu correo desde la red interna ATU o VPN. El token JWT se almacena localmente y restaura la sesión al recargar. Tres perfiles: Admin ATU, Supervisor de Área y Chofer.
 
 ### 2. Dashboard (RF06)
-Panel de control con KPIs operativos: rutas activas, choferes disponibles, buses operativos, conflictos pendientes y certificaciones Protransporte por vencer en los próximos 30 días. Los datos provienen directamente de PostgreSQL.
+KPIs operativos en tiempo real: rutas activas, choferes disponibles, buses operativos, conflictos pendientes y certificaciones por vencer.
 
 ### 3. Rutas (RF02)
-Catálogo de las 10 rutas del Metropolitano (A, B, C, Expresos 1-9, Nocturna) con tipo, horario de operación, frecuencia y estado activo/inactivo.
+Catálogo de rutas del Metropolitano (Regulares A/B/C, Expresos, Nocturna) con tipo, horario y frecuencia.
 
 ### 4. Programación / Grilla (RF03)
-Selecciona una ruta y una fecha para visualizar los horarios de servicio con los choferes asignados y los conflictos activos. El Administrador ATU puede resolver conflictos directamente desde la interfaz y **duplicar la semana** (patrón Prototype) hacia otra fecha de inicio.
+Visualiza horarios por ruta y fecha. Admin y supervisores pueden asignar choferes y buses. Admin puede resolver conflictos y duplicar semanas.
 
 ### 5. Choferes (RF04)
-Gestión del registro de choferes filtrable por estado. Los documentos próximos a vencer se resaltan con indicadores visuales de días restantes.
+Registro de choferes con alertas de documentos, indisponibilidades y creación automática de acceso al portal. Supervisores gestionan solo choferes de su área.
 
-### 6. Optimizador IA *(RF05 — pendiente)*
-Propuestas automáticas de programación usando Prophet y OR-Tools.
+### 6. Buses
+Flota por área operativa. Admin gestiona toda la flota; supervisores gestionan buses de su área.
 
-### 7. Exportación de reportes *(RF06)*
-`POST /api/reportes/exportar` — PDF o XLSX desde KPIs del dashboard (stubs listos; ver `backend/docs/PATRONES_CREACIONALES.md`).
+### 7. Áreas Operativas *(solo Admin)*
+CRUD de las divisiones internas del Metropolitano (Operaciones Norte/Sur, Mantenimiento, Turnos).
+
+### 8. Usuarios *(solo Admin)*
+Gestión de cuentas staff (`admin_atu` y `supervisor_area`).
+
+### 9. Mis Rutas *(solo Chofer)*
+Portal del chofer con sus asignaciones del día (ruta, horario, bus).
+
+### 10. Reportes (RF06)
+Exportación PDF/XLSX desde KPIs del dashboard.
+
+### 11. Optimizador IA *(RF05 — Sprint 3)*
+Propuestas automáticas de programación con Prophet y OR-Tools. **No implementado en V2.**
 
 ---
 
@@ -363,50 +382,79 @@ Propuestas automáticas de programación usando Prophet y OR-Tools.
 
 El proyecto se gestiona con metodología Scrum con sprints semanales.
 
-- GitHub: https://github.com/MetroHub/Metrohub
-- Rama activa: `main`
+- GitHub: https://github.com/MetroSmart/Metrohub
+- Rama activa de desarrollo: `fixv2`
 - Gestión de backlog: Jira (proyecto SCRUM)
 
-### Product Backlog
+### Product Backlog (resumen)
 
-| Ticket | Historia | Épica | Responsable | Estado |
-|--------|----------|-------|-------------|--------|
-| SCRUM-30 | Frontend — primera versión SPA | — | Erick | Resuelto |
-| SCRUM-29 | Login con JWT y sesión persistente | RF01 | Cesar | Completado |
-| SCRUM-28 | Autorización por roles | RF01 | Isaac | Completado |
-| SCRUM-27 | Bloqueo por intentos fallidos y bcrypt | RF01 | Isaac/Cesar | Completado |
-| SCRUM-23 | CRUD de rutas con atributos completos | RF02 | Isaac | Completado |
-| SCRUM-22 | Activar/desactivar rutas | RF02 | Isaac/Cesar | Completado |
-| SCRUM-24 | Gestión de estaciones | RF02 | Isaac | Parcial |
-| SCRUM-19 | Grilla conectada al backend | RF03 | Cesar | Completado |
-| SCRUM-18 | Validación y resolución de conflictos | RF03 | Isaac/Cesar | Completado |
-| SCRUM-17 | Publicación aprobada para Supervisores | RF03 | Isaac | Pendiente |
-| SCRUM-14 | Registro de choferes | RF04 | Cesar | Completado |
-| SCRUM-16 | Asignación con reglas 8h y solapamiento | RF04 | Isaac | Completado |
-| SCRUM-15 | Alertas de documentos por vencer | RF04 | Cesar | Completado |
-| SCRUM-20 | Predicción de demanda (Prophet) | RF05 | Isaac/Cesar | Pendiente |
-| SCRUM-21 | Optimizador OR-Tools | RF05 | Isaac | Pendiente |
-| SCRUM-25 | Dashboard de KPIs desde BD | RF06 | Cesar | Completado |
-| SCRUM-26 | Exportación PDF/XLSX | RF06 | Erick | Pendiente |
+| Ticket | Historia | Épica | Estado V2 |
+|--------|----------|-------|-----------|
+| SCRUM-29/28/27 | Autenticación JWT, roles, bloqueo | RF01 | Completado |
+| SCRUM-23/22 | CRUD rutas, activar/desactivar | RF02 | Completado |
+| SCRUM-19/18 | Grilla, conflictos | RF03 | Completado |
+| SCRUM-14/16/15 | Choferes, asignación, alertas | RF04 | Completado |
+| SCRUM-25 | Dashboard KPIs | RF06 | Completado |
+| SCRUM-26 | Exportación PDF/XLSX | RF06 | Parcial (stubs) |
+| SCRUM-20/21 | Prophet + OR-Tools | RF05 | **Sprint 3** |
+| — | Portal chofer + áreas operativas | RF01/RF04 | Completado (V2) |
 
 ---
 
-## Estado actual del sprint
+## Estado actual — Sprint 2 (V2)
 
-### Sprint 1 — Arquitectura base e integración completa
+**Versión entregada:** MetroHub **V2.0**  
+**Período:** Mayo – Junio 2026  
+**Objetivo:** Consolidar roles, portal chofer y modelo de áreas operativas
 
-Período: 23 – 30 abril 2026  
-Objetivo: Sistema funcionando de punta a punta — backend MVC + frontend React + PostgreSQL integrados
+### Entregables completados en V2
 
-| Integrante | Actividades principales |
-|------------|------------------------|
-| **Isaac Martel** | Backend principal (modelos, routers, servicios), schema BD, Docker Compose, integración final del sistema |
-| **Cesar Correa** | Backend , `api.js`, fusión frontend-backend, conexión de todas las páginas a la API |
-| **Erick Ortega** | Frontend completo (páginas y componentes), diseño visual, gestión del backlog en Jira |
-| **Diego Torres** | `seed.sql` con datos simulados del Metropolitano (52 horarios, 20 choferes, 16 buses, 3 conflictos) |
-| **Ivett Mera** | Soporte en Jira, investigación de datos reales del Metropolitano |
+| Módulo | Descripción |
+|--------|-------------|
+| **Áreas operativas** | Reemplazo de concesionarios por 4 áreas internas ATU |
+| **Rol `supervisor_area`** | Permisos por `area_id` en JWT; lectura global, escritura acotada |
+| **Portal chofer** | Tabla `accesos_chofer`, vista `MisRutas`, cambio de contraseña en primer ingreso |
+| **Gestión ampliada** | Páginas Buses, Usuarios, Áreas Operativas |
+| **Grilla** | Supervisores pueden asignar/quitar choferes en su área |
+| **Registro chofer** | Campo correo opcional; acceso automático al portal |
 
-**Avance:** 13 de 17 ítems completados — **76 %**
+### Avance Sprint 2
+
+**17 de 19 ítems core completados — ~89 %**  
+Pendientes menores: exportación PDF/XLSX completa, estaciones (parcial).
+
+---
+
+## Roadmap — Sprint 3 (Módulo IA)
+
+**Período planificado:** Junio – Julio 2026  
+**Objetivo:** Implementar el módulo de Inteligencia Artificial (RF05) sobre la base operativa de V2
+
+### Alcance planificado
+
+| Componente | Tecnología | Descripción |
+|------------|------------|-------------|
+| **Predicción de demanda** | Prophet (Meta) | Forecast de pasajeros por ruta, hora y día de la semana |
+| **Optimizador de asignación** | OR-Tools (Google) | Propuesta automática de choferes y buses respetando restricciones laborales |
+| **API de propuestas** | FastAPI | Endpoints para generar, revisar y aprobar propuestas IA |
+| **UI Optimizador** | React | Pantalla para que el Admin ATU revise y aplique propuestas a la grilla |
+
+### Restricciones que el optimizador respetará
+
+- Máximo 8 horas de jornada por chofer
+- Sin solapamiento de turnos
+- Chofer disponible (sin indisponibilidad registrada)
+- Licencia y certificación Protransporte vigentes
+- Coherencia chofer–bus–área operativa
+
+### Criterios de aceptación Sprint 3
+
+- [ ] Modelo Prophet entrenado con datos históricos de demanda (seed + datos simulados)
+- [ ] Optimizador OR-Tools genera propuesta en <= 30 s (RNF03)
+- [ ] Admin puede aprobar o rechazar propuesta desde la UI
+- [ ] Sistema funcional sin módulo IA activo (RNF04 — degradación graceful)
+
+> El módulo IA **no forma parte de V2**. La versión actual opera de forma completa sin dependencia de modelos de ML.
 
 ---
 
@@ -471,4 +519,4 @@ git push origin SCRUM-XX-descripcion-corta
 
 ---
 
-MetroHub v1.0 · Universidad Nacional de Ingeniería · Lima, Perú · 2026
+MetroHub **V2.0** · Universidad Nacional de Ingeniería · Lima, Perú · 2026
