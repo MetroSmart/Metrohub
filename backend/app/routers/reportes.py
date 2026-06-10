@@ -11,10 +11,10 @@ router = APIRouter()
 
 
 def _solo_admin(usuario: dict):
-    if usuario["rol"] != "admin_atu":
+    if usuario["rol"] not in {"admin_atu", "supervisor_area"}:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo el Administrador ATU puede exportar reportes",
+            detail="Solo el Administrador ATU o Supervisores de Área pueden exportar reportes",
         )
 
 

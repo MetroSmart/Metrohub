@@ -1,5 +1,5 @@
 -- =============================================================================
--- MetroSmart v2.0 - Script de Creación de Base de Datos
+-- MetroHub v2.0 - Script de Creación de Base de Datos
 -- Universidad Nacional de Ingeniería - EPCC
 -- Motor: PostgreSQL 14+
 -- Versión del esquema: v3 (sin módulo IA, con tabla buses)
@@ -11,32 +11,30 @@ DROP TABLE IF EXISTS asignaciones CASCADE;
 DROP TABLE IF EXISTS horarios_servicio CASCADE;
 DROP TABLE IF EXISTS programaciones CASCADE;
 DROP TABLE IF EXISTS disponibilidad_chofer CASCADE;
+DROP TABLE IF EXISTS accesos_chofer CASCADE;
 DROP TABLE IF EXISTS buses CASCADE;
 DROP TABLE IF EXISTS choferes CASCADE;
 DROP TABLE IF EXISTS ruta_estacion CASCADE;
 DROP TABLE IF EXISTS estaciones CASCADE;
 DROP TABLE IF EXISTS rutas CASCADE;
 DROP TABLE IF EXISTS usuarios CASCADE;
-DROP TABLE IF EXISTS concesionarios CASCADE;
+DROP TABLE IF EXISTS areas_operativas CASCADE;
 
 -- =============================================================================
 -- DOMINIO 1: IDENTIDAD Y ACCESO (RF01)
 -- =============================================================================
 
-CREATE TABLE concesionarios (
+CREATE TABLE areas_operativas (
     id              SERIAL PRIMARY KEY,
-    ruc             VARCHAR(11) NOT NULL UNIQUE,
-    razon_social    VARCHAR(150) NOT NULL,
+    nombre          VARCHAR(100) NOT NULL,
     nombre_corto    VARCHAR(50) NOT NULL,
-    telefono        VARCHAR(20),
-    email_contacto  VARCHAR(100),
+    descripcion     TEXT,
     activo          BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_ruc_longitud CHECK (LENGTH(ruc) = 11)
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-COMMENT ON TABLE concesionarios IS 'Empresas privadas que operan buses del Metropolitano por contrato con ATU';
+COMMENT ON TABLE areas_operativas IS 'Áreas operativas internas del Metropolitano (Operaciones Norte/Sur, Mantenimiento, Turnos)';
 
 CREATE TABLE usuarios (
     id                  SERIAL PRIMARY KEY,
@@ -46,32 +44,32 @@ CREATE TABLE usuarios (
     apellidos           VARCHAR(100) NOT NULL,
     dni                 VARCHAR(8) NOT NULL UNIQUE,
     rol                 VARCHAR(30) NOT NULL,
-    concesionario_id    INTEGER,
+    area_id             INTEGER,
     activo              BOOLEAN NOT NULL DEFAULT TRUE,
     intentos_fallidos   SMALLINT NOT NULL DEFAULT 0,
     bloqueado_hasta     TIMESTAMP,
     ultimo_login        TIMESTAMP,
     created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_usuario_concesionario
-        FOREIGN KEY (concesionario_id) REFERENCES concesionarios(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_usuario_area
+        FOREIGN KEY (area_id) REFERENCES areas_operativas(id) ON DELETE RESTRICT,
     CONSTRAINT chk_rol_valido
-        CHECK (rol IN ('admin_atu', 'supervisor_concesionario')),
-    CONSTRAINT chk_supervisor_tiene_concesionario
+        CHECK (rol IN ('admin_atu', 'supervisor_area')),
+    CONSTRAINT chk_supervisor_tiene_area
         CHECK (
-            (rol = 'admin_atu' AND concesionario_id IS NULL) OR
-            (rol = 'supervisor_concesionario' AND concesionario_id IS NOT NULL)
+            (rol = 'admin_atu' AND area_id IS NULL) OR
+            (rol = 'supervisor_area' AND area_id IS NOT NULL)
         ),
     CONSTRAINT chk_dni_longitud CHECK (LENGTH(dni) = 8)
 );
 
-COMMENT ON TABLE usuarios IS 'Usuarios con acceso al sistema: Admin ATU o Supervisor de Concesionario (RF01)';
+COMMENT ON TABLE usuarios IS 'Personal ATU y supervisores de área operativa con acceso al sistema (RF01)';
 COMMENT ON COLUMN usuarios.password_hash IS 'bcrypt con factor >= 12 (RNF02)';
 COMMENT ON COLUMN usuarios.bloqueado_hasta IS 'Se activa tras 5 intentos fallidos (RF01)';
 
 CREATE INDEX idx_usuarios_email ON usuarios(email);
 CREATE INDEX idx_usuarios_rol ON usuarios(rol);
-CREATE INDEX idx_usuarios_concesionario ON usuarios(concesionario_id);
+CREATE INDEX idx_usuarios_area ON usuarios(area_id);
 
 -- =============================================================================
 -- DOMINIO 2: CATÁLOGO OPERATIVO - RUTAS Y ESTACIONES (RF02)
@@ -150,7 +148,7 @@ CREATE TABLE choferes (
     fecha_nacimiento        DATE NOT NULL,
     telefono                VARCHAR(20),
     email                   VARCHAR(100),
-    concesionario_id        INTEGER NOT NULL,
+    area_id                 INTEGER NOT NULL,
     numero_licencia         VARCHAR(20) NOT NULL UNIQUE,
     tipo_licencia           VARCHAR(10) NOT NULL,
     fec_vence_licencia      DATE NOT NULL,
@@ -159,8 +157,8 @@ CREATE TABLE choferes (
     anios_experiencia       SMALLINT,
     created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_chofer_concesionario
-        FOREIGN KEY (concesionario_id) REFERENCES concesionarios(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_chofer_area
+        FOREIGN KEY (area_id) REFERENCES areas_operativas(id) ON DELETE RESTRICT,
     CONSTRAINT chk_tipo_licencia
         CHECK (tipo_licencia IN ('A-IIIA', 'A-IIIB', 'A-IIIC')),
     CONSTRAINT chk_estado_chofer
@@ -168,26 +166,51 @@ CREATE TABLE choferes (
     CONSTRAINT chk_dni_chofer_longitud CHECK (LENGTH(dni) = 8)
 );
 
-COMMENT ON TABLE choferes IS 'Choferes de los concesionarios. Requiere licencia profesional A-III + certificación Protransporte anual';
+COMMENT ON TABLE choferes IS 'Choferes asignados a áreas operativas. Requiere licencia profesional A-III + certificación Protransporte anual';
 COMMENT ON COLUMN choferes.tipo_licencia IS 'Licencia profesional peruana: A-IIIA/B/C';
 COMMENT ON COLUMN choferes.fec_vence_certif_prot IS 'Certificación Protransporte (vigencia 1 año)';
 
-CREATE INDEX idx_choferes_concesionario ON choferes(concesionario_id);
+CREATE INDEX idx_choferes_area ON choferes(area_id);
 CREATE INDEX idx_choferes_estado ON choferes(estado);
 CREATE INDEX idx_choferes_certif ON choferes(fec_vence_certif_prot);
+
+CREATE TABLE accesos_chofer (
+    id                  SERIAL PRIMARY KEY,
+    chofer_id           INTEGER NOT NULL UNIQUE,
+    email               VARCHAR(100) NOT NULL UNIQUE,
+    password_hash       VARCHAR(255) NOT NULL,
+    activo              BOOLEAN NOT NULL DEFAULT TRUE,
+    debe_cambiar_password BOOLEAN NOT NULL DEFAULT TRUE,
+    intentos_fallidos   SMALLINT NOT NULL DEFAULT 0,
+    bloqueado_hasta     TIMESTAMP,
+    ultimo_login        TIMESTAMP,
+    creado_por          INTEGER,
+    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_acceso_chofer
+        FOREIGN KEY (chofer_id) REFERENCES choferes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_acceso_creado_por
+        FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+COMMENT ON TABLE accesos_chofer IS 'Credenciales de acceso al portal del chofer, separadas de usuarios ATU/supervisores (RF01)';
+COMMENT ON COLUMN accesos_chofer.password_hash IS 'bcrypt con factor >= 12 (RNF02)';
+
+CREATE INDEX idx_accesos_chofer_email ON accesos_chofer(email);
+CREATE INDEX idx_accesos_chofer_chofer ON accesos_chofer(chofer_id);
 
 -- Tabla buses: placa como PK (identificador natural, único por diseño vehicular)
 CREATE TABLE buses (
     placa               VARCHAR(10) PRIMARY KEY,
-    concesionario_id    INTEGER NOT NULL,
+    area_id             INTEGER NOT NULL,
     tipo                VARCHAR(20) NOT NULL,
     anio                SMALLINT,
     capacidad_pasajeros SMALLINT,
     estado              VARCHAR(20) NOT NULL DEFAULT 'operativo',
     created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_bus_concesionario
-        FOREIGN KEY (concesionario_id) REFERENCES concesionarios(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_bus_area
+        FOREIGN KEY (area_id) REFERENCES areas_operativas(id) ON DELETE RESTRICT,
     CONSTRAINT chk_tipo_bus
         CHECK (tipo IN ('articulado', 'convencional')),
     CONSTRAINT chk_estado_bus
@@ -201,7 +224,7 @@ CREATE TABLE buses (
 COMMENT ON TABLE buses IS 'Flota de buses del Metropolitano. Placa como PK (identificador natural)';
 COMMENT ON COLUMN buses.placa IS 'Placa vehicular peruana (formato C1J-999 o similar)';
 
-CREATE INDEX idx_buses_concesionario ON buses(concesionario_id);
+CREATE INDEX idx_buses_area ON buses(area_id);
 CREATE INDEX idx_buses_estado ON buses(estado);
 CREATE INDEX idx_buses_tipo ON buses(tipo);
 
@@ -293,7 +316,7 @@ CREATE TABLE asignaciones (
     horario_id          INTEGER NOT NULL,
     chofer_id           INTEGER NOT NULL,
     bus_placa           VARCHAR(10),
-    concesionario_id    INTEGER NOT NULL,
+    area_id             INTEGER NOT NULL,
     estado              VARCHAR(15) NOT NULL DEFAULT 'propuesta',
     asignado_por        INTEGER NOT NULL,
     notas               TEXT,
@@ -306,8 +329,8 @@ CREATE TABLE asignaciones (
     CONSTRAINT fk_asig_bus
         FOREIGN KEY (bus_placa) REFERENCES buses(placa)
         ON UPDATE CASCADE ON DELETE SET NULL,
-    CONSTRAINT fk_asig_concesionario
-        FOREIGN KEY (concesionario_id) REFERENCES concesionarios(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_asig_area
+        FOREIGN KEY (area_id) REFERENCES areas_operativas(id) ON DELETE RESTRICT,
     CONSTRAINT fk_asig_usuario
         FOREIGN KEY (asignado_por) REFERENCES usuarios(id) ON DELETE RESTRICT,
     CONSTRAINT chk_estado_asig
@@ -345,7 +368,7 @@ CREATE TABLE conflictos (
             'licencia_vencida',
             'certif_prot_vencida',
             'descanso_insuficiente',
-            'concesionario_incorrecto',
+            'area_incorrecta',
             'bus_no_operativo',
             'otro'
         )),
@@ -370,7 +393,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_concesionarios_updated BEFORE UPDATE ON concesionarios
+CREATE TRIGGER trg_areas_updated BEFORE UPDATE ON areas_operativas
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_usuarios_updated BEFORE UPDATE ON usuarios
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -379,6 +402,8 @@ CREATE TRIGGER trg_estaciones_updated BEFORE UPDATE ON estaciones
 CREATE TRIGGER trg_rutas_updated BEFORE UPDATE ON rutas
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_choferes_updated BEFORE UPDATE ON choferes
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_accesos_chofer_updated BEFORE UPDATE ON accesos_chofer
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_buses_updated BEFORE UPDATE ON buses
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();

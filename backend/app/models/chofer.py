@@ -22,7 +22,7 @@ class Chofer(Base):
     fecha_nacimiento      = Column(Date, nullable=False)
     telefono              = Column(String(20))
     email                 = Column(String(100))
-    concesionario_id      = Column(Integer, ForeignKey("concesionarios.id", ondelete="RESTRICT"), nullable=False)
+    area_id               = Column(Integer, ForeignKey("areas_operativas.id", ondelete="RESTRICT"), nullable=False)
     numero_licencia       = Column(String(20), unique=True, nullable=False)
     tipo_licencia         = Column(String(10), nullable=False)
     fec_vence_licencia    = Column(Date, nullable=False)
@@ -32,6 +32,7 @@ class Chofer(Base):
     created_at            = Column(TIMESTAMP, nullable=False, server_default=func.now())
     updated_at            = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
 
-    concesionario     = relationship("Concesionario", back_populates="choferes")
+    area              = relationship("AreaOperativa", back_populates="choferes")
+    acceso            = relationship("AccesoChofer", back_populates="chofer", uselist=False)
     disponibilidades  = relationship("DisponibilidadChofer", back_populates="chofer", cascade="all, delete-orphan")
     asignaciones      = relationship("Asignacion", back_populates="chofer")

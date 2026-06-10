@@ -10,7 +10,7 @@ class Conflicto(Base):
         CheckConstraint(
             "tipo IN ('solapamiento_turno', 'exceso_8h_dia', 'chofer_no_disponible', "
             "'licencia_vencida', 'certif_prot_vencida', 'descanso_insuficiente', "
-            "'concesionario_incorrecto', 'bus_no_operativo', 'otro')",
+            "'area_incorrecta', 'bus_no_operativo', 'otro')",
             name="chk_tipo_conflicto",
         ),
         CheckConstraint("severidad IN ('baja', 'media', 'alta', 'critica')", name="chk_severidad"),

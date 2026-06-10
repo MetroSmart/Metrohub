@@ -7,7 +7,7 @@ from app.builders.programacion_builder import ProgramacionBuilder
 from app.schemas.horario import HorarioCrear, AsignacionCrear, ProgramacionCompletaCrear
 # ── Horarios ──────────────────────────────────────────────────
 
-def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[int] = None) -> List[dict]:
+def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[int] = None, programacion_id: Optional[int] = None) -> List[dict]:
     q = (
         db.query(HorarioServicio)
         .options(
@@ -19,13 +19,17 @@ def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[
         q = q.filter(HorarioServicio.fecha == fecha)
     if ruta_id:
         q = q.filter(HorarioServicio.ruta_id == ruta_id)
+    if programacion_id:
+        q = q.filter(HorarioServicio.programacion_id == programacion_id)
 
     resultado = []
     for h in q.order_by(HorarioServicio.hora_salida).all():
         conflicto_activo = None
         chofer_info = None
+        asignacion_id = None
         for asig in h.asignaciones:
             if chofer_info is None and asig.chofer:
+                asignacion_id = asig.id
                 chofer_info = {
                     "id":     asig.chofer.id,
                     "nombre": f"{asig.chofer.nombres} {asig.chofer.apellidos}",
@@ -33,22 +37,26 @@ def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[
             for c in asig.conflictos:
                 if not c.resuelto and conflicto_activo is None:
                     conflicto_activo = {
-                        "id":           c.id,
+                        "id":            c.id,
                         "asignacion_id": c.asignacion_id,
-                        "tipo":         c.tipo,
-                        "severidad":    c.severidad,
-                        "descripcion":  c.descripcion,
+                        "tipo":          c.tipo,
+                        "severidad":     c.severidad,
+                        "descripcion":   c.descripcion,
                     }
+        bus_placa = next((a.bus_placa for a in h.asignaciones if a.bus_placa), None)
         resultado.append({
-            "id":              h.id,
-            "ruta_id":         h.ruta_id,
-            "fecha":           str(h.fecha),
-            "hora_salida":     str(h.hora_salida)[:5],
-            "turno":           h.turno,
+            "id":               h.id,
+            "programacion_id":  h.programacion_id,
+            "ruta_id":          h.ruta_id,
+            "fecha":            str(h.fecha),
+            "hora_salida":      str(h.hora_salida)[:5],
+            "turno":            h.turno,
             "duracion_est_min": h.duracion_est_min,
-            "activo":          h.activo,
-            "chofer":          chofer_info,
-            "conflicto":       conflicto_activo,
+            "activo":           h.activo,
+            "chofer":           chofer_info,
+            "asignacion_id":    asignacion_id,
+            "bus_placa":        bus_placa,
+            "conflicto":        conflicto_activo,
         })
     return resultado
 
@@ -92,10 +100,10 @@ def crear_programacion_completa(
         duracion_est_min=datos.duracion_est_min,
     )
     builder = ProgramacionBuilder(db).desde_horario(horario_data)
-    if datos.chofer_id and datos.concesionario_id and asignado_por:
+    if datos.chofer_id and datos.area_id and asignado_por:
         builder.asignacion(
             chofer_id=datos.chofer_id,
-            concesionario_id=datos.concesionario_id,
+            area_id=datos.area_id,
             bus_placa=datos.bus_placa,
             notas=datos.notas,
             asignado_por=asignado_por,

@@ -29,7 +29,7 @@ class AsignacionCrear(BaseModel):
     horario_id:       int
     chofer_id:        int
     bus_placa:        Optional[str] = None
-    concesionario_id: int
+    area_id: int
     notas:            Optional[str] = None
 
 
@@ -52,6 +52,12 @@ class DuplicarSemanaRequest(BaseModel):
     omitir_existentes: bool = True
 
 
+class AsignacionActualizar(BaseModel):
+    bus_placa: Optional[str] = None
+    estado:    Optional[str] = None
+    notas:     Optional[str] = None
+
+
 class ProgramacionCompletaCrear(BaseModel):
     """RF03 — horario + asignación opcional (patrón Builder)."""
 
@@ -62,6 +68,6 @@ class ProgramacionCompletaCrear(BaseModel):
     turno:            str
     duracion_est_min: int = Field(ge=15, le=240)
     chofer_id:        Optional[int] = None
-    concesionario_id: Optional[int] = None
+    area_id: Optional[int] = None
     bus_placa:        Optional[str] = None
     notas:            Optional[str] = None

@@ -14,7 +14,7 @@ class AsignacionPrototype(Prototype[Asignacion]):
         return cls({
             "chofer_id": asignacion.chofer_id,
             "bus_placa": asignacion.bus_placa,
-            "concesionario_id": asignacion.concesionario_id,
+            "area_id": asignacion.area_id,
             "estado": "propuesta",
             "asignado_por": asignacion.asignado_por,
             "notas": asignacion.notas,

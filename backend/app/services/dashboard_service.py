@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
 from app.models.ruta import Ruta
@@ -6,15 +7,18 @@ from app.models.bus import Bus
 from app.models.asignacion import Asignacion
 from app.models.horario_servicio import HorarioServicio
 from app.models.conflicto import Conflicto
+from app.redis_client import get_redis
+
+_CACHE_KEY = "dashboard:kpis"
+_CACHE_TTL = 300  # 5 minutos
 
 
-def obtener_kpis(db: Session) -> dict:
+def _kpis_desde_db(db: Session) -> dict:
     hoy = date.today()
     en_30_dias = hoy + timedelta(days=30)
-
     return {
-        "fecha": hoy,
-        "rutas_activas":   db.query(Ruta).filter(Ruta.activa == True).count(),
+        "fecha": str(hoy),
+        "rutas_activas": db.query(Ruta).filter(Ruta.activa == True).count(),
         "choferes_activos": db.query(Chofer).filter(Chofer.estado == "activo").count(),
         "buses_operativos": db.query(Bus).filter(Bus.estado == "operativo").count(),
         "asignaciones_hoy": (
@@ -30,3 +34,24 @@ def obtener_kpis(db: Session) -> dict:
             .count()
         ),
     }
+
+
+def obtener_kpis(db: Session) -> dict:
+    r = get_redis()
+    if r:
+        try:
+            cached = r.get(_CACHE_KEY)
+            if cached:
+                return json.loads(cached)
+        except Exception:
+            pass
+
+    datos = _kpis_desde_db(db)
+
+    if r:
+        try:
+            r.set(_CACHE_KEY, json.dumps(datos), ex=_CACHE_TTL)
+        except Exception:
+            pass
+
+    return datos

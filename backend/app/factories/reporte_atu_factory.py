@@ -14,7 +14,7 @@ class SeccionEncabezado(SeccionReporte):
     def renderizar(self, datos: dict[str, Any]) -> str:
         return (
             f"METROHUB — Reporte ATU\n"
-            f"Sistema: {datos.get('sistema', 'MetroSmart')}\n"
+            f"Sistema: {datos.get('sistema', 'MetroHub')}\n"
             f"Fecha: {datos.get('fecha')}\n"
             "---\n"
         )

@@ -35,8 +35,9 @@ El sistema **no está orientado al pasajero final** y no expone funcionalidades 
 
 | Perfil | Descripción |
 |--------|-------------|
-| **Administrador ATU** | Accede con credenciales institucionales. Configura rutas y estaciones, aprueba programaciones, gestiona concesionarios, visualiza KPIs globales y genera reportes oficiales. Acceso total. |
-| **Supervisor de Concesionario** | Registra y actualiza la disponibilidad de choferes y unidades de su empresa. Visualiza la programación aprobada de su concesionario. Acceso limitado a sus propios datos. |
+| **Administrador ATU** | Accede con credenciales institucionales. Configura rutas y estaciones, aprueba programaciones, gestiona áreas operativas, visualiza KPIs globales y genera reportes oficiales. Acceso total. |
+| **Supervisor de Área** | Gestiona choferes y buses de su área operativa. Registra disponibilidades, asigna choferes a turnos y visualiza la programación completa del sistema. Escritura restringida a su propia área. |
+| **Chofer** | Accede al portal de choferes con sus credenciales personales. Visualiza sus rutas y turnos asignados del día. |
 
 ---
 
@@ -279,7 +280,7 @@ MetroHub/
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/MetroSmart/Metrohub.git
+git clone https://github.com/MetroHub/Metrohub.git
 cd Metrohub
 
 # 2. Copiar variables de entorno
@@ -311,15 +312,25 @@ npm run dev
 
 ### Credenciales de demo
 
-| Correo | Rol |
-|--------|-----|
-| admin.atu@metrosmart.gob.pe | Administrador ATU |
-| sup.limavias@metrosmart.gob.pe | Supervisor Lima Vías Express |
-| sup.limabus@metrosmart.gob.pe | Supervisor Lima Bus |
-| sup.transvial@metrosmart.gob.pe | Supervisor Transvial |
-| sup.perumasivo@metrosmart.gob.pe | Supervisor Perú Masivo |
+| Correo | Contraseña | Rol |
+|--------|------------|-----|
+| admin.atu@metrohub.gob.pe | admin123 | Administrador ATU |
+| sup.norte@metrohub.gob.pe | norte123 | Supervisor — Operaciones Norte |
+| sup.sur@metrohub.gob.pe | sur123 | Supervisor — Operaciones Sur |
+| sup.mantenimiento@metrohub.gob.pe | mantenimiento123 | Supervisor — Mantenimiento de Flota |
+| sup.turnos@metrohub.gob.pe | turnos123 | Supervisor — Turnos y Guardias |
 
-> Las contraseñas están configuradas en el `.env` o son sus iniciales junto con un 123(Ej. limavias123 o admin123). La cuenta se bloquea tras 5 intentos fallidos (RF01).
+> La cuenta se bloquea tras 5 intentos fallidos consecutivos (RF01).
+
+### Credenciales choferes demo
+
+| Correo | Contraseña | Chofer |
+|--------|------------|--------|
+| jhuaman@metrohub.gob.pe | 44156789 | Juan Manuel Huamán Flores |
+| rcastillo@metrohub.gob.pe | 45892314 | Roberto Castillo Vera |
+| mtorres@metrohub.gob.pe | 43678912 | Miguel Ángel Torres Huanca |
+
+> La contraseña inicial del chofer es su DNI. No se requiere cambio de contraseña en el primer ingreso (demo).
 
 ---
 
@@ -352,7 +363,7 @@ Propuestas automáticas de programación usando Prophet y OR-Tools.
 
 El proyecto se gestiona con metodología Scrum con sprints semanales.
 
-- GitHub: https://github.com/MetroSmart/Metrohub
+- GitHub: https://github.com/MetroHub/Metrohub
 - Rama activa: `main`
 - Gestión de backlog: Jira (proyecto SCRUM)
 

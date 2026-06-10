@@ -1,5 +1,3 @@
-from datetime import time
-from typing import Optional
 from pydantic import BaseModel, Field
 
 

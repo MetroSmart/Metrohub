@@ -13,7 +13,14 @@ export async function apiFetch(path, options = {}) {
       ...(options.headers ?? {}),
     },
   });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    let msg = `${res.status} ${res.statusText}`;
+    try {
+      const err = await res.json();
+      if (err.detail) msg = typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail);
+    } catch { /* no JSON body */ }
+    throw new Error(msg);
+  }
   if (res.status === 204) return null;
   return res.json();
 }

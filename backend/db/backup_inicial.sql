@@ -982,11 +982,11 @@ COPY public.rutas (id, codigo, nombre, tipo, hora_inicio, hora_fin, frecuencia_m
 --
 
 COPY public.usuarios (id, email, password_hash, nombre, apellidos, dni, rol, concesionario_id, activo, intentos_fallidos, bloqueado_hasta, ultimo_login, created_at, updated_at) FROM stdin;
-1	admin.atu@metrosmart.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	María	Quispe Rivera	72839401	admin_atu	\N	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
-2	sup.limavias@metrosmart.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Carlos	Ramírez Torres	45892013	supervisor_concesionario	1	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
-3	sup.limabus@metrosmart.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Lucía	Morales Salinas	41203987	supervisor_concesionario	2	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
-4	sup.transvial@metrosmart.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Jorge	Vega Mendoza	43897201	supervisor_concesionario	3	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
-5	sup.perumasivo@metrosmart.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Ana	Ccahuana Pérez	47123890	supervisor_concesionario	4	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
+1	admin.atu@metrohub.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	María	Quispe Rivera	72839401	admin_atu	\N	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
+2	sup.limavias@metrohub.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Carlos	Ramírez Torres	45892013	supervisor_concesionario	1	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
+3	sup.limabus@metrohub.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Lucía	Morales Salinas	41203987	supervisor_concesionario	2	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
+4	sup.transvial@metrohub.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Jorge	Vega Mendoza	43897201	supervisor_concesionario	3	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
+5	sup.perumasivo@metrohub.gob.pe	$2b$12$REEMPLAZAR_CON_HASH_REAL_BCRYPT_AQUI_1234567890abcdef	Ana	Ccahuana Pérez	47123890	supervisor_concesionario	4	t	0	\N	\N	2026-04-29 11:49:41.824237	2026-04-29 11:49:41.824237
 \.
 
 

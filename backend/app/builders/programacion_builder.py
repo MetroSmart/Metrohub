@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.models.asignacion import Asignacion
 from app.models.horario_servicio import HorarioServicio
 from app.schemas.horario import AsignacionCrear, HorarioCrear
-from app.services.horario_validacion import calcular_horas_dia, detectar_solapamiento
 
 
 class ProgramacionBuilderError(Exception):
@@ -62,7 +61,7 @@ class ProgramacionBuilder:
         self,
         *,
         chofer_id: int,
-        concesionario_id: int,
+        area_id: int,
         bus_placa: Optional[str] = None,
         notas: Optional[str] = None,
         asignado_por: int,
@@ -70,7 +69,7 @@ class ProgramacionBuilder:
         self._asignado_por = asignado_por
         self._asignacion_pendiente = {
             "chofer_id": chofer_id,
-            "concesionario_id": concesionario_id,
+            "area_id": area_id,
             "bus_placa": bus_placa,
             "notas": notas,
         }
@@ -86,6 +85,7 @@ class ProgramacionBuilder:
         return self
 
     def _validar_asignacion(self, horario: HorarioServicio, datos: AsignacionCrear) -> None:
+        from app.services import horario_service
         hora = str(horario.hora_salida)[:5]
         if detectar_solapamiento(
             self._db,
@@ -130,13 +130,14 @@ class ProgramacionBuilder:
             return AsignacionCrear(
                 horario_id=hid,
                 chofer_id=p["chofer_id"],
-                concesionario_id=p["concesionario_id"],
+                area_id=p["area_id"],
                 bus_placa=p.get("bus_placa"),
                 notas=p.get("notas"),
             )
         raise ProgramacionBuilderError("Configure la asignación antes de build_asignacion()")
 
     def build_asignacion(self, horario_id: Optional[int] = None) -> Asignacion:
+        from app.services import horario_service
         datos = self._resolver_asignacion(horario_id)
 
         if not self._asignado_por:

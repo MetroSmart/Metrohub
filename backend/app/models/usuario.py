@@ -7,11 +7,11 @@ from app.database import Base
 class Usuario(Base):
     __tablename__ = "usuarios"
     __table_args__ = (
-        CheckConstraint("rol IN ('admin_atu', 'supervisor_concesionario')", name="chk_rol_valido"),
+        CheckConstraint("rol IN ('admin_atu', 'supervisor_area')", name="chk_rol_valido"),
         CheckConstraint(
-            "(rol = 'admin_atu' AND concesionario_id IS NULL) OR "
-            "(rol = 'supervisor_concesionario' AND concesionario_id IS NOT NULL)",
-            name="chk_supervisor_tiene_concesionario",
+            "(rol = 'admin_atu' AND area_id IS NULL) OR "
+            "(rol = 'supervisor_area' AND area_id IS NOT NULL)",
+            name="chk_supervisor_tiene_area",
         ),
         CheckConstraint("LENGTH(dni) = 8", name="chk_dni_longitud"),
     )
@@ -23,7 +23,7 @@ class Usuario(Base):
     apellidos         = Column(String(100), nullable=False)
     dni               = Column(String(8), unique=True, nullable=False)
     rol               = Column(String(30), nullable=False)
-    concesionario_id  = Column(Integer, ForeignKey("concesionarios.id", ondelete="RESTRICT"), nullable=True)
+    area_id           = Column(Integer, ForeignKey("areas_operativas.id", ondelete="RESTRICT"), nullable=True)
     activo            = Column(Boolean, nullable=False, default=True)
     intentos_fallidos = Column(SmallInteger, nullable=False, default=0)
     bloqueado_hasta   = Column(TIMESTAMP, nullable=True)
@@ -31,4 +31,4 @@ class Usuario(Base):
     created_at        = Column(TIMESTAMP, nullable=False, server_default=func.now())
     updated_at        = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
 
-    concesionario = relationship("Concesionario", back_populates="usuarios")
+    area = relationship("AreaOperativa", back_populates="usuarios")
