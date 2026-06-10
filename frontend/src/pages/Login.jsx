@@ -52,7 +52,8 @@ export default function Login({ onLogin }) {
       onLogin({
         email,
         role: data.rol || role,
-        name: email.split("@")[0],
+        name: data.nombre || email.split("@")[0],
+        chofer_id: data.chofer_id ?? null,
       });
     } catch {
       setError("No se pudo conectar con el backend. Verifica que esté levantado.");
@@ -131,7 +132,7 @@ export default function Login({ onLogin }) {
 
         <Field label="Rol">
           <div style={styles.roleRow}>
-            {[ ["admin_atu","Admin ATU"], ["supervisor_concesionario","Supervisor"] ].map(([val, label]) => (
+            {[ ["admin_atu","Admin ATU"], ["supervisor_concesionario","Supervisor"], ["chofer","Chofer"] ].map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setRole(val)}

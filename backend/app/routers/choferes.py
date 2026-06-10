@@ -19,6 +19,22 @@ def alertas_documentos(db: Session = Depends(get_db),
     return {"total_alertas": len(alertas), "choferes": alertas}
 
 
+@router.get("/me/asignaciones")
+def mis_asignaciones(
+    fecha: Optional[str] = None,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    if usuario["rol"] != "chofer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Solo los choferes pueden consultar sus asignaciones")
+    chofer_id = usuario.get("chofer_id")
+    if not chofer_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Sesión de chofer inválida")
+    return chofer_service.listar_mis_asignaciones(db, chofer_id, fecha)
+
+
 @router.get("/")
 def listar_choferes(
     concesionario_id: Optional[int] = None,

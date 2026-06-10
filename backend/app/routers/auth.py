@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from jose import JWTError
 
 from app.database import get_db
 from app.schemas.auth import TokenResponse, PerfilResponse
 from app.services import auth_service
+from app.models.usuario import Usuario
+from app.models.acceso_chofer import AccesoChofer
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -24,18 +26,53 @@ def obtener_usuario_actual(token: str = Depends(oauth2_scheme)) -> dict:
 
 @router.post("/login", response_model=TokenResponse)
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    usuario = auth_service.autenticar_usuario(db, form.username, form.password)
-    if not usuario:
+    sesion = auth_service.autenticar(db, form.username, form.password)
+    if not sesion:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Correo o contraseña incorrectos")
     token = auth_service.crear_token({
-        "sub":    usuario.email,
-        "rol":    usuario.rol,
-        "nombre": usuario.nombre,
+        "sub":       sesion["email"],
+        "rol":       sesion["rol"],
+        "nombre":    sesion["nombre"],
+        "chofer_id": sesion["chofer_id"],
     })
-    return TokenResponse(access_token=token, token_type="bearer", rol=usuario.rol)
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        rol=sesion["rol"],
+        nombre=sesion["nombre"],
+        chofer_id=sesion["chofer_id"],
+    )
 
 
 @router.get("/me", response_model=PerfilResponse)
-def obtener_perfil(usuario: dict = Depends(obtener_usuario_actual)):
-    return PerfilResponse(email=usuario["email"], rol=usuario["rol"], nombre=usuario.get("nombre", ""))
+def obtener_perfil(usuario: dict = Depends(obtener_usuario_actual),
+                   db: Session = Depends(get_db)):
+    if usuario["rol"] == "chofer":
+        acceso = (
+            db.query(AccesoChofer)
+            .options(joinedload(AccesoChofer.chofer))
+            .filter(AccesoChofer.email == usuario["email"])
+            .first()
+        )
+        if not acceso or not acceso.chofer:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Acceso de chofer no encontrado")
+        return PerfilResponse(
+            email=acceso.email,
+            rol="chofer",
+            nombre=acceso.chofer.nombres,
+            apellidos=acceso.chofer.apellidos,
+            chofer_id=acceso.chofer_id,
+        )
+
+    registro = db.query(Usuario).filter(Usuario.email == usuario["email"]).first()
+    if not registro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+    return PerfilResponse(
+        email=registro.email,
+        rol=registro.rol,
+        nombre=registro.nombre,
+        apellidos=registro.apellidos,
+        chofer_id=None,
+    )

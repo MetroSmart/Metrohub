@@ -119,6 +119,12 @@ INSERT INTO choferes (dni, nombres, apellidos, fecha_nacimiento, telefono, email
 ('43951753', 'Enrique',      'Lozano Machaca',     '1974-05-06', '970987654', 'elozano@perumasivo.pe',         4, 'Q99900011', 'A-IIIA', '2026-09-17', '2026-11-25', 'activo',        21),
 ('47159951', 'Jorge Luis',   'Tello Quiñones',     '1988-10-31', '969876543', 'jtello@perumasivo.pe',          4, 'Q00011122', 'A-IIIC', '2027-12-22', '2027-04-30', 'inactivo',       7);
 
+-- Accesos al portal del chofer (tabla accesos_chofer — contraseña: chofer2026)
+INSERT INTO accesos_chofer (chofer_id, email, password_hash, creado_por) VALUES
+(1, 'jhuaman@metrohub.gob.pe',   '$2b$12$tGuyPseyX10WFRjikZJEk.CANmzW1TRtDZAQHGUm79ujaypT3KpW.', 2),
+(2, 'rcastillo@metrohub.gob.pe', '$2b$12$tGuyPseyX10WFRjikZJEk.CANmzW1TRtDZAQHGUm79ujaypT3KpW.', 2),
+(6, 'mtorres@metrohub.gob.pe',   '$2b$12$tGuyPseyX10WFRjikZJEk.CANmzW1TRtDZAQHGUm79ujaypT3KpW.', 3);
+
 -- -----------------------------------------------------------------------------
 -- 7. BUSES (16 unidades — estados variados)
 -- -----------------------------------------------------------------------------

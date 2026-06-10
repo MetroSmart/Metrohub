@@ -7,5 +7,4 @@ postgres_data/
 *.aux
 *.log
 *.out
-node_modules/
-frontend/node_modules/
+DOCUMENTACION.md

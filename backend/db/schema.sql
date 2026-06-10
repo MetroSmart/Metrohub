@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS asignaciones CASCADE;
 DROP TABLE IF EXISTS horarios_servicio CASCADE;
 DROP TABLE IF EXISTS programaciones CASCADE;
 DROP TABLE IF EXISTS disponibilidad_chofer CASCADE;
+DROP TABLE IF EXISTS accesos_chofer CASCADE;
 DROP TABLE IF EXISTS buses CASCADE;
 DROP TABLE IF EXISTS choferes CASCADE;
 DROP TABLE IF EXISTS ruta_estacion CASCADE;
@@ -65,7 +66,7 @@ CREATE TABLE usuarios (
     CONSTRAINT chk_dni_longitud CHECK (LENGTH(dni) = 8)
 );
 
-COMMENT ON TABLE usuarios IS 'Usuarios con acceso al sistema: Admin ATU o Supervisor de Concesionario (RF01)';
+COMMENT ON TABLE usuarios IS 'Personal ATU y supervisores de concesionario con acceso al sistema (RF01)';
 COMMENT ON COLUMN usuarios.password_hash IS 'bcrypt con factor >= 12 (RNF02)';
 COMMENT ON COLUMN usuarios.bloqueado_hasta IS 'Se activa tras 5 intentos fallidos (RF01)';
 
@@ -175,6 +176,30 @@ COMMENT ON COLUMN choferes.fec_vence_certif_prot IS 'Certificación Protransport
 CREATE INDEX idx_choferes_concesionario ON choferes(concesionario_id);
 CREATE INDEX idx_choferes_estado ON choferes(estado);
 CREATE INDEX idx_choferes_certif ON choferes(fec_vence_certif_prot);
+
+CREATE TABLE accesos_chofer (
+    id                  SERIAL PRIMARY KEY,
+    chofer_id           INTEGER NOT NULL UNIQUE,
+    email               VARCHAR(100) NOT NULL UNIQUE,
+    password_hash       VARCHAR(255) NOT NULL,
+    activo              BOOLEAN NOT NULL DEFAULT TRUE,
+    intentos_fallidos   SMALLINT NOT NULL DEFAULT 0,
+    bloqueado_hasta     TIMESTAMP,
+    ultimo_login        TIMESTAMP,
+    creado_por          INTEGER,
+    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_acceso_chofer
+        FOREIGN KEY (chofer_id) REFERENCES choferes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_acceso_creado_por
+        FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+COMMENT ON TABLE accesos_chofer IS 'Credenciales de acceso al portal del chofer, separadas de usuarios ATU/supervisores (RF01)';
+COMMENT ON COLUMN accesos_chofer.password_hash IS 'bcrypt con factor >= 12 (RNF02)';
+
+CREATE INDEX idx_accesos_chofer_email ON accesos_chofer(email);
+CREATE INDEX idx_accesos_chofer_chofer ON accesos_chofer(chofer_id);
 
 -- Tabla buses: placa como PK (identificador natural, único por diseño vehicular)
 CREATE TABLE buses (
@@ -379,6 +404,8 @@ CREATE TRIGGER trg_estaciones_updated BEFORE UPDATE ON estaciones
 CREATE TRIGGER trg_rutas_updated BEFORE UPDATE ON rutas
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_choferes_updated BEFORE UPDATE ON choferes
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_accesos_chofer_updated BEFORE UPDATE ON accesos_chofer
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_buses_updated BEFORE UPDATE ON buses
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
