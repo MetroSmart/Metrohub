@@ -12,6 +12,7 @@ class AccesoChofer(Base):
     email             = Column(String(100), unique=True, nullable=False, index=True)
     password_hash     = Column(String(255), nullable=False)
     activo            = Column(Boolean, nullable=False, default=True)
+    debe_cambiar_password = Column(Boolean, nullable=False, default=True)
     intentos_fallidos = Column(SmallInteger, nullable=False, default=0)
     bloqueado_hasta   = Column(TIMESTAMP, nullable=True)
     ultimo_login      = Column(TIMESTAMP, nullable=True)

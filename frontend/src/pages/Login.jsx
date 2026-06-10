@@ -54,6 +54,7 @@ export default function Login({ onLogin }) {
         role: data.rol || role,
         name: data.nombre || email.split("@")[0],
         chofer_id: data.chofer_id ?? null,
+        mustChangePassword: Boolean(data.debe_cambiar_password),
       });
     } catch {
       setError("No se pudo conectar con el backend. Verifica que esté levantado.");

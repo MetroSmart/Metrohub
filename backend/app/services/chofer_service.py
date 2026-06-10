@@ -2,10 +2,13 @@ from datetime import date, datetime, time
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from app.models.chofer import Chofer
+from app.models.acceso_chofer import AccesoChofer
+from app.models.usuario import Usuario
 from app.models.asignacion import Asignacion
 from app.models.horario_servicio import HorarioServicio
 from app.schemas.chofer import ChoferCrear
 from app.services import estacion_service
+from app.services.auth_service import hash_password
 
 _ESTADOS_VALIDOS = {"activo", "suspendido", "licencia_medica", "vacaciones", "inactivo"}
 
@@ -31,12 +34,66 @@ def dni_existe(db: Session, dni: str) -> bool:
     return db.query(Chofer).filter(Chofer.dni == dni).first() is not None
 
 
-def crear_chofer(db: Session, datos: ChoferCrear) -> Chofer:
+def _email_acceso(dni: str, email_contacto: Optional[str]) -> str:
+    if email_contacto and email_contacto.strip():
+        return email_contacto.strip().lower()
+    return f"{dni}@metrohub.gob.pe"
+
+
+def validar_concesionario_supervisor(db: Session, usuario_email: str, concesionario_id: int) -> None:
+    registro = db.query(Usuario).filter(Usuario.email == usuario_email).first()
+    if registro and registro.concesionario_id != concesionario_id:
+        raise PermissionError("Solo puede registrar choferes de su concesionario")
+
+
+def crear_chofer(
+    db: Session,
+    datos: ChoferCrear,
+    creado_por_id: Optional[int] = None,
+) -> Chofer:
+    email_login = _email_acceso(datos.dni, datos.email)
+    if db.query(AccesoChofer).filter(AccesoChofer.email == email_login).first():
+        raise ValueError(f"Ya existe un acceso con el correo {email_login}")
+
     chofer = Chofer(**datos.model_dump())
     db.add(chofer)
+    db.flush()
+
+    db.add(AccesoChofer(
+        chofer_id=chofer.id,
+        email=email_login,
+        password_hash=hash_password(datos.dni),
+        creado_por=creado_por_id,
+        debe_cambiar_password=True,
+    ))
     db.commit()
     db.refresh(chofer)
     return chofer
+
+
+def serializar_chofer_con_acceso(db: Session, chofer: Chofer) -> dict:
+    acceso = db.query(AccesoChofer).filter(AccesoChofer.chofer_id == chofer.id).first()
+    return {
+        "id":                    chofer.id,
+        "dni":                   chofer.dni,
+        "nombres":               chofer.nombres,
+        "apellidos":             chofer.apellidos,
+        "fecha_nacimiento":      str(chofer.fecha_nacimiento),
+        "telefono":              chofer.telefono,
+        "email":                 chofer.email,
+        "concesionario_id":      chofer.concesionario_id,
+        "numero_licencia":       chofer.numero_licencia,
+        "tipo_licencia":         chofer.tipo_licencia,
+        "fec_vence_licencia":    str(chofer.fec_vence_licencia),
+        "fec_vence_certif_prot": str(chofer.fec_vence_certif_prot),
+        "anios_experiencia":     chofer.anios_experiencia,
+        "estado":                chofer.estado,
+        "acceso_portal": {
+            "email":                 acceso.email if acceso else None,
+            "password_inicial":      "DNI del chofer",
+            "debe_cambiar_password": acceso.debe_cambiar_password if acceso else False,
+        },
+    }
 
 
 def actualizar_estado(db: Session, chofer_id: int, estado: str) -> Optional[Chofer]:

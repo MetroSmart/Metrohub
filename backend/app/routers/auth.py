@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from jose import JWTError
 
 from app.database import get_db
-from app.schemas.auth import TokenResponse, PerfilResponse
+from app.schemas.auth import TokenResponse, PerfilResponse, CambioPasswordPrimerIngreso
 from app.services import auth_service
 from app.models.usuario import Usuario
 from app.models.acceso_chofer import AccesoChofer
@@ -42,6 +42,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         rol=sesion["rol"],
         nombre=sesion["nombre"],
         chofer_id=sesion["chofer_id"],
+        debe_cambiar_password=sesion.get("debe_cambiar_password", False),
     )
 
 
@@ -64,6 +65,7 @@ def obtener_perfil(usuario: dict = Depends(obtener_usuario_actual),
             nombre=acceso.chofer.nombres,
             apellidos=acceso.chofer.apellidos,
             chofer_id=acceso.chofer_id,
+            debe_cambiar_password=acceso.debe_cambiar_password,
         )
 
     registro = db.query(Usuario).filter(Usuario.email == usuario["email"]).first()
@@ -75,4 +77,26 @@ def obtener_perfil(usuario: dict = Depends(obtener_usuario_actual),
         nombre=registro.nombre,
         apellidos=registro.apellidos,
         chofer_id=None,
+        debe_cambiar_password=False,
     )
+
+
+@router.post("/cambiar-password-primer-ingreso")
+def cambiar_password_primer_ingreso(
+    datos: CambioPasswordPrimerIngreso,
+    usuario: dict = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    if usuario["rol"] != "chofer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Solo los choferes pueden usar este endpoint")
+    try:
+        auth_service.cambiar_password_primer_ingreso(
+            db,
+            usuario["email"],
+            datos.password_actual,
+            datos.password_nueva,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    return {"mensaje": "Contraseña actualizada correctamente", "debe_cambiar_password": False}

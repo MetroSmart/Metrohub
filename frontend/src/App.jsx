@@ -9,8 +9,19 @@ import Buses from "./pages/Buses";
 import Usuarios from "./pages/Usuarios";
 import Concesionarios from "./pages/Concesionarios";
 import MisRutas from "./pages/MisRutas";
+import CambioPasswordPrimerIngreso from "./components/CambioPasswordPrimerIngreso";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+function buildUser(data) {
+  return {
+    email: data.email,
+    role: data.rol,
+    name: `${data.nombre} ${data.apellidos || ""}`.trim() || data.email.split("@")[0],
+    chofer_id: data.chofer_id ?? null,
+    mustChangePassword: Boolean(data.debe_cambiar_password),
+  };
+}
 
 export default function App() {
   const [page, setPage]                     = useState("login");
@@ -31,12 +42,7 @@ export default function App() {
           return;
         }
         const data = await response.json();
-        setUser({
-          email: data.email,
-          role: data.rol,
-          name: `${data.nombre} ${data.apellidos || ""}`.trim() || data.email.split("@")[0],
-          chofer_id: data.chofer_id ?? null,
-        });
+        setUser(buildUser(data));
         setPage(data.rol === "chofer" ? "mis-rutas" : "dashboard");
       } catch {
         localStorage.removeItem("metrohub_access_token");
@@ -51,6 +57,11 @@ export default function App() {
     setUser(userData);
     setPage(userData.role === "chofer" ? "mis-rutas" : "dashboard");
   };
+
+  const handlePasswordChanged = () => {
+    setUser(u => ({ ...u, mustChangePassword: false }));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("metrohub_access_token");
     setUser(null);
@@ -66,6 +77,16 @@ export default function App() {
       }}>
         Cargando MetroHub…
       </div>
+    );
+  }
+
+  if (user?.mustChangePassword && user?.role === "chofer") {
+    return (
+      <CambioPasswordPrimerIngreso
+        user={user}
+        onComplete={handlePasswordChanged}
+        onLogout={handleLogout}
+      />
     );
   }
 

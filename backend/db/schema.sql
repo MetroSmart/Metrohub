@@ -183,6 +183,7 @@ CREATE TABLE accesos_chofer (
     email               VARCHAR(100) NOT NULL UNIQUE,
     password_hash       VARCHAR(255) NOT NULL,
     activo              BOOLEAN NOT NULL DEFAULT TRUE,
+    debe_cambiar_password BOOLEAN NOT NULL DEFAULT TRUE,
     intentos_fallidos   SMALLINT NOT NULL DEFAULT 0,
     bloqueado_hasta     TIMESTAMP,
     ultimo_login        TIMESTAMP,
