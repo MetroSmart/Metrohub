@@ -14,8 +14,8 @@ from app.models.conflicto import Conflicto
 from app.services import dashboard_service
 
 
-def _recopilar_datos(db: Session, extras: dict[str, Any]) -> dict[str, Any]:
-    hoy = date.today()
+def _recopilar_datos(db: Session, extras: dict[str, Any], fecha: date | None = None) -> dict[str, Any]:
+    hoy = fecha or date.today()
     en_30_dias = hoy + timedelta(days=30)
 
     kpis = dashboard_service.obtener_kpis(db)
@@ -122,8 +122,9 @@ def exportar_dashboard(
     formato: str,
     usar_familia_atu: bool = True,
     extras: dict[str, Any] | None = None,
+    fecha: date | None = None,
 ) -> tuple[bytes, str, str]:
-    datos = _recopilar_datos(db, extras or {})
+    datos = _recopilar_datos(db, extras or {}, fecha)
     if usar_familia_atu:
         return ReporteATUFactory.generar_reporte_completo(formato, datos)
     exportador = ExportadorReporteFactory.crear(formato)

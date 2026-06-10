@@ -31,6 +31,7 @@ def exportar_reporte(
             body.formato,
             body.usar_familia_atu,
             body.extras,
+            body.fecha,
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

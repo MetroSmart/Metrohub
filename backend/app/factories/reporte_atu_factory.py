@@ -98,12 +98,11 @@ class ReporteATUFactory:
     ) -> tuple[bytes, str, str]:
         fabrica = cls.obtener_fabrica_secciones(formato)
         encabezado = fabrica.crear_encabezado().renderizar(datos)
-        kpis = fabrica.crear_kpis().renderizar(datos)
+        kpis_txt = fabrica.crear_kpis().renderizar(datos)
         tabla = fabrica.crear_tabla().renderizar(datos)
         payload = {
-            "contenido_texto": encabezado + kpis + tabla,
-            "kpis": datos.get("kpis", {}),
-            "fecha": datos.get("fecha"),
+            **datos,
+            "contenido_texto": encabezado + kpis_txt + tabla,
             "formato_familia": formato,
         }
         exportador = ExportadorReporteFactory.crear(formato)

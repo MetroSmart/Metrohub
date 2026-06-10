@@ -6,6 +6,9 @@ const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export default function Reportes({ user, onNav, onLogout }) {
   const [loading, setLoading] = useState(null); // "pdf" | "xlsx" | null
   const [feedback, setFeedback] = useState(null); // { ok, msg }
+  const hoy = new Date().toISOString().slice(0, 10);
+  const haceUnaSemana = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const [fecha, setFecha] = useState(hoy);
 
   const handleExport = async (formato) => {
     setLoading(formato);
@@ -18,7 +21,7 @@ export default function Reportes({ user, onNav, onLogout }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ formato, usar_familia_atu: true }),
+        body: JSON.stringify({ formato, usar_familia_atu: true, fecha }),
       });
 
       if (!res.ok) {
@@ -65,6 +68,20 @@ export default function Reportes({ user, onNav, onLogout }) {
         {!esAdmin && (
           <div style={styles.infoBox}>
             Solo el Administrador ATU puede generar y exportar reportes.
+          </div>
+        )}
+
+        {esAdmin && (
+          <div style={styles.dateRow}>
+            <label style={styles.dateLabel}>Fecha del reporte</label>
+            <input
+              type="date"
+              value={fecha}
+              min={haceUnaSemana}
+              max={hoy}
+              onChange={e => setFecha(e.target.value)}
+              style={styles.dateInput}
+            />
           </div>
         )}
 
@@ -145,4 +162,7 @@ const styles = {
   feedbackErr:{ background: "#FCEBEB", border: "1px solid #F7C1C1", borderRadius: 8, padding: "11px 16px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#791F1F" },
   noteBox:    { background: "#fff", border: "0.5px solid #e8e8e8", borderRadius: 8, padding: "16px 20px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#444" },
   noteList:   { marginTop: 8, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#666" },
+  dateRow:    { display: "flex", alignItems: "center", gap: 10 },
+  dateLabel:  { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#555", fontWeight: 500 },
+  dateInput:  { fontSize: 13, padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", color: "#111", outline: "none", fontFamily: "'DM Sans',sans-serif" },
 };
