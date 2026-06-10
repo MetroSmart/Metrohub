@@ -30,6 +30,9 @@ export default function Buses({ user, onNav, onLogout }) {
   const [formError, setFormError]       = useState("");
 
   const isAdmin = user?.role === "admin_atu";
+  const isSupervisor = user?.role === "supervisor_area";
+  const canCreate = isAdmin || isSupervisor;
+  const canManageBus = (b) => isAdmin || b.area_id === user?.area_id;
 
   useEffect(() => {
     api.get("/api/areas?solo_activos=true")
@@ -106,8 +109,11 @@ export default function Buses({ user, onNav, onLogout }) {
             <h1 style={styles.pageTitle}>Flota de buses</h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {isAdmin && (
-              <button style={styles.btnPrimary} onClick={() => setModal(true)}>
+            {canCreate && (
+              <button style={styles.btnPrimary} onClick={() => {
+                setForm({ ...FORM_INIT, area_id: isSupervisor ? String(user.area_id) : "" });
+                setModal(true);
+              }}>
                 + Registrar bus
               </button>
             )}
@@ -171,7 +177,7 @@ export default function Buses({ user, onNav, onLogout }) {
                         </span>
                       </td>
                       <td style={styles.td}>
-                        {isAdmin && (
+                        {canManageBus(b) && (
                           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                             <select
                               value={b.estado}
@@ -214,10 +220,11 @@ export default function Buses({ user, onNav, onLogout }) {
               </Field>
               <Field label="Área *">
                 <select name="area_id" value={form.area_id}
-                  onChange={handleField} style={styles.input}>
+                  onChange={handleField} style={styles.input}
+                  disabled={isSupervisor}>
                   <option value="">— Seleccionar —</option>
                   {areas.map(c => (
-                    <option key={c.id} value={c.id}>{c.nombre_corto} — {c.ruc}</option>
+                    <option key={c.id} value={c.id}>{c.nombre_corto}</option>
                   ))}
                 </select>
               </Field>

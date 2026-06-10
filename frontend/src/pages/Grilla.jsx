@@ -57,7 +57,7 @@ export default function Grilla({ user, onNav, onLogout }) {
   const [formHorarioErr, setFormHorarioErr]       = useState("");
   const [formHorarioSaving, setFormHorarioSaving] = useState(false);
 
-  // Modal asignar chofer (admin only)
+  // Modal asignar chofer (admin o supervisor de área)
   const [asigTarget, setAsigTarget]         = useState(null); // horario seleccionado
   const [asigChoferes, setAsigChoferes]     = useState([]);
   const [asigConcs, setAsigConcs]           = useState([]);
@@ -107,14 +107,26 @@ export default function Grilla({ user, onNav, onLogout }) {
     setAsigTarget(horario);
     setFormAsig({ chofer_id: "", area_id: user?.role === "supervisor_area" ? String(user.area_id) : "", bus_placa: "", notas: "" });
     setFormAsigErr("");
+    const areaParam = user?.role === "supervisor_area" && user.area_id
+      ? `&area_id=${user.area_id}` : "";
     const [ch, co, bu] = await Promise.all([
-      api.get("/api/choferes?estado=activo").catch(() => []),
+      api.get(`/api/choferes?estado=activo${areaParam}`).catch(() => []),
       api.get("/api/areas").catch(() => ({ areas: [] })),
-      api.get("/api/buses?estado=operativo").catch(() => ({ buses: [] })),
+      api.get(`/api/buses?estado=operativo${areaParam}`).catch(() => ({ buses: [] })),
     ]);
-    setAsigChoferes(Array.isArray(ch) ? ch : (ch.choferes ?? ch));
+    const choferes = Array.isArray(ch) ? ch : (ch.choferes ?? ch);
+    setAsigChoferes(
+      user?.role === "supervisor_area" && user.area_id
+        ? choferes.filter(c => c.area_id === user.area_id)
+        : choferes,
+    );
     setAsigConcs(co.areas ?? co);
-    setAsigBuses(bu.buses ?? bu);
+    const buses = bu.buses ?? bu;
+    setAsigBuses(
+      user?.role === "supervisor_area" && user.area_id
+        ? buses.filter(b => b.area_id === user.area_id)
+        : buses,
+    );
   };
 
   const handleCrearAsignacion = async (e) => {
@@ -601,7 +613,7 @@ export default function Grilla({ user, onNav, onLogout }) {
         </div>
       )}
 
-      {/* Modal asignar chofer (admin only) */}
+      {/* Modal asignar chofer (admin o supervisor de área) */}
       {asigTarget && (
         <div style={styles.overlay}>
           <div style={styles.modal}>

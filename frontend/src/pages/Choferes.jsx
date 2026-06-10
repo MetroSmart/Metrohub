@@ -60,12 +60,17 @@ export default function Choferes({ user, onNav, onLogout }) {
   }, []);
 
   useEffect(() => {
-    const url = filtroEstado ? `/api/choferes?estado=${filtroEstado}` : "/api/choferes";
+    const params = new URLSearchParams();
+    if (filtroEstado) params.set("estado", filtroEstado);
+    if (user?.role === "supervisor_area" && user.area_id) {
+      params.set("area_id", user.area_id);
+    }
+    const qs = params.toString();
     setLoading(true);
-    api.get(url)
+    api.get(qs ? `/api/choferes?${qs}` : "/api/choferes")
       .then(data => { setChoferes(data); setLoading(false); })
       .catch(e  => { setError(e.message); setLoading(false); });
-  }, [filtroEstado]);
+  }, [filtroEstado, user?.role, user?.area_id]);
 
   useEffect(() => {
     if (tab !== "disponibilidad") return;
