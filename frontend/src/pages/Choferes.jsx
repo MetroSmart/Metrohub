@@ -19,7 +19,7 @@ const MOTIVO_STYLE = {
 };
 
 const FORM_INIT = {
-  dni: "", nombres: "", apellidos: "",
+  dni: "", nombres: "", apellidos: "", email: "",
   fecha_nacimiento: "", concesionario_id: "",
   numero_licencia: "", tipo_licencia: "A-IIIA",
   fec_vence_licencia: "", fec_vence_certif_prot: "",
@@ -95,13 +95,20 @@ export default function Choferes({ user, onNav, onLogout }) {
     }
     setSubmitting(true);
     try {
+      const email = form.email.trim();
       const nuevo = await api.post("/api/choferes", {
         ...form,
+        email: email || null,
         concesionario_id: Number(form.concesionario_id),
       });
       setChoferes(prev => [...prev, nuevo]);
       setModal(false);
       setForm(FORM_INIT);
+      if (nuevo.acceso_portal?.email) {
+        alert(
+          `Chofer registrado.\n\nAcceso al portal:\nCorreo: ${nuevo.acceso_portal.email}\nContraseña inicial: DNI (${form.dni})\n\nDeberá cambiarla en su primer ingreso.`
+        );
+      }
     } catch (e) {
       setFormError(e.message || "No se pudo registrar el chofer.");
     } finally {
@@ -355,6 +362,11 @@ export default function Choferes({ user, onNav, onLogout }) {
                     onChange={handleField} style={styles.input} />
                 </Field>
               </div>
+              <Field label="Correo (acceso al portal)">
+                <input type="email" name="email" value={form.email} onChange={handleField}
+                  placeholder="opcional — si no se indica, se usará el DNI@metrohub.gob.pe"
+                  style={styles.input} />
+              </Field>
               <Field label="Concesionario">
                 <select name="concesionario_id" value={form.concesionario_id}
                   onChange={handleField} style={styles.input}>

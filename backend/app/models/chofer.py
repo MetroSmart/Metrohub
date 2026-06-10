@@ -33,5 +33,6 @@ class Chofer(Base):
     updated_at            = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
 
     concesionario     = relationship("Concesionario", back_populates="choferes")
+    acceso            = relationship("AccesoChofer", back_populates="chofer", uselist=False)
     disponibilidades  = relationship("DisponibilidadChofer", back_populates="chofer", cascade="all, delete-orphan")
     asignaciones      = relationship("Asignacion", back_populates="chofer")

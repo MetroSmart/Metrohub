@@ -8,8 +8,20 @@ import Reportes from "./pages/Reportes";
 import Buses from "./pages/Buses";
 import Usuarios from "./pages/Usuarios";
 import Concesionarios from "./pages/Concesionarios";
+import MisRutas from "./pages/MisRutas";
+import CambioPasswordPrimerIngreso from "./components/CambioPasswordPrimerIngreso";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+function buildUser(data) {
+  return {
+    email: data.email,
+    role: data.rol,
+    name: `${data.nombre} ${data.apellidos || ""}`.trim() || data.email.split("@")[0],
+    chofer_id: data.chofer_id ?? null,
+    mustChangePassword: Boolean(data.debe_cambiar_password),
+  };
+}
 
 export default function App() {
   const [page, setPage]                     = useState("login");
@@ -30,8 +42,8 @@ export default function App() {
           return;
         }
         const data = await response.json();
-        setUser({ email: data.email, role: data.rol, name: data.email.split("@")[0] });
-        setPage("dashboard");
+        setUser(buildUser(data));
+        setPage(data.rol === "chofer" ? "mis-rutas" : "dashboard");
       } catch {
         localStorage.removeItem("metrohub_access_token");
       } finally {
@@ -41,7 +53,15 @@ export default function App() {
     restoreSession();
   }, []);
 
-  const handleLogin = (userData) => { setUser(userData); setPage("dashboard"); };
+  const handleLogin = (userData) => {
+    setUser(userData);
+    setPage(userData.role === "chofer" ? "mis-rutas" : "dashboard");
+  };
+
+  const handlePasswordChanged = () => {
+    setUser(u => ({ ...u, mustChangePassword: false }));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("metrohub_access_token");
     setUser(null);
@@ -60,9 +80,20 @@ export default function App() {
     );
   }
 
+  if (user?.mustChangePassword && user?.role === "chofer") {
+    return (
+      <CambioPasswordPrimerIngreso
+        user={user}
+        onComplete={handlePasswordChanged}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   const props = { user, onNav: setPage, onLogout: handleLogout };
 
   if (page === "login")          return <Login onLogin={handleLogin} />;
+  if (page === "mis-rutas")      return <MisRutas       {...props} />;
   if (page === "grilla")         return <Grilla         {...props} />;
   if (page === "rutas")          return <Rutas          {...props} />;
   if (page === "choferes")       return <Choferes       {...props} />;

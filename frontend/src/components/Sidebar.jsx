@@ -13,14 +13,21 @@ const NAV_ADMIN = [
   { key: "concesionarios", label: "Concesionarios",     icon: <IconBuilding /> },
 ];
 
+const NAV_CHOFER = [
+  { key: "mis-rutas", label: "Mis rutas asignadas", icon: <IconRoutes /> },
+];
+
 export default function Sidebar({ active, onNav, onLogout, user }) {
   const isAdmin = user?.role === "admin_atu";
+  const isChofer = user?.role === "chofer";
 
-  const sections = [
-    { label: "Principal",   items: NAV_PRINCIPAL },
-    { label: "Reportes",    items: NAV_REPORTES  },
-    ...(isAdmin ? [{ label: "Administración", items: NAV_ADMIN }] : []),
-  ];
+  const sections = isChofer
+    ? [{ label: "Mi jornada", items: NAV_CHOFER }]
+    : [
+        { label: "Principal",   items: NAV_PRINCIPAL },
+        { label: "Reportes",    items: NAV_REPORTES  },
+        ...(isAdmin ? [{ label: "Administración", items: NAV_ADMIN }] : []),
+      ];
 
   return (
     <aside style={styles.sidebar}>
@@ -33,7 +40,7 @@ export default function Sidebar({ active, onNav, onLogout, user }) {
         <div>
           <div style={styles.userName}>{user?.name ?? "Usuario"}</div>
           <div style={styles.userRole}>
-            {isAdmin ? "Admin ATU" : "Supervisor"}
+            {isChofer ? "Chofer" : isAdmin ? "Admin ATU" : "Supervisor"}
           </div>
         </div>
       </div>

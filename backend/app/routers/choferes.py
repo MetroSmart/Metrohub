@@ -1,5 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -12,11 +13,32 @@ router = APIRouter()
 _ESTADOS_VALIDOS = {"activo", "suspendido", "licencia_medica", "vacaciones", "inactivo"}
 
 
+def _usuario_id(db: Session, email: str) -> Optional[int]:
+    row = db.execute(text("SELECT id FROM usuarios WHERE email = :e"), {"e": email}).fetchone()
+    return row[0] if row else None
+
+
 @router.get("/alertas/documentos")
 def alertas_documentos(db: Session = Depends(get_db),
                        usuario: dict = Depends(obtener_usuario_actual)):
     alertas = chofer_service.alertas_documentos(db)
     return {"total_alertas": len(alertas), "choferes": alertas}
+
+
+@router.get("/me/asignaciones")
+def mis_asignaciones(
+    fecha: Optional[str] = None,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    if usuario["rol"] != "chofer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Solo los choferes pueden consultar sus asignaciones")
+    chofer_id = usuario.get("chofer_id")
+    if not chofer_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Sesión de chofer inválida")
+    return chofer_service.listar_mis_asignaciones(db, chofer_id, fecha)
 
 
 @router.get("/")
@@ -48,7 +70,17 @@ def registrar_chofer(datos: ChoferCrear, db: Session = Depends(get_db),
     if chofer_service.dni_existe(db, datos.dni):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"Ya existe un chofer con DNI {datos.dni}")
-    return chofer_service.crear_chofer(db, datos)
+    try:
+        if usuario["rol"] == "supervisor_concesionario":
+            chofer_service.validar_concesionario_supervisor(
+                db, usuario["email"], datos.concesionario_id,
+            )
+        chofer = chofer_service.crear_chofer(db, datos, creado_por_id=_usuario_id(db, usuario["email"]))
+        return chofer_service.serializar_chofer_con_acceso(db, chofer)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.patch("/{chofer_id}/estado")
