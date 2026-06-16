@@ -25,6 +25,15 @@ os.environ.setdefault("POSTGRES_DB", "test")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
+
+
+def pytest_collection_modifyitems(config, items):
+    """Omite los tests marcados @pytest.mark.postgres cuando la suite corre
+    sobre SQLite en memoria (vistas/triggers/coerción de tipos no soportados)."""
+    skip_pg = pytest.mark.skip(reason="requiere PostgreSQL real (no soportado en SQLite)")
+    for item in items:
+        if "postgres" in item.keywords:
+            item.add_marker(skip_pg)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
