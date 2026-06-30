@@ -8,3 +8,11 @@ postgres_data/
 *.log
 *.out
 DOCUMENTACION.md
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage/
+backend/htmlcov/
+frontend/coverage/
