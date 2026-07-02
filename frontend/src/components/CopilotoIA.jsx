@@ -180,7 +180,14 @@ export default function CopilotoIA({ user, onNavToGrilla }) {
             {tab === "fatiga" && (
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontSize: 13, color: "#374151", fontWeight: 600 }}>Alertas de esta semana</span>
+                  <div>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 600 }}>Alertas de esta semana</span>
+                    {alertas?.actualizado_en && !cargandoFatiga && (
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>
+                        hace {Math.round((Date.now() / 1000 - alertas.actualizado_en) / 60)} min · caché 5 min
+                      </div>
+                    )}
+                  </div>
                   <button onClick={cargarAlertas} style={estiloBotonSecundario}>
                     {cargandoFatiga ? "Cargando…" : "↻ Actualizar"}
                   </button>

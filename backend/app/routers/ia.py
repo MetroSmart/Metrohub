@@ -1,4 +1,5 @@
 import os
+import time
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -17,6 +18,21 @@ class ChatBody(BaseModel):
 router = APIRouter()
 
 IA_SERVICE_URL = os.getenv("IA_SERVICE_URL", "http://localhost:8001")
+
+_TTL_ALERTAS = 300   # 5 minutos
+_TTL_CHAT    = 600   # 10 minutos
+_cache: dict[str, tuple[float, dict]] = {}
+
+
+def _cache_get(key: str) -> dict | None:
+    entry = _cache.get(key)
+    if entry and time.time() - entry[0] < entry[1]["_ttl"]:
+        return entry[1]
+    return None
+
+
+def _cache_set(key: str, data: dict, ttl: int) -> None:
+    _cache[key] = (time.time(), {**data, "_ttl": ttl})
 
 INTENTS_VALIDOS = {"disponibilidad", "explicar_alerta", "horas_area", "estado_programacion", "resolver_conflicto"}
 
@@ -77,9 +93,15 @@ async def alertas_fatiga(
 ):
     _solo_admin_o_supervisor(usuario)
 
+    cached = _cache_get("alertas_fatiga")
+    if cached:
+        return {k: v for k, v in cached.items() if k != "_ttl"}
+
     alertas_raw = ia_service.detectar_alertas_fatiga(db)
     if not alertas_raw:
-        return {"total": 0, "alertas": [], "mensaje": "No se detectaron alertas esta semana"}
+        result = {"total": 0, "alertas": [], "actualizado_en": int(time.time())}
+        _cache_set("alertas_fatiga", result, _TTL_ALERTAS)
+        return result
 
     resultado = await _llamar_ia("/alertas-fatiga", {"alertas": alertas_raw})
     alertas_ia = resultado.get("alertas", [])
@@ -92,10 +114,13 @@ async def alertas_fatiga(
             "fecha_referencia": alerta_raw.get("fecha_referencia", ""),
         })
 
-    return {
+    result = {
         "total": len(alertas_final),
         "alertas": alertas_final,
+        "actualizado_en": int(time.time()),
     }
+    _cache_set("alertas_fatiga", result, _TTL_ALERTAS)
+    return result
 
 
 @router.post("/chat")
@@ -118,10 +143,22 @@ async def chat_asistente(
     if not pregunta:
         raise HTTPException(status_code=400, detail="'pregunta' es requerida")
 
+    cache_key = None
+    if intent == "resolver_conflicto":
+        cache_key = f"chat_resolver_{params.get('tipo', '')}_{params.get('severidad', '')}"
+        cached = _cache_get(cache_key)
+        if cached:
+            return {k: v for k, v in cached.items() if k != "_ttl"}
+
     contexto = ia_service.obtener_contexto_chat(db, intent, params)
     resultado = await _llamar_ia("/chat", {
         "intent": intent,
         "contexto": contexto,
         "pregunta": pregunta,
     })
-    return {"intent": intent, "respuesta": resultado.get("respuesta", "")}
+    response = {"intent": intent, "respuesta": resultado.get("respuesta", "")}
+
+    if cache_key:
+        _cache_set(cache_key, response, _TTL_CHAT)
+
+    return response
