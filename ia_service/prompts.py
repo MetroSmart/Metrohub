@@ -50,6 +50,19 @@ def prompt_alertas_fatiga(alertas: list[dict]) -> str:
 
 
 def prompt_chat(intent: str, contexto: dict, pregunta: str) -> str:
+    if intent == "resolver_conflicto":
+        tipo = contexto.get("tipo", "").replace("_", " ")
+        sev  = contexto.get("severidad", "")
+        desc = contexto.get("descripcion", "")
+        return (
+            f"{SISTEMA_BASE}\n\n"
+            f"El administrador necesita resolver el siguiente conflicto de programación:\n"
+            f"  Tipo: {tipo}\n"
+            f"  Severidad: {sev}\n"
+            f"  Descripción: {desc}\n\n"
+            f"Proporciona 2-3 pasos concretos y prácticos para resolverlo. "
+            f"Sé directo. Usa párrafos cortos, sin bullets."
+        )
     contexto_texto = "\n".join([f"  {k}: {v}" for k, v in contexto.items()])
     return (
         f"{SISTEMA_BASE}\n\n"

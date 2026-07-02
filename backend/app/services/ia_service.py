@@ -283,7 +283,17 @@ def obtener_contexto_chat(db: Session, intent: str, params: dict) -> dict:
         return _ctx_horas_area(db, params)
     if intent == "estado_programacion":
         return _ctx_estado_programacion(db, params)
+    if intent == "resolver_conflicto":
+        return _ctx_resolver_conflicto(params)
     return {"info": "intent no reconocido"}
+
+
+def _ctx_resolver_conflicto(params: dict) -> dict:
+    return {
+        "tipo": params.get("tipo", ""),
+        "severidad": params.get("severidad", ""),
+        "descripcion": params.get("descripcion", ""),
+    }
 
 
 def _ctx_disponibilidad(db: Session, params: dict) -> dict:

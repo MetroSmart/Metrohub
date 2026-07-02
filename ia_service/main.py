@@ -10,6 +10,35 @@ from gemini_client import generar_texto, generar_json
 
 app = FastAPI(title="MetroHub IA Service", version="1.0.0")
 
+_TIPO_FALLBACK = {
+    "exceso_horas_semana": (
+        "Exceso de horas semanales detectado.",
+        "Redistribuir turnos con otros choferes disponibles del área.",
+        "alta",
+    ),
+    "turnos_noche_consecutivos": (
+        "Demasiados turnos noche consecutivos.",
+        "Programar descanso nocturno y reasignar al menos un turno.",
+        "media",
+    ),
+    "descanso_insuficiente": (
+        "Descanso insuficiente entre turnos consecutivos.",
+        "Garantizar mínimo 8 horas entre el fin de un turno y el inicio del siguiente.",
+        "alta",
+    ),
+}
+
+
+def _items_fallback(alertas) -> list[dict]:
+    resultado = []
+    for a in alertas:
+        alerta_txt, sugerencia, sev = _TIPO_FALLBACK.get(
+            a.tipo,
+            ("Alerta de programación detectada.", "Revisar la asignación del chofer.", "media"),
+        )
+        resultado.append({"alerta": alerta_txt, "sugerencia": sugerencia, "severidad": sev})
+    return resultado
+
 
 @app.get("/health")
 def health():
@@ -48,8 +77,10 @@ def generar_alertas(req: AlertaFatigaRequest):
     prompt = prompt_alertas_fatiga([a.model_dump() for a in req.alertas])
     try:
         items = generar_json(prompt)
-    except (json.JSONDecodeError, ValueError):
-        raise HTTPException(status_code=502, detail="Error al procesar respuesta de IA")
+        if not isinstance(items, list):
+            raise ValueError("respuesta no es lista")
+    except Exception:
+        items = _items_fallback(req.alertas)
 
     resultado = [
         AlertaFatigaTexto(
@@ -68,5 +99,8 @@ def generar_alertas(req: AlertaFatigaRequest):
 @app.post("/chat", response_model=ChatResponse)
 def chat_asistente(req: ChatRequest):
     prompt = prompt_chat(req.intent, req.contexto, req.pregunta)
-    respuesta = generar_texto(prompt)
+    try:
+        respuesta = generar_texto(prompt)
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=f"Servicio IA no disponible: {e}")
     return ChatResponse(respuesta=respuesta)

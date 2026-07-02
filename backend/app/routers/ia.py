@@ -18,7 +18,7 @@ router = APIRouter()
 
 IA_SERVICE_URL = os.getenv("IA_SERVICE_URL", "http://localhost:8001")
 
-INTENTS_VALIDOS = {"disponibilidad", "explicar_alerta", "horas_area", "estado_programacion"}
+INTENTS_VALIDOS = {"disponibilidad", "explicar_alerta", "horas_area", "estado_programacion", "resolver_conflicto"}
 
 
 def _solo_admin_o_supervisor(usuario: dict):

@@ -37,6 +37,7 @@ export default function Grilla({ user, onNav, onLogout }) {
   const [saving, setSaving]                 = useState(false);
   const [approving, setApproving]           = useState(false);
   const [resolving, setResolving]           = useState(null);
+  const [resolverModal, setResolverModal]   = useState(null);
   const [duplicating, setDuplicating]       = useState(false);
 
   // Modal nueva programación
@@ -269,13 +270,37 @@ export default function Grilla({ user, onNav, onLogout }) {
     }
   };
 
-  const handleResolver = async (conflictoId, horarioId) => {
+  const handleResolver = async (conflictoId, horarioId, conflicto) => {
+    setResolving(conflictoId);
+    let sugerenciaIA = null;
+    try {
+      const data = await api.post("/api/ia/chat", {
+        intent: "resolver_conflicto",
+        pregunta: `¿Cómo resuelvo este conflicto?`,
+        params: {
+          tipo: conflicto.tipo,
+          descripcion: conflicto.descripcion,
+          severidad: conflicto.severidad,
+        },
+      });
+      sugerenciaIA = data.respuesta || null;
+    } catch {
+      // IA no disponible — se muestra el modal igualmente sin sugerencia
+    } finally {
+      setResolving(null);
+    }
+    setResolverModal({ conflictoId, horarioId, tipo: conflicto.tipo, descripcion: conflicto.descripcion, severidad: conflicto.severidad, sugerenciaIA });
+  };
+
+  const confirmarResolucion = async () => {
+    const { conflictoId, horarioId } = resolverModal;
     setResolving(conflictoId);
     try {
       await api.patch(`/api/conflictos/${conflictoId}/resolver`);
       setHorarios(prev =>
         prev.map(h => h.id === horarioId ? { ...h, conflicto: null } : h)
       );
+      setResolverModal(null);
     } catch {
       alert("No se pudo resolver. Verifica que tengas rol de Administrador ATU.");
     } finally {
@@ -524,9 +549,9 @@ export default function Grilla({ user, onNav, onLogout }) {
                             <button
                               style={styles.resolveBtn}
                               disabled={resolving === h.conflicto.id}
-                              onClick={() => handleResolver(h.conflicto.id, h.id)}
+                              onClick={() => handleResolver(h.conflicto.id, h.id, h.conflicto)}
                             >
-                              {resolving === h.conflicto.id ? "Resolviendo…" : "Resolver"}
+                              {resolving === h.conflicto.id ? "Consultando IA…" : "Resolver"}
                             </button>
                           )}
                         </div>
@@ -820,6 +845,57 @@ export default function Grilla({ user, onNav, onLogout }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal resolver conflicto con sugerencia IA */}
+      {resolverModal && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Resolver conflicto</h2>
+              <button style={styles.modalClose} onClick={() => setResolverModal(null)}>×</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ ...styles.tag, ...(SEV_STYLE[resolverModal.severidad] ?? SEV_STYLE.media) }}>
+                  {resolverModal.tipo.replace(/_/g, " ")}
+                </span>
+                <span style={{ ...styles.tag, ...(SEV_STYLE[resolverModal.severidad] ?? SEV_STYLE.media) }}>
+                  {resolverModal.severidad}
+                </span>
+              </div>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#374151", margin: 0, lineHeight: 1.5 }}>
+                {resolverModal.descripcion}
+              </p>
+              {resolverModal.sugerenciaIA ? (
+                <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 14px" }}>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#1D4ED8", marginBottom: 6 }}>
+                    Sugerencia del Copiloto IA
+                  </div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#1E3A5F", lineHeight: 1.6 }}>
+                    {resolverModal.sugerenciaIA}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 8, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#6B7280" }}>
+                  Copiloto IA no disponible — puedes resolver el conflicto manualmente.
+                </div>
+              )}
+              <div style={styles.formActions}>
+                <button style={styles.btnSecondary} onClick={() => setResolverModal(null)}>
+                  Cancelar
+                </button>
+                <button
+                  style={{ ...styles.btnPrimary, opacity: resolving === resolverModal.conflictoId ? 0.6 : 1 }}
+                  disabled={resolving === resolverModal.conflictoId}
+                  onClick={confirmarResolucion}
+                >
+                  {resolving === resolverModal.conflictoId ? "Resolviendo…" : "Confirmar resolución"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

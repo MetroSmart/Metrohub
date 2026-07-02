@@ -21,13 +21,19 @@ def _get_model():
 
 def generar_texto(prompt: str) -> str:
     model = _get_model()
-    response = model.generate_content(prompt)
-    return response.text.strip()
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        raise ValueError(f"Gemini API: {e}") from e
 
 
 def generar_json(prompt: str):
     model = _get_model()
-    response = model.generate_content(prompt)
+    try:
+        response = model.generate_content(prompt)
+    except Exception as e:
+        raise ValueError(f"Gemini API: {e}") from e
     texto = response.text.strip()
     if texto.startswith("```"):
         # split por ``` y tomar el segmento interior; .strip() elimina \n inicial
