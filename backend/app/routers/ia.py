@@ -19,8 +19,8 @@ router = APIRouter()
 
 IA_SERVICE_URL = os.getenv("IA_SERVICE_URL", "http://localhost:8001")
 
-_TTL_ALERTAS = 300   # 5 minutos
-_TTL_CHAT    = 600   # 10 minutos
+_TTL_ALERTAS = 1800  # 30 minutos
+_TTL_CHAT    = 3600  # 1 hora por tipo de conflicto
 _cache: dict[str, tuple[float, dict]] = {}
 
 

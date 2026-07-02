@@ -286,28 +286,36 @@ export default function Grilla({ user, onNav, onLogout, initialFecha }) {
     }
   };
 
-  const handleResolver = async (conflictoId, horarioId, conflicto) => {
-    setResolving(conflictoId);
-    let sugerencia = null;
-    let esIA = false;
+  const handleResolver = (conflictoId, horarioId, conflicto) => {
+    setResolverModal({
+      conflictoId, horarioId,
+      tipo: conflicto.tipo,
+      descripcion: conflicto.descripcion,
+      severidad: conflicto.severidad,
+      sugerencia: GUIA_POR_TIPO[conflicto.tipo] || null,
+      esIA: false,
+      cargandoIA: false,
+    });
+  };
+
+  const pedirSugerenciaIA = async () => {
+    setResolverModal(m => ({ ...m, cargandoIA: true }));
     try {
       const data = await api.post("/api/ia/chat", {
         intent: "resolver_conflicto",
-        pregunta: `¿Cómo resuelvo este conflicto?`,
+        pregunta: "¿Cómo resuelvo este conflicto?",
         params: {
-          tipo: conflicto.tipo,
-          descripcion: conflicto.descripcion,
-          severidad: conflicto.severidad,
+          tipo: resolverModal.tipo,
+          descripcion: resolverModal.descripcion,
+          severidad: resolverModal.severidad,
         },
       });
-      if (data.respuesta) { sugerencia = data.respuesta; esIA = true; }
+      if (data.respuesta) {
+        setResolverModal(m => ({ ...m, sugerencia: data.respuesta, esIA: true, cargandoIA: false }));
+      }
     } catch {
-      // IA no disponible — usar guía local por tipo de conflicto
-    } finally {
-      setResolving(null);
+      setResolverModal(m => ({ ...m, cargandoIA: false }));
     }
-    if (!sugerencia) sugerencia = GUIA_POR_TIPO[conflicto.tipo] || null;
-    setResolverModal({ conflictoId, horarioId, tipo: conflicto.tipo, descripcion: conflicto.descripcion, severidad: conflicto.severidad, sugerencia, esIA });
   };
 
   const confirmarResolucion = async () => {
@@ -566,10 +574,9 @@ export default function Grilla({ user, onNav, onLogout, initialFecha }) {
                           {user?.role === "admin_atu" && (
                             <button
                               style={styles.resolveBtn}
-                              disabled={resolving === h.conflicto.id}
-                              onClick={() => handleResolver(h.conflicto.id, h.id, h.conflicto)}
+                                onClick={() => handleResolver(h.conflicto.id, h.id, h.conflicto)}
                             >
-                              {resolving === h.conflicto.id ? "Consultando IA…" : "Resolver"}
+                              Resolver
                             </button>
                           )}
                         </div>
@@ -893,8 +900,19 @@ export default function Grilla({ user, onNav, onLogout, initialFecha }) {
                   border: `1px solid ${resolverModal.esIA ? "#BFDBFE" : "#BBF7D0"}`,
                   borderRadius: 8, padding: "12px 14px",
                 }}>
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: resolverModal.esIA ? "#1D4ED8" : "#15803D", marginBottom: 6 }}>
-                    {resolverModal.esIA ? "Sugerencia del Copiloto IA" : "Guía de resolución"}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: resolverModal.esIA ? "#1D4ED8" : "#15803D" }}>
+                      {resolverModal.esIA ? "Sugerencia del Copiloto IA" : "Guía de resolución"}
+                    </span>
+                    {!resolverModal.esIA && (
+                      <button
+                        onClick={pedirSugerenciaIA}
+                        disabled={resolverModal.cargandoIA}
+                        style={{ fontSize: 10, padding: "2px 8px", borderRadius: 5, border: "1px solid #BFDBFE", background: "#EFF6FF", color: "#1D4ED8", cursor: "pointer", fontFamily: "inherit" }}
+                      >
+                        {resolverModal.cargandoIA ? "Consultando…" : "✨ Pedir análisis IA"}
+                      </button>
+                    )}
                   </div>
                   <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: resolverModal.esIA ? "#1E3A5F" : "#1A3D2B", lineHeight: 1.6 }}>
                     {resolverModal.sugerencia}
