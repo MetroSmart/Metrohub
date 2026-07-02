@@ -29,6 +29,7 @@ export default function App() {
   const [page, setPage]                     = useState("login");
   const [user, setUser]                     = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [grillaFecha, setGrillaFecha]       = useState(null);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -91,8 +92,6 @@ export default function App() {
       />
     );
   }
-
-  const [grillaFecha, setGrillaFecha] = useState(null);
 
   const irAGrilla = (fecha) => {
     setGrillaFecha(fecha);
