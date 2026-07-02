@@ -19,8 +19,9 @@ router = APIRouter()
 
 IA_SERVICE_URL = os.getenv("IA_SERVICE_URL", "http://localhost:8001")
 
-_TTL_ALERTAS = 1800  # 30 minutos
-_TTL_CHAT    = 3600  # 1 hora por tipo de conflicto
+_TTL_ALERTAS    = 1800  # 30 minutos
+_TTL_CHAT       = 3600  # 1 hora por tipo de conflicto
+_TTL_REEMPLAZO  =  600  # 10 minutos por asignación
 _cache: dict[str, tuple[float, dict]] = {}
 
 
@@ -64,6 +65,63 @@ async def ia_health():
         return {"ia_service": "no disponible"}
 
 
+@router.get("/asignaciones-selector")
+async def asignaciones_selector(
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    _solo_admin_o_supervisor(usuario)
+    from datetime import date, timedelta
+    from app.models.asignacion import Asignacion
+    from app.models.horario_servicio import HorarioServicio
+    from app.models.conflicto import Conflicto
+
+    hoy = date.today()
+    asigs = (
+        db.query(Asignacion)
+        .join(HorarioServicio, Asignacion.horario_id == HorarioServicio.id)
+        .filter(
+            Asignacion.estado.in_(["propuesta", "confirmada"]),
+            HorarioServicio.fecha >= hoy,
+            HorarioServicio.fecha <= hoy + timedelta(days=14),
+        )
+        .order_by(HorarioServicio.fecha, HorarioServicio.hora_salida)
+        .all()
+    )
+
+    asigs_validas = [a for a in asigs if a.chofer and a.horario]
+    asig_ids = [a.id for a in asigs_validas]
+
+    conflictos_ids = {
+        c.asignacion_id
+        for c in db.query(Conflicto.asignacion_id)
+        .filter(Conflicto.asignacion_id.in_(asig_ids), Conflicto.resuelto == False)
+        .all()
+    }
+
+    choferes_con_alerta = {a["chofer_id"] for a in ia_service.detectar_alertas_fatiga(db)}
+
+    TURNO = {"manana": "Mañana", "tarde": "Tarde", "noche": "Noche"}
+    resultado = [
+        {
+            "asignacion_id": a.id,
+            "label": (
+                f"{a.chofer.nombres} {a.chofer.apellidos}"
+                f" — {TURNO.get(a.horario.turno, a.horario.turno)}"
+                f" · {a.horario.fecha.strftime('%d %b')}"
+                f" · {a.horario.ruta.codigo if a.horario.ruta else 'Ruta ?'}"
+            ),
+            "tiene_problema": (
+                a.id in conflictos_ids or a.chofer_id in choferes_con_alerta
+            ),
+        }
+        for a in asigs_validas
+    ]
+
+    resultado.sort(key=lambda x: (0 if x["tiene_problema"] else 1))
+    return resultado
+
+
 @router.post("/sugerir-reemplazo/{asignacion_id}")
 async def sugerir_reemplazo(
     asignacion_id: int,
@@ -72,18 +130,25 @@ async def sugerir_reemplazo(
 ):
     _solo_admin_o_supervisor(usuario)
 
+    cache_key = f"reemplazo_{asignacion_id}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return {k: v for k, v in cached.items() if k != "_ttl"}
+
     datos = ia_service.obtener_candidatos_reemplazo(db, asignacion_id)
     if not datos or not datos.get("candidatos"):
         raise HTTPException(status_code=404, detail="No se encontraron candidatos disponibles")
 
     resultado = await _llamar_ia("/reemplazo", datos)
-    return {
+    response = {
         "asignacion_id": asignacion_id,
         "horario": datos["horario"],
         "chofer_ausente": datos["chofer_ausente"],
         "candidatos_evaluados": len(datos["candidatos"]),
         "recomendacion_ia": resultado,
     }
+    _cache_set(cache_key, response, _TTL_REEMPLAZO)
+    return response
 
 
 @router.get("/alertas-fatiga")

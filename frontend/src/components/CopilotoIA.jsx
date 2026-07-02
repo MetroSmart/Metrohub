@@ -14,12 +14,6 @@ const INTENTS = [
   { id: "estado_programacion", label: "Estado de una programación",       placeholder: "Ej: ¿Cómo está la programación 3?" },
 ];
 
-const PARAMS_POR_INTENT = {
-  disponibilidad:      [{ key: "fecha",            label: "Fecha (AAAA-MM-DD)" }, { key: "turno", label: "Turno (manana/tarde/noche)" }],
-  explicar_alerta:     [{ key: "chofer_id",         label: "ID del chofer" }],
-  horas_area:          [{ key: "area_id",           label: "ID del área" }, { key: "fecha", label: "Fecha de referencia (AAAA-MM-DD)" }],
-  estado_programacion: [{ key: "programacion_id",   label: "ID de la programación" }],
-};
 
 export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
   const [abierto,         setAbierto]         = useState(false);
@@ -33,14 +27,20 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
   const [alertas,    setAlertas]    = useState(null);
 
   // Tab Sugerir Reemplazo
-  const [asigId,     setAsigId]     = useState("");
-  const [reemplazo,  setReemplazo]  = useState(null);
+  const [asigId,       setAsigId]       = useState("");
+  const [asigOpciones, setAsigOpciones] = useState(null);
+  const [reemplazo,    setReemplazo]    = useState(null);
 
   // Tab Asistente Chat
   const [intentSel,  setIntentSel]  = useState(INTENTS[0].id);
-  const [params,     setParams]     = useState({});
   const [pregunta,   setPregunta]   = useState("");
   const [respuesta,  setRespuesta]  = useState("");
+
+  const cargarOpciones = useCallback(() => {
+    api.get("/api/ia/asignaciones-selector")
+      .then(data => setAsigOpciones(data))
+      .catch(() => setAsigOpciones([]));
+  }, []);
 
   useEffect(() => {
     if (!reemplazoTrigger) return;
@@ -50,6 +50,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
     setAsigId(String(id));
     setReemplazo(null);
     setError("");
+    if (!asigOpciones) cargarOpciones();
     setCargandoReemplazo(true);
     api.post(`/api/ia/sugerir-reemplazo/${id}`)
       .then(data => setReemplazo(data))
@@ -77,11 +78,12 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
   const onTabChange = (t) => {
     setTab(t);
     limpiarError();
-    if (t === "fatiga" && alertas === null) cargarAlertas();
+    if (t === "fatiga"    && alertas === null)      cargarAlertas();
+    if (t === "reemplazo" && asigOpciones === null) cargarOpciones();
   };
 
   const pedirReemplazo = async () => {
-    if (!asigId.trim()) { setError("Ingresa el ID de la asignación"); return; }
+    if (!asigId.trim()) { setError("Selecciona una asignación de la lista"); return; }
     setCargandoReemplazo(true); limpiarError(); setReemplazo(null);
     try {
       const data = await api.post(`/api/ia/sugerir-reemplazo/${asigId.trim()}`);
@@ -100,7 +102,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
       const data = await api.post("/api/ia/chat", {
         intent: intentSel,
         pregunta: pregunta.trim(),
-        params,
+        params: {},
       });
       setRespuesta(data.respuesta);
     } catch (e) {
@@ -199,7 +201,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                     <span style={{ fontSize: 13, color: "#374151", fontWeight: 600 }}>Alertas de esta semana</span>
                     {alertas?.actualizado_en && !cargandoFatiga && (
                       <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>
-                        hace {Math.round((Date.now() / 1000 - alertas.actualizado_en) / 60)} min · caché 5 min
+                        hace {Math.round((Date.now() / 1000 - alertas.actualizado_en) / 60)} min · caché 30 min
                       </div>
                     )}
                   </div>
@@ -254,17 +256,29 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
             {tab === "reemplazo" && (
               <div>
                 <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
-                  Ingresa el ID de la asignación que necesita cobertura y la IA sugerirá el mejor reemplazo disponible.
+                  Selecciona la asignación que necesita cobertura y la IA sugerirá el mejor reemplazo disponible.
                 </p>
-                <label style={estiloLabel}>ID de asignación</label>
-                <input
-                  type="number"
-                  value={asigId}
-                  onChange={e => setAsigId(e.target.value)}
-                  placeholder="Ej: 42"
-                  style={estiloInput}
-                  onKeyDown={e => e.key === "Enter" && pedirReemplazo()}
-                />
+                <label style={estiloLabel}>Asignación</label>
+                {asigOpciones === null ? (
+                  <div style={estiloCargando}>Cargando asignaciones…</div>
+                ) : asigOpciones.length === 0 ? (
+                  <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>
+                    No hay asignaciones activas en los próximos 14 días.
+                  </div>
+                ) : (
+                  <select
+                    value={asigId}
+                    onChange={e => setAsigId(e.target.value)}
+                    style={{ ...estiloInput, background: "#fff" }}
+                  >
+                    <option value="">— Selecciona una asignación —</option>
+                    {asigOpciones.map(o => (
+                      <option key={o.asignacion_id} value={String(o.asignacion_id)}>
+                        {o.tiene_problema ? "⚠️ " : ""}{o.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <button
                   onClick={pedirReemplazo}
                   disabled={cargandoReemplazo}
@@ -302,7 +316,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                   {INTENTS.map(i => (
                     <button
                       key={i.id}
-                      onClick={() => { setIntentSel(i.id); setParams({}); setRespuesta(""); }}
+                      onClick={() => { setIntentSel(i.id); setRespuesta(""); }}
                       style={{
                         padding: "7px 8px", borderRadius: 8, border: "1px solid",
                         fontSize: 11, cursor: "pointer", textAlign: "left",
@@ -314,17 +328,6 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                     >{i.label}</button>
                   ))}
                 </div>
-
-                {PARAMS_POR_INTENT[intentSel]?.map(p => (
-                  <div key={p.key} style={{ marginBottom: 8 }}>
-                    <label style={estiloLabel}>{p.label}</label>
-                    <input
-                      value={params[p.key] || ""}
-                      onChange={e => setParams(prev => ({ ...prev, [p.key]: e.target.value }))}
-                      style={estiloInput}
-                    />
-                  </div>
-                ))}
 
                 <label style={estiloLabel}>Tu pregunta</label>
                 <textarea

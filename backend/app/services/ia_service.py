@@ -342,62 +342,66 @@ def _ctx_disponibilidad(db: Session, params: dict) -> dict:
 
 
 def _ctx_explicar_alerta(db: Session, params: dict) -> dict:
-    chofer_id = params.get("chofer_id")
-    if not chofer_id:
-        return {"info": "chofer_id requerido"}
     alertas = detectar_alertas_fatiga(db)
-    alertas_chofer = [a for a in alertas if a["chofer_id"] == int(chofer_id)]
-    if not alertas_chofer:
-        return {"info": f"No se detectaron alertas para el chofer {chofer_id} esta semana."}
-    return {
-        "alertas_detectadas": len(alertas_chofer),
-        "detalle": str(alertas_chofer),
-    }
+    if not alertas:
+        return {"info": "No se detectaron alertas de fatiga esta semana."}
+    resumen = [
+        {
+            "chofer": f"{a['nombres']} {a['apellidos']}",
+            "tipo": a["tipo"].replace("_", " "),
+            "detalle": a["detalle"],
+        }
+        for a in alertas
+    ]
+    return {"total_alertas": len(alertas), "alertas": resumen}
 
 
 def _ctx_horas_area(db: Session, params: dict) -> dict:
-    area_id   = params.get("area_id")
-    fecha_str = params.get("fecha", str(date.today()))
-    try:
-        ref = date.fromisoformat(fecha_str)
-    except ValueError:
-        ref = date.today()
-    lunes = _inicio_semana(ref)
+    lunes = _inicio_semana(date.today())
     dom   = lunes + timedelta(days=6)
 
-    area = db.query(AreaOperativa).filter(AreaOperativa.id == area_id).first()
-    asigs = (
-        db.query(Asignacion)
-        .join(HorarioServicio)
-        .filter(
-            Asignacion.area_id == area_id,
-            Asignacion.estado.in_(["propuesta", "confirmada"]),
-            HorarioServicio.fecha.between(lunes, dom),
+    areas = db.query(AreaOperativa).all()
+    resumen = []
+    for area in areas:
+        asigs = (
+            db.query(Asignacion)
+            .join(HorarioServicio)
+            .filter(
+                Asignacion.area_id == area.id,
+                Asignacion.estado.in_(["propuesta", "confirmada"]),
+                HorarioServicio.fecha.between(lunes, dom),
+            )
+            .all()
         )
-        .all()
-    )
-    total_min = sum(a.horario.duracion_est_min for a in asigs)
-    return {
-        "area": area.nombre if area else f"Área {area_id}",
-        "semana": f"{lunes} al {dom}",
-        "total_horas_asignadas": round(total_min / 60, 1),
-        "total_asignaciones": len(asigs),
-    }
+        total_min = sum(a.horario.duracion_est_min for a in asigs)
+        resumen.append({
+            "area": area.nombre,
+            "horas_asignadas": round(total_min / 60, 1),
+            "total_asignaciones": len(asigs),
+        })
+    return {"semana": f"{lunes} al {dom}", "areas": resumen}
 
 
 def _ctx_estado_programacion(db: Session, params: dict) -> dict:
-    prog_id = params.get("programacion_id")
-    prog = db.query(Programacion).filter(Programacion.id == prog_id).first()
-    if not prog:
-        return {"info": f"No existe la programación {prog_id}"}
-    total_h = len(prog.horarios_servicio)
-    total_a = sum(len(h.asignaciones) for h in prog.horarios_servicio)
+    progs = (
+        db.query(Programacion)
+        .order_by(Programacion.fecha_inicio.desc())
+        .limit(5)
+        .all()
+    )
+    if not progs:
+        return {"info": "No hay programaciones registradas."}
     return {
-        "nombre": prog.nombre,
-        "estado": prog.estado,
-        "fecha_inicio": str(prog.fecha_inicio),
-        "fecha_fin": str(prog.fecha_fin),
-        "total_horarios": total_h,
-        "total_asignaciones": total_a,
-        "observaciones": prog.observaciones or "ninguna",
+        "programaciones": [
+            {
+                "id": p.id,
+                "nombre": p.nombre,
+                "estado": p.estado,
+                "fecha_inicio": str(p.fecha_inicio),
+                "fecha_fin": str(p.fecha_fin),
+                "total_horarios": len(p.horarios_servicio),
+                "total_asignaciones": sum(len(h.asignaciones) for h in p.horarios_servicio),
+            }
+            for p in progs
+        ]
     }

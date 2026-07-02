@@ -1,3 +1,5 @@
+import json
+
 SISTEMA_BASE = (
     "Eres el asistente inteligente de MetroHub, el sistema de programación "
     "de horarios del Metropolitano de Lima. Responde siempre en español, "
@@ -63,11 +65,12 @@ def prompt_chat(intent: str, contexto: dict, pregunta: str) -> str:
             f"Proporciona 2-3 pasos concretos y prácticos para resolverlo. "
             f"Sé directo. Usa párrafos cortos, sin bullets."
         )
-    contexto_texto = "\n".join([f"  {k}: {v}" for k, v in contexto.items()])
+    contexto_texto = json.dumps(contexto, ensure_ascii=False, indent=2)
     return (
         f"{SISTEMA_BASE}\n\n"
-        f"El usuario (administrador/supervisor) pregunta: \"{pregunta}\"\n\n"
-        f"Información relevante del sistema:\n{contexto_texto}\n\n"
-        f"Responde de forma directa y útil en máximo 4 oraciones. "
-        f"Si la información es insuficiente para responder con certeza, indícalo."
+        f"El usuario pregunta: \"{pregunta}\"\n\n"
+        f"Datos actuales del sistema:\n{contexto_texto}\n\n"
+        f"Usa los datos para responder de forma directa y útil. "
+        f"Máximo 4 oraciones. Si el usuario menciona un nombre o área específica, "
+        f"búscala en los datos. Si la información no alcanza para responder con certeza, indícalo."
     )
