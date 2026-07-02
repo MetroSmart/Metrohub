@@ -35,6 +35,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
 
   // Tab Fatiga
   const [descansosAplicados, setDescansosAplicados] = useState({});
+  const [ultimaAccion,       setUltimaAccion]       = useState(null);
 
   // Tab Asistente Chat
   const [intentSel,  setIntentSel]  = useState(INTENTS[0].id);
@@ -100,13 +101,13 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
     }
   };
 
-  const programarDescanso = async (choferId, fecha) => {
+  const programarDescanso = async (choferId, fecha, nombres, apellidos) => {
     const key = `${choferId}_${fecha}`;
     setDescansosAplicados(prev => ({ ...prev, [key]: "cargando" }));
     try {
       await api.post(`/api/ia/programar-descanso/${choferId}`, { fecha, observaciones: "" });
       setDescansosAplicados(prev => ({ ...prev, [key]: "ok" }));
-      // Refrescar alertas: el descanso registrado debe eliminar la alerta
+      setUltimaAccion({ nombres, apellidos, fecha });
       await cargarAlertas(true);
     } catch (e) {
       setDescansosAplicados(prev => ({ ...prev, [key]: false }));
@@ -242,6 +243,20 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                     {cargandoFatiga ? "Cargando…" : "↻ Actualizar"}
                   </button>
                 </div>
+                {/* Banner de última acción ejecutada */}
+                {ultimaAccion && !cargandoFatiga && (
+                  <div style={{
+                    background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: 8,
+                    padding: "8px 12px", marginBottom: 10, fontSize: 12,
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                  }}>
+                    <span style={{ color: "#065F46" }}>
+                      ✅ Descanso registrado para <strong>{ultimaAccion.nombres} {ultimaAccion.apellidos}</strong> el {ultimaAccion.fecha}
+                    </span>
+                    <button onClick={() => setUltimaAccion(null)}
+                      style={{ background: "none", border: "none", color: "#6EE7B7", cursor: "pointer", fontSize: 14 }}>×</button>
+                  </div>
+                )}
                 {cargandoFatiga && <div style={estiloCargando}>Analizando programación…</div>}
                 {!cargandoFatiga && alertas && alertas.total === 0 && (
                   <div style={{ textAlign: "center", color: "#6B7280", fontSize: 13, padding: 20 }}>
@@ -282,9 +297,15 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                         {a.chofer_id && a.fecha_referencia && (() => {
                           const dKey = `${a.chofer_id}_${a.fecha_referencia}`;
                           const estado = descansosAplicados[dKey];
+                          const LABEL_ACCION = {
+                            descanso_insuficiente:     "😴 Dar descanso compensatorio",
+                            turnos_noche_consecutivos: "🌙 Liberar de turno nocturno",
+                            exceso_horas_semana:       "📉 Reducir carga — programar descanso",
+                          };
+                          const labelBoton = LABEL_ACCION[a.tipo] || "😴 Programar descanso";
                           return (
                             <button
-                              onClick={() => programarDescanso(a.chofer_id, a.fecha_referencia)}
+                              onClick={() => programarDescanso(a.chofer_id, a.fecha_referencia, a.nombres, a.apellidos)}
                               disabled={!!estado}
                               style={{
                                 padding: "3px 10px", borderRadius: 6, fontSize: 10,
@@ -295,7 +316,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                                 opacity: estado ? 0.75 : 1,
                               }}
                             >
-                              {estado === "cargando" ? "Registrando…" : estado === "ok" ? "✅ Descanso registrado" : "😴 Programar descanso"}
+                              {estado === "cargando" ? "Registrando…" : estado === "ok" ? "✅ Aplicado" : labelBoton}
                             </button>
                           );
                         })()}
