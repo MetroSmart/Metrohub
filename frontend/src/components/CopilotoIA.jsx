@@ -102,10 +102,14 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
 
   const programarDescanso = async (choferId, fecha) => {
     const key = `${choferId}_${fecha}`;
+    setDescansosAplicados(prev => ({ ...prev, [key]: "cargando" }));
     try {
       await api.post(`/api/ia/programar-descanso/${choferId}`, { fecha, observaciones: "" });
-      setDescansosAplicados(prev => ({ ...prev, [key]: true }));
+      setDescansosAplicados(prev => ({ ...prev, [key]: "ok" }));
+      // Refrescar alertas: el descanso registrado debe eliminar la alerta
+      await cargarAlertas(true);
     } catch (e) {
+      setDescansosAplicados(prev => ({ ...prev, [key]: false }));
       setError(e.message);
     }
   };
@@ -275,22 +279,26 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                             Ver en Grilla →
                           </button>
                         )}
-                        {a.chofer_id && a.fecha_referencia && (
-                          <button
-                            onClick={() => programarDescanso(a.chofer_id, a.fecha_referencia)}
-                            disabled={!!descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`]}
-                            style={{
-                              padding: "3px 10px", borderRadius: 6, fontSize: 10, cursor: "pointer",
-                              fontFamily: "inherit",
-                              border: `1px solid ${c.borde}`,
-                              background: descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? c.fondo : c.borde,
-                              color: descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? c.texto : "#fff",
-                              opacity: descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? 0.7 : 1,
-                            }}
-                          >
-                            {descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? "✅ Descanso registrado" : "😴 Programar descanso"}
-                          </button>
-                        )}
+                        {a.chofer_id && a.fecha_referencia && (() => {
+                          const dKey = `${a.chofer_id}_${a.fecha_referencia}`;
+                          const estado = descansosAplicados[dKey];
+                          return (
+                            <button
+                              onClick={() => programarDescanso(a.chofer_id, a.fecha_referencia)}
+                              disabled={!!estado}
+                              style={{
+                                padding: "3px 10px", borderRadius: 6, fontSize: 10,
+                                cursor: estado ? "default" : "pointer",
+                                fontFamily: "inherit", border: `1px solid ${c.borde}`,
+                                background: estado === "ok" ? c.fondo : c.borde,
+                                color: estado === "ok" ? c.texto : "#fff",
+                                opacity: estado ? 0.75 : 1,
+                              }}
+                            >
+                              {estado === "cargando" ? "Registrando…" : estado === "ok" ? "✅ Descanso registrado" : "😴 Programar descanso"}
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
                   );

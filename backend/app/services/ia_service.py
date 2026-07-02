@@ -272,6 +272,37 @@ def detectar_alertas_fatiga(db: Session) -> list[dict]:
                 })
                 break  # una alerta por chofer en esta categoría
 
+    # Excluir alertas de choferes que ya tienen descanso registrado
+    # cerca de la fecha de la alerta (±1 día), porque la acción ya fue tomada.
+    if alertas:
+        choferes_con_alerta = {a["chofer_id"] for a in alertas}
+        fechas_por_chofer: dict[int, list] = {}
+        for a in alertas:
+            fechas_por_chofer.setdefault(a["chofer_id"], []).append(
+                date.fromisoformat(a["fecha_referencia"])
+            )
+
+        choferes_descansando = set()
+        for chofer_id, fechas_ref in fechas_por_chofer.items():
+            for fecha_ref in fechas_ref:
+                existe = (
+                    db.query(DisponibilidadChofer)
+                    .filter(
+                        DisponibilidadChofer.chofer_id == chofer_id,
+                        DisponibilidadChofer.motivo  == "descanso",
+                        DisponibilidadChofer.fecha.between(
+                            fecha_ref - timedelta(days=1),
+                            fecha_ref + timedelta(days=1),
+                        ),
+                    )
+                    .first()
+                )
+                if existe:
+                    choferes_descansando.add(chofer_id)
+                    break
+
+        alertas = [a for a in alertas if a["chofer_id"] not in choferes_descansando]
+
     return alertas
 
 
