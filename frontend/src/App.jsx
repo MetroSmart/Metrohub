@@ -10,6 +10,7 @@ import Usuarios from "./pages/Usuarios";
 import Areas from "./pages/Areas";
 import MisRutas from "./pages/MisRutas";
 import CambioPasswordPrimerIngreso from "./components/CambioPasswordPrimerIngreso";
+import CopilotoIA from "./components/CopilotoIA";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -93,14 +94,17 @@ export default function App() {
 
   const props = { user, onNav: setPage, onLogout: handleLogout };
 
-  if (page === "login")          return <Login onLogin={handleLogin} />;
-  if (page === "mis-rutas")      return <MisRutas       {...props} />;
-  if (page === "grilla")         return <Grilla         {...props} />;
-  if (page === "rutas")          return <Rutas          {...props} />;
-  if (page === "choferes")       return <Choferes       {...props} />;
-  if (page === "reportes")       return <Reportes       {...props} />;
-  if (page === "buses")          return <Buses          {...props} />;
-  if (page === "usuarios")       return <Usuarios       {...props} />;
-  if (page === "areas")          return <Areas          {...props} />;
-  return <Dashboard {...props} />;
+  // CopilotoIA se oculta automáticamente para el rol 'chofer' (lógica interna del componente)
+  const copiloto = user ? <CopilotoIA user={user} /> : null;
+
+  if (page === "login")     return <Login onLogin={handleLogin} />;
+  if (page === "mis-rutas") return <><MisRutas   {...props} />{copiloto}</>;
+  if (page === "grilla")    return <><Grilla      {...props} />{copiloto}</>;
+  if (page === "rutas")     return <><Rutas       {...props} />{copiloto}</>;
+  if (page === "choferes")  return <><Choferes    {...props} />{copiloto}</>;
+  if (page === "reportes")  return <><Reportes    {...props} />{copiloto}</>;
+  if (page === "buses")     return <><Buses       {...props} />{copiloto}</>;
+  if (page === "usuarios")  return <><Usuarios    {...props} />{copiloto}</>;
+  if (page === "areas")     return <><Areas       {...props} />{copiloto}</>;
+  return <><Dashboard {...props} />{copiloto}</>;
 }

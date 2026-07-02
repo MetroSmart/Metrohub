@@ -21,7 +21,7 @@ Plataforma web de programación inteligente de horarios y asignación de chofere
 - [Uso del sistema](#uso-del-sistema)
 - [Gestión del proyecto — Scrum](#gestión-del-proyecto--scrum)
 - [Estado actual — Sprint 2 (V2)](#estado-actual--sprint-2-v2)
-- [Roadmap — Sprint 3 (Módulo IA)](#roadmap--sprint-3-módulo-ia)
+- [Estado actual — Sprint 3 (Copiloto IA)](#estado-actual--sprint-3-copiloto-ia)
 - [Patrones creacionales](#patrones-creacionales)
 
 ---
@@ -93,16 +93,17 @@ Docente: Prof. Manuel Quispe Torres
 | PostgreSQL | 16 | Base de datos principal |
 | Redis | 7+ | Caché de consultas frecuentes |
 
-### Módulo IA *(planificado — Sprint 3)*
-| Tecnología | Uso |
-|------------|-----|
-| OR-Tools / PuLP | Optimización de asignación de choferes (programación lineal entera) |
-| Prophet | Predicción de demanda por ruta, hora y día de la semana |
+### Módulo IA *(Sprint 3 — implementado)*
+| Tecnología | Versión | Uso |
+|------------|---------|-----|
+| Google Gemini (`gemini-2.0-flash`) | google-generativeai 0.8.3 | Modelo LLM para análisis de fatiga, sugerencia de reemplazos y asistente conversacional |
+| FastAPI (microservicio `metrohub_ia`) | 0.111+ | Servicio IA independiente en puerto 8001 |
+| httpx | — | Comunicación interna backend → microservicio IA |
 
 ### DevOps
 | Tecnología | Uso |
 |------------|-----|
-| Docker + Docker Compose | 4 contenedores: backend, frontend, db, redis |
+| Docker + Docker Compose | 5 contenedores: backend, frontend, db, redis, metrohub_ia |
 | GitHub | Control de versiones y gestión de ramas |
 | Jira (Scrum) | Gestión de sprints y backlog |
 
@@ -132,8 +133,7 @@ Capa de Negocio
 
 Capa de Datos e Inteligencia Artificial
 ├── PostgreSQL 16 (tablas, triggers, vista v_dashboard_kpis)
-├── OR-Tools (optimización de asignación — Sprint 3)
-├── Prophet (predicción de demanda — Sprint 3)
+├── metrohub_ia :8001 (microservicio Gemini — alertas fatiga, reemplazos, chat)
 └── Redis (caché)
 ```
 
@@ -179,10 +179,10 @@ Frontend y Backend coexisten en el mismo repositorio, permitiendo:
 - Control de disponibilidad e indisponibilidades (descanso, vacaciones, médico, etc.)
 - Vista **Mis Rutas** para el chofer con sus asignaciones del día
 
-### RF05 — Optimización con IA *(planificado — Sprint 3)*
-- Predicción de demanda por ruta, hora y día con modelo Prophet
-- Optimización de asignación de choferes y buses con OR-Tools
-- Propuesta automática revisable y aprobable por el Administrador ATU
+### RF05 — Copiloto IA *(Sprint 3 — implementado)*
+- Detección automática de alertas de fatiga en la programación vigente (turnos noche consecutivos, descanso insuficiente, exceso de horas)
+- Sugerencia de reemplazo para una asignación: evalúa candidatos del área y recomienda el óptimo vía Gemini
+- Asistente conversacional con contexto de BD en tiempo real (disponibilidad, horas, estado de programación, alertas por chofer)
 
 ### RF06 — Dashboard de Indicadores y Reportes
 - KPIs operativos actualizados desde la BD: rutas activas, choferes disponibles, buses operativos, conflictos pendientes, certificaciones por vencer en 30 días
@@ -304,6 +304,7 @@ Los servicios quedan disponibles en:
 | Frontend | http://localhost:5173 |
 | Backend API | http://localhost:8000 |
 | Swagger Docs | http://localhost:8000/docs |
+| Copiloto IA | http://localhost:8001 |
 | PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |
 
@@ -331,13 +332,18 @@ npm run dev
 
 ### Credenciales choferes demo
 
-| Correo | Contraseña | Chofer |
-|--------|------------|--------|
-| jhuaman@metrohub.gob.pe | 44156789 | Juan Manuel Huamán Flores |
-| rcastillo@metrohub.gob.pe | 45892314 | Roberto Castillo Vera |
-| mtorres@metrohub.gob.pe | 43678912 | Miguel Ángel Torres Huanca |
+| Correo | Contraseña | Chofer | Cambio obligatorio |
+|--------|------------|--------|--------------------|
+| jhuaman@metrohub.gob.pe | 44156789 | Juan Manuel Huamán Flores | No |
+| rcastillo@metrohub.gob.pe | 45892314 | Roberto Castillo Vera | No |
+| mtorres@metrohub.gob.pe | 43678912 | Miguel Ángel Torres Huanca | No |
+| pquispe@metrohub.gob.pe | 44156789 | Pedro Quispe Mendoza | **Sí** |
+| csoldevilla@metrohub.gob.pe | 44156789 | Cinthia Soldevilla Ríos | **Sí** |
+| cramos@metrohub.gob.pe | 44156789 | Cesar Ramos Vilca | **Sí** |
+| fhuertas@metrohub.gob.pe | 44156789 | Fernando Huertas Ayala | **Sí** |
+| aparedes@metrohub.gob.pe | 44156789 | Alberto Paredes Yupanqui | **Sí** |
 
-> La contraseña inicial del chofer es su DNI. Los choferes demo no requieren cambio de contraseña. Los choferes **nuevos** registrados desde el panel deben cambiarla en su primer ingreso.
+> Los primeros 3 choferes usan su propio DNI como contraseña. Los 5 choferes con cambio obligatorio usan la contraseña temporal `44156789` y son redirigidos al formulario de cambio en su primer ingreso.
 
 ---
 
@@ -373,8 +379,13 @@ Portal del chofer con sus asignaciones del día (ruta, horario, bus).
 ### 10. Reportes (RF06)
 Exportación PDF/XLSX desde KPIs del dashboard.
 
-### 11. Optimizador IA *(RF05 — Sprint 3)*
-Propuestas automáticas de programación con Prophet y OR-Tools. **No implementado en V2.**
+### 11. Copiloto IA *(RF05 — Sprint 3 — implementado)*
+Panel flotante (botón 🤖) disponible para Admin ATU y Supervisores de Área. Tres funciones:
+- **Alertas de fatiga** — detecta automáticamente turnos noche consecutivos, descanso insuficiente y exceso de horas semanales en la programación vigente.
+- **Sugerencia de reemplazo** — dado el ID de una asignación, selecciona el mejor candidato disponible del área evaluando carga horaria y descanso.
+- **Asistente chat** — responde preguntas sobre disponibilidad, horas por área, estado de programaciones y alertas de choferes específicos.
+
+> Requiere `GEMINI_API_KEY` en `.env`. Funciona con la cuenta gratuita de Google AI Studio.
 
 ---
 
@@ -396,7 +407,7 @@ El proyecto se gestiona con metodología Scrum con sprints semanales.
 | SCRUM-14/16/15 | Choferes, asignación, alertas | RF04 | Completado |
 | SCRUM-25 | Dashboard KPIs | RF06 | Completado |
 | SCRUM-26 | Exportación PDF/XLSX | RF06 | Parcial (stubs) |
-| SCRUM-20/21 | Prophet + OR-Tools | RF05 | **Sprint 3** |
+| SCRUM-20/21 | Copiloto IA (Gemini) — alertas, reemplazo, chat | RF05 | **Completado (Sprint 3)** |
 | — | Portal chofer + áreas operativas | RF01/RF04 | Completado (V2) |
 
 ---
@@ -425,36 +436,38 @@ Pendientes menores: exportación PDF/XLSX completa, estaciones (parcial).
 
 ---
 
-## Roadmap — Sprint 3 (Módulo IA)
+## Estado actual — Sprint 3 (Copiloto IA)
 
-**Período planificado:** Junio – Julio 2026  
-**Objetivo:** Implementar el módulo de Inteligencia Artificial (RF05) sobre la base operativa de V2
+**Período:** Junio – Julio 2026  
+**Objetivo:** Implementar el módulo de Inteligencia Artificial (RF05) con Gemini sobre la base operativa de V2
 
-### Alcance planificado
+### Componentes implementados
 
 | Componente | Tecnología | Descripción |
 |------------|------------|-------------|
-| **Predicción de demanda** | Prophet (Meta) | Forecast de pasajeros por ruta, hora y día de la semana |
-| **Optimizador de asignación** | OR-Tools (Google) | Propuesta automática de choferes y buses respetando restricciones laborales |
-| **API de propuestas** | FastAPI | Endpoints para generar, revisar y aprobar propuestas IA |
-| **UI Optimizador** | React | Pantalla para que el Admin ATU revise y aplique propuestas a la grilla |
+| **Microservicio IA** | FastAPI + Gemini 2.0 Flash | `metrohub_ia` en puerto 8001 — recibe contexto estructurado y genera respuestas con LLM |
+| **Detección de fatiga** | Python (ia_service.py) | Analiza la semana vigente: turnos noche consecutivos, descanso insuficiente, exceso de horas |
+| **Sugerencia de reemplazo** | Gemini + fallback deterministico | Evalúa candidatos del área por carga horaria y noches consecutivas; fallback si la IA falla |
+| **Asistente chat** | Gemini (texto libre) | 4 intents: disponibilidad, explicar alerta, horas por área, estado de programación |
+| **Panel Copiloto** | React (`CopilotoIA.jsx`) | Botón flotante con 3 tabs; estados de carga independientes por función |
 
-### Restricciones que el optimizador respetará
+### Restricciones respetadas
 
-- Máximo 8 horas de jornada por chofer
-- Sin solapamiento de turnos
-- Chofer disponible (sin indisponibilidad registrada)
-- Licencia y certificación Protransporte vigentes
-- Coherencia chofer–bus–área operativa
+- Máximo 8 horas de jornada (alerta `exceso_horas_semana`)
+- Sin solapamiento de turnos ni descanso < 8 h (alerta `descanso_insuficiente`)
+- Máximo 3 turnos noche consecutivos (alerta `turnos_noche_consecutivos`)
+- Candidatos filtrados por área operativa, disponibilidad y solapamiento real
+- Sistema completamente funcional sin módulo IA activo (RNF04 — degradación graceful vía 503)
 
-### Criterios de aceptación Sprint 3
+### Criterios de aceptación — cumplidos
 
-- [ ] Modelo Prophet entrenado con datos históricos de demanda (seed + datos simulados)
-- [ ] Optimizador OR-Tools genera propuesta en <= 30 s (RNF03)
-- [ ] Admin puede aprobar o rechazar propuesta desde la UI
-- [ ] Sistema funcional sin módulo IA activo (RNF04 — degradación graceful)
+- [x] Microservicio `metrohub_ia` contenedorizado, integrado con Docker Compose
+- [x] Alertas de fatiga detectadas en la semana vigente, enriquecidas por Gemini
+- [x] Reemplazo sugiere candidato válido; fallback deterministico si Gemini falla
+- [x] Asistente chat responde los 4 intents con contexto de BD en tiempo real
+- [x] Sistema funcional sin `GEMINI_API_KEY` (degradación graceful, error 503)
 
-> El módulo IA **no forma parte de V2**. La versión actual opera de forma completa sin dependencia de modelos de ML.
+> Requiere `GEMINI_API_KEY=...` en `.env` (cuenta gratuita Google AI Studio).
 
 ---
 
