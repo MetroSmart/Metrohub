@@ -37,7 +37,7 @@ const GUIA_POR_TIPO = {
   otro:                   "Revisa el caso con el supervisor del área y aplica el protocolo interno correspondiente. Documenta las acciones tomadas en las observaciones de la asignación.",
 };
 
-export default function Grilla({ user, onNav, onLogout, initialFecha }) {
+export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirReemplazo }) {
   const [horarios, setHorarios]             = useState([]);
   const [rutas, setRutas]                   = useState([]);
   const [programaciones, setProgramaciones] = useState([]);
@@ -534,6 +534,14 @@ export default function Grilla({ user, onNav, onLogout, initialFecha }) {
                                 onClick={() => handleQuitarAsignacion(h.asignacion_id, h.id)}
                               >
                                 Quitar
+                              </button>
+                            )}
+                            {(user?.role === "admin_atu" || user?.role === "supervisor_area") && h.asignacion_id && onSugerirReemplazo && (
+                              <button
+                                style={styles.assignBtn}
+                                onClick={() => onSugerirReemplazo(h.asignacion_id)}
+                              >
+                                Reemplazar
                               </button>
                             )}
                           </div>

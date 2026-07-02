@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { api } from "../api";
 
 const COLORES_SEVERIDAD = {
@@ -21,7 +21,7 @@ const PARAMS_POR_INTENT = {
   estado_programacion: [{ key: "programacion_id",   label: "ID de la programación" }],
 };
 
-export default function CopilotoIA({ user, onNavToGrilla }) {
+export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
   const [abierto,         setAbierto]         = useState(false);
   const [tab,             setTab]             = useState("fatiga");
   const [cargandoFatiga,  setCargandoFatiga]  = useState(false);
@@ -41,6 +41,21 @@ export default function CopilotoIA({ user, onNavToGrilla }) {
   const [params,     setParams]     = useState({});
   const [pregunta,   setPregunta]   = useState("");
   const [respuesta,  setRespuesta]  = useState("");
+
+  useEffect(() => {
+    if (!reemplazoTrigger) return;
+    const { asigId: id } = reemplazoTrigger;
+    setAbierto(true);
+    setTab("reemplazo");
+    setAsigId(String(id));
+    setReemplazo(null);
+    setError("");
+    setCargandoReemplazo(true);
+    api.post(`/api/ia/sugerir-reemplazo/${id}`)
+      .then(data => setReemplazo(data))
+      .catch(e => setError(e.message))
+      .finally(() => setCargandoReemplazo(false));
+  }, [reemplazoTrigger]);
 
   const roles_permitidos = ["admin_atu", "supervisor_area"];
   if (!user || !roles_permitidos.includes(user.role)) return null;

@@ -30,6 +30,7 @@ export default function App() {
   const [user, setUser]                     = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [grillaFecha, setGrillaFecha]       = useState(null);
+  const [reemplazoTrigger, setReemplazoTrigger] = useState(null);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -101,11 +102,13 @@ export default function App() {
   const props = { user, onNav: setPage, onLogout: handleLogout };
 
   // CopilotoIA se oculta automáticamente para el rol 'chofer' (lógica interna del componente)
-  const copiloto = user ? <CopilotoIA user={user} onNavToGrilla={irAGrilla} /> : null;
+  const abrirReemplazo = (asigId) => setReemplazoTrigger({ asigId, ts: Date.now() });
+
+  const copiloto = user ? <CopilotoIA user={user} onNavToGrilla={irAGrilla} reemplazoTrigger={reemplazoTrigger} /> : null;
 
   if (page === "login")     return <Login onLogin={handleLogin} />;
   if (page === "mis-rutas") return <><MisRutas   {...props} />{copiloto}</>;
-  if (page === "grilla")    return <><Grilla      {...props} initialFecha={grillaFecha} />{copiloto}</>;
+  if (page === "grilla")    return <><Grilla      {...props} initialFecha={grillaFecha} onSugerirReemplazo={abrirReemplazo} />{copiloto}</>;
   if (page === "rutas")     return <><Rutas       {...props} />{copiloto}</>;
   if (page === "choferes")  return <><Choferes    {...props} />{copiloto}</>;
   if (page === "reportes")  return <><Reportes    {...props} />{copiloto}</>;
