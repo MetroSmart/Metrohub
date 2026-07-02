@@ -50,6 +50,8 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
   const [approving, setApproving]           = useState(false);
   const [resolving, setResolving]           = useState(null);
   const [resolverModal, setResolverModal]   = useState(null);
+  const [confirmandoDia, setConfirmandoDia] = useState(false);
+  const [diaMsg, setDiaMsg]                 = useState(null);
   const [duplicating, setDuplicating]       = useState(false);
 
   // Modal nueva programación
@@ -286,16 +288,51 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
     }
   };
 
-  const handleResolver = (conflictoId, horarioId, conflicto) => {
+  const handleResolver = (conflictoId, horarioId, conflicto, asignacionId) => {
     setResolverModal({
-      conflictoId, horarioId,
+      conflictoId, horarioId, asignacionId,
       tipo: conflicto.tipo,
       descripcion: conflicto.descripcion,
       severidad: conflicto.severidad,
       sugerencia: GUIA_POR_TIPO[conflicto.tipo] || null,
       esIA: false,
       cargandoIA: false,
+      aplicandoIA: false,
+      reemplazoAplicado: null,
     });
+  };
+
+  const aplicarReemplazoIA = async () => {
+    setResolverModal(m => ({ ...m, aplicandoIA: true }));
+    try {
+      const data = await api.post(`/api/ia/aplicar-reemplazo/${resolverModal.asignacionId}`);
+      setResolverModal(m => ({ ...m, aplicandoIA: false, reemplazoAplicado: data }));
+      setHorarios(prev => prev.map(h =>
+        h.id === resolverModal.horarioId ? { ...h, conflicto: null } : h
+      ));
+    } catch (e) {
+      setResolverModal(m => ({ ...m, aplicandoIA: false }));
+      alert(e.message || "No se pudo aplicar el reemplazo");
+    }
+  };
+
+  const confirmarDiaIA = async () => {
+    setConfirmandoDia(true); setDiaMsg(null);
+    try {
+      const data = await api.post("/api/ia/confirmar-dia", { fecha });
+      setDiaMsg(data.mensaje);
+      if (data.confirmadas > 0) {
+        setHorarios(prev => prev.map(h =>
+          h.estado === "propuesta" && !data.detalles_omitidas.some(o => o.asignacion_id === h.asignacion_id)
+            ? { ...h, estado: "confirmada" }
+            : h
+        ));
+      }
+    } catch (e) {
+      setDiaMsg(e.message || "Error al confirmar");
+    } finally {
+      setConfirmandoDia(false);
+    }
   };
 
   const pedirSugerenciaIA = async () => {
@@ -467,9 +504,26 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
               + Agregar horario
             </button>
           )}
+          {user?.role === "admin_atu" && programacionId && (
+            <button
+              style={{ ...styles.btnSecondary, opacity: confirmandoDia ? 0.6 : 1,
+                background: "#EFF6FF", color: "#1D4ED8", border: "1px solid #BFDBFE" }}
+              onClick={confirmarDiaIA}
+              disabled={confirmandoDia}
+              title="La IA confirma todas las asignaciones propuestas del día que no tengan conflictos activos"
+            >
+              {confirmandoDia ? "Procesando…" : "✨ IA: Confirmar día"}
+            </button>
+          )}
           {conflictCount > 0 && (
             <span style={styles.conflictBadge}>
               {conflictCount} conflicto{conflictCount > 1 ? "s" : ""}
+            </span>
+          )}
+          {diaMsg && (
+            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#065F46",
+              background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: 6, padding: "3px 10px" }}>
+              ✅ {diaMsg}
             </span>
           )}
           {actionStatus && (
@@ -582,7 +636,7 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
                           {user?.role === "admin_atu" && (
                             <button
                               style={styles.resolveBtn}
-                                onClick={() => handleResolver(h.conflicto.id, h.id, h.conflicto)}
+                                onClick={() => handleResolver(h.conflicto.id, h.id, h.conflicto, h.asignacion_id)}
                             >
                               Resolver
                             </button>
@@ -927,17 +981,44 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
                   </div>
                 </div>
               )}
+              {/* Botón aplicar reemplazo IA */}
+              {!resolverModal.reemplazoAplicado && ["chofer_no_disponible","descanso_insuficiente","solapamiento_turno"].includes(resolverModal.tipo) && resolverModal.asignacionId && (
+                <button
+                  onClick={aplicarReemplazoIA}
+                  disabled={resolverModal.aplicandoIA}
+                  style={{ ...styles.btnPrimary, width: "100%",
+                    background: resolverModal.aplicandoIA ? "#9CA3AF" : "linear-gradient(135deg, #065F46, #059669)",
+                    opacity: resolverModal.aplicandoIA ? 0.7 : 1 }}
+                >
+                  {resolverModal.aplicandoIA ? "🤖 Buscando y aplicando reemplazo…" : "🤖 Aplicar reemplazo IA"}
+                </button>
+              )}
+
+              {/* Resultado del reemplazo aplicado */}
+              {resolverModal.reemplazoAplicado && (
+                <div style={{ background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "#065F46" }}>
+                    ✅ Reemplazo aplicado exitosamente
+                  </div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#047857", marginTop: 4 }}>
+                    <strong>{resolverModal.reemplazoAplicado.chofer_reemplazo?.nombres} {resolverModal.reemplazoAplicado.chofer_reemplazo?.apellidos}</strong> ahora cubre el turno. El conflicto fue cerrado automáticamente.
+                  </div>
+                </div>
+              )}
+
               <div style={styles.formActions}>
                 <button style={styles.btnSecondary} onClick={() => setResolverModal(null)}>
-                  Cancelar
+                  {resolverModal.reemplazoAplicado ? "Cerrar" : "Cancelar"}
                 </button>
-                <button
-                  style={{ ...styles.btnPrimary, opacity: resolving === resolverModal.conflictoId ? 0.6 : 1 }}
-                  disabled={resolving === resolverModal.conflictoId}
-                  onClick={confirmarResolucion}
-                >
-                  {resolving === resolverModal.conflictoId ? "Resolviendo…" : "Confirmar resolución"}
-                </button>
+                {!resolverModal.reemplazoAplicado && (
+                  <button
+                    style={{ ...styles.btnPrimary, opacity: resolving === resolverModal.conflictoId ? 0.6 : 1 }}
+                    disabled={resolving === resolverModal.conflictoId}
+                    onClick={confirmarResolucion}
+                  >
+                    {resolving === resolverModal.conflictoId ? "Marcando…" : "Marcar como resuelto"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

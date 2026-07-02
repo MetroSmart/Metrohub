@@ -1,11 +1,18 @@
+import datetime as dt
 import os
 import time
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy import text
+from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
+from app.models.asignacion import Asignacion
+from app.models.chofer import Chofer
+from app.models.conflicto import Conflicto
+from app.models.disponibilidad_chofer import DisponibilidadChofer
+from app.models.horario_servicio import HorarioServicio
 from app.routers.auth import obtener_usuario_actual
 from app.services import ia_service
 
@@ -14,6 +21,15 @@ class ChatBody(BaseModel):
     intent: str
     pregunta: str
     params: dict = {}
+
+
+class DescansoBody(BaseModel):
+    fecha: str
+    observaciones: str = ""
+
+
+class ConfirmarDiaBody(BaseModel):
+    fecha: str
 
 router = APIRouter()
 
@@ -41,6 +57,11 @@ INTENTS_VALIDOS = {"disponibilidad", "explicar_alerta", "horas_area", "estado_pr
 def _solo_admin_o_supervisor(usuario: dict):
     if usuario["rol"] not in ("admin_atu", "supervisor_area"):
         raise HTTPException(status_code=403, detail="Acceso no autorizado")
+
+
+def _usuario_id(db: Session, email: str) -> int:
+    row = db.execute(text("SELECT id FROM usuarios WHERE email = :e"), {"e": email}).fetchone()
+    return row[0] if row else 1
 
 
 async def _llamar_ia(path: str, payload: dict) -> dict:
@@ -177,7 +198,10 @@ async def alertas_fatiga(
     for alerta_ia, alerta_raw in zip(alertas_ia, alertas_raw):
         alertas_final.append({
             **alerta_ia,
-            "tipo": alerta_raw.get("tipo", ""),
+            "chofer_id":       alerta_raw.get("chofer_id"),
+            "nombres":         alerta_raw.get("nombres", ""),
+            "apellidos":       alerta_raw.get("apellidos", ""),
+            "tipo":            alerta_raw.get("tipo", ""),
             "fecha_referencia": alerta_raw.get("fecha_referencia", ""),
         })
 
@@ -229,3 +253,164 @@ async def chat_asistente(
         _cache_set(cache_key, response, _TTL_CHAT)
 
     return response
+
+
+# ─── Acciones IA activas ────────────────────────────────────────────────────
+
+@router.post("/aplicar-reemplazo/{asignacion_id}")
+async def aplicar_reemplazo(
+    asignacion_id: int,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    """Busca el mejor reemplazo vía IA y lo aplica: marca la asignación como
+    reemplazada, crea la nueva y cierra cualquier conflicto vinculado."""
+    _solo_admin_o_supervisor(usuario)
+
+    asig_old = db.query(Asignacion).filter(Asignacion.id == asignacion_id).first()
+    if not asig_old:
+        raise HTTPException(status_code=404, detail="Asignación no encontrada")
+
+    # Reutiliza caché de sugerir-reemplazo si ya existe
+    cache_key = f"reemplazo_{asignacion_id}"
+    cached = _cache_get(cache_key)
+    if cached:
+        resultado_ia = cached.get("recomendacion_ia", {})
+        datos_horario = cached.get("horario", {})
+    else:
+        datos = ia_service.obtener_candidatos_reemplazo(db, asignacion_id)
+        if not datos or not datos.get("candidatos"):
+            raise HTTPException(status_code=404, detail="No hay candidatos disponibles para reemplazo")
+        resultado_ia = await _llamar_ia("/reemplazo", datos)
+        datos_horario = datos.get("horario", {})
+
+    chofer_id_nuevo = resultado_ia.get("chofer_id")
+    if not chofer_id_nuevo:
+        raise HTTPException(status_code=502, detail="La IA no pudo determinar un candidato")
+
+    uid = _usuario_id(db, usuario["email"])
+
+    asig_old.estado = "reemplazada"
+
+    asig_nueva = Asignacion(
+        horario_id   = asig_old.horario_id,
+        chofer_id    = chofer_id_nuevo,
+        bus_placa    = asig_old.bus_placa,
+        area_id      = asig_old.area_id,
+        estado       = "confirmada",
+        asignado_por = uid,
+        notas        = f"Reemplazo automático IA — asignación original #{asignacion_id}",
+    )
+    db.add(asig_nueva)
+
+    for conf in asig_old.conflictos:
+        if not conf.resuelto:
+            conf.resuelto          = True
+            conf.resuelto_por      = uid
+            conf.fecha_resolucion  = dt.datetime.utcnow()
+
+    db.commit()
+    db.refresh(asig_nueva)
+
+    chofer = db.query(Chofer).filter(Chofer.id == chofer_id_nuevo).first()
+    _cache.pop(cache_key, None)
+
+    return {
+        "asignacion_nueva_id": asig_nueva.id,
+        "chofer_reemplazo": {
+            "id":        chofer.id,
+            "nombres":   chofer.nombres,
+            "apellidos": chofer.apellidos,
+        },
+        "recomendacion": resultado_ia.get("recomendacion", ""),
+        "horario": datos_horario,
+    }
+
+
+@router.post("/programar-descanso/{chofer_id}")
+def programar_descanso(
+    chofer_id: int,
+    body: DescansoBody,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    """Registra un día de descanso para el chofer a partir de una alerta de fatiga."""
+    _solo_admin_o_supervisor(usuario)
+
+    fecha = dt.date.fromisoformat(body.fecha)
+    uid   = _usuario_id(db, usuario["email"])
+
+    disp = DisponibilidadChofer(
+        chofer_id      = chofer_id,
+        fecha          = fecha,
+        hora_desde     = dt.time(0, 0),
+        hora_hasta     = dt.time(23, 59),
+        motivo         = "descanso",
+        observaciones  = body.observaciones or "Descanso registrado por Copiloto IA — alerta de fatiga detectada",
+        registrado_por = uid,
+    )
+    db.add(disp)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Ya existe disponibilidad registrada para esa fecha")
+
+    _cache.pop("alertas_fatiga", None)
+    return {"mensaje": "Descanso registrado", "fecha": str(fecha), "chofer_id": chofer_id}
+
+
+@router.post("/confirmar-dia")
+def confirmar_dia_ia(
+    body: ConfirmarDiaBody,
+    db: Session = Depends(get_db),
+    usuario: dict = Depends(obtener_usuario_actual),
+):
+    """Confirma todas las asignaciones 'propuesta' del día que no tengan
+    conflictos activos. Las que tienen conflictos se omiten."""
+    _solo_admin_o_supervisor(usuario)
+
+    fecha = dt.date.fromisoformat(body.fecha)
+
+    propuestas = (
+        db.query(Asignacion)
+        .join(HorarioServicio, Asignacion.horario_id == HorarioServicio.id)
+        .options(joinedload(Asignacion.chofer))
+        .filter(HorarioServicio.fecha == fecha, Asignacion.estado == "propuesta")
+        .all()
+    )
+
+    if not propuestas:
+        return {"confirmadas": 0, "omitidas": 0, "detalles_omitidas": [],
+                "mensaje": "No hay asignaciones propuestas para esta fecha."}
+
+    propuesta_ids = [a.id for a in propuestas]
+    con_conflicto = {
+        c.asignacion_id
+        for c in db.query(Conflicto)
+        .filter(Conflicto.asignacion_id.in_(propuesta_ids), Conflicto.resuelto == False)
+        .all()
+    }
+
+    confirmadas, omitidas = 0, []
+    for asig in propuestas:
+        if asig.id not in con_conflicto:
+            asig.estado = "confirmada"
+            confirmadas += 1
+        else:
+            omitidas.append({
+                "asignacion_id": asig.id,
+                "chofer": f"{asig.chofer.nombres} {asig.chofer.apellidos}",
+            })
+
+    db.commit()
+    total = confirmadas + len(omitidas)
+    return {
+        "confirmadas":       confirmadas,
+        "omitidas":          len(omitidas),
+        "detalles_omitidas": omitidas,
+        "mensaje": (
+            f"IA confirmó {confirmadas} de {total} asignaciones."
+            + (f" {len(omitidas)} omitidas por conflictos activos." if omitidas else "")
+        ),
+    }

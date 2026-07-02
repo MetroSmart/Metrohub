@@ -27,9 +27,14 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
   const [alertas,    setAlertas]    = useState(null);
 
   // Tab Sugerir Reemplazo
-  const [asigId,       setAsigId]       = useState("");
-  const [asigOpciones, setAsigOpciones] = useState(null);
-  const [reemplazo,    setReemplazo]    = useState(null);
+  const [asigId,            setAsigId]            = useState("");
+  const [asigOpciones,      setAsigOpciones]      = useState(null);
+  const [reemplazo,         setReemplazo]         = useState(null);
+  const [aplicandoReemplazo, setAplicandoReemplazo] = useState(false);
+  const [reemplazoAplicado,  setReemplazoAplicado]  = useState(null);
+
+  // Tab Fatiga
+  const [descansosAplicados, setDescansosAplicados] = useState({});
 
   // Tab Asistente Chat
   const [intentSel,  setIntentSel]  = useState(INTENTS[0].id);
@@ -83,8 +88,31 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
     if (t === "reemplazo" && asigOpciones === null) cargarOpciones();
   };
 
+  const aplicarReemplazo = async () => {
+    setAplicandoReemplazo(true); limpiarError();
+    try {
+      const data = await api.post(`/api/ia/aplicar-reemplazo/${asigId.trim()}`);
+      setReemplazoAplicado(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setAplicandoReemplazo(false);
+    }
+  };
+
+  const programarDescanso = async (choferId, fecha) => {
+    const key = `${choferId}_${fecha}`;
+    try {
+      await api.post(`/api/ia/programar-descanso/${choferId}`, { fecha, observaciones: "" });
+      setDescansosAplicados(prev => ({ ...prev, [key]: true }));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   const pedirReemplazo = async () => {
     if (!asigId.trim()) { setError("Selecciona una asignación de la lista"); return; }
+    setReemplazoAplicado(null);
     setCargandoReemplazo(true); limpiarError(); setReemplazo(null);
     try {
       const data = await api.post(`/api/ia/sugerir-reemplazo/${asigId.trim()}`);
@@ -234,19 +262,36 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                       <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
                         💡 {a.sugerencia}
                       </div>
-                      {a.fecha_referencia && onNavToGrilla && (
-                        <button
-                          onClick={() => { setAbierto(false); onNavToGrilla(a.fecha_referencia); }}
-                          style={{
-                            marginTop: 8, padding: "3px 10px", borderRadius: 6,
-                            border: `1px solid ${c.borde}`, background: "transparent",
-                            color: c.texto, fontSize: 10, cursor: "pointer",
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          Ver en Grilla →
-                        </button>
-                      )}
+                      <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                        {a.fecha_referencia && onNavToGrilla && (
+                          <button
+                            onClick={() => { setAbierto(false); onNavToGrilla(a.fecha_referencia); }}
+                            style={{
+                              padding: "3px 10px", borderRadius: 6,
+                              border: `1px solid ${c.borde}`, background: "transparent",
+                              color: c.texto, fontSize: 10, cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            Ver en Grilla →
+                          </button>
+                        )}
+                        {a.chofer_id && a.fecha_referencia && (
+                          <button
+                            onClick={() => programarDescanso(a.chofer_id, a.fecha_referencia)}
+                            disabled={!!descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`]}
+                            style={{
+                              padding: "3px 10px", borderRadius: 6, fontSize: 10, cursor: "pointer",
+                              fontFamily: "inherit",
+                              border: `1px solid ${c.borde}`,
+                              background: descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? c.fondo : c.borde,
+                              color: descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? c.texto : "#fff",
+                              opacity: descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? 0.7 : 1,
+                            }}
+                          >
+                            {descansosAplicados[`${a.chofer_id}_${a.fecha_referencia}`] ? "✅ Descanso registrado" : "😴 Programar descanso"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -304,6 +349,24 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                         {reemplazo.recomendacion_ia?.recomendacion}
                       </div>
                     </div>
+                    {!reemplazoAplicado ? (
+                      <button
+                        onClick={aplicarReemplazo}
+                        disabled={aplicandoReemplazo}
+                        style={{ ...estiloBotonPrincipal, marginTop: 10, width: "100%",
+                          background: aplicandoReemplazo ? "#9CA3AF" : "linear-gradient(135deg, #065F46, #059669)" }}
+                      >
+                        {aplicandoReemplazo ? "🤖 Aplicando reemplazo…" : "🚀 Aplicar este reemplazo"}
+                      </button>
+                    ) : (
+                      <div style={{ marginTop: 10, background: "#D1FAE5", border: "1px solid #6EE7B7",
+                        borderRadius: 8, padding: "10px 12px" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#065F46" }}>✅ Reemplazo aplicado</div>
+                        <div style={{ fontSize: 12, color: "#047857", marginTop: 3 }}>
+                          <strong>{reemplazoAplicado.chofer_reemplazo?.nombres} {reemplazoAplicado.chofer_reemplazo?.apellidos}</strong> asignado al turno. Conflicto cerrado automáticamente.
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
