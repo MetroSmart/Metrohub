@@ -50,8 +50,6 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
   const [approving, setApproving]           = useState(false);
   const [resolving, setResolving]           = useState(null);
   const [resolverModal, setResolverModal]   = useState(null);
-  const [confirmandoDia, setConfirmandoDia] = useState(false);
-  const [diaMsg, setDiaMsg]                 = useState(null);
   const [duplicating, setDuplicating]       = useState(false);
 
   // Modal nueva programación
@@ -316,24 +314,6 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
     }
   };
 
-  const confirmarDiaIA = async () => {
-    setConfirmandoDia(true); setDiaMsg(null);
-    try {
-      const data = await api.post("/api/ia/confirmar-dia", { fecha });
-      setDiaMsg(data.mensaje);
-      if (data.confirmadas > 0) {
-        setHorarios(prev => prev.map(h =>
-          h.estado === "propuesta" && !data.detalles_omitidas.some(o => o.asignacion_id === h.asignacion_id)
-            ? { ...h, estado: "confirmada" }
-            : h
-        ));
-      }
-    } catch (e) {
-      setDiaMsg(e.message || "Error al confirmar");
-    } finally {
-      setConfirmandoDia(false);
-    }
-  };
 
   const pedirSugerenciaIA = async () => {
     setResolverModal(m => ({ ...m, cargandoIA: true }));
@@ -504,26 +484,9 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
               + Agregar horario
             </button>
           )}
-          {user?.role === "admin_atu" && programacionId && (
-            <button
-              style={{ ...styles.btnSecondary, opacity: confirmandoDia ? 0.6 : 1,
-                background: "#EFF6FF", color: "#1D4ED8", border: "1px solid #BFDBFE" }}
-              onClick={confirmarDiaIA}
-              disabled={confirmandoDia}
-              title="La IA confirma todas las asignaciones propuestas del día que no tengan conflictos activos"
-            >
-              {confirmandoDia ? "Procesando…" : "✨ IA: Confirmar día"}
-            </button>
-          )}
           {conflictCount > 0 && (
             <span style={styles.conflictBadge}>
               {conflictCount} conflicto{conflictCount > 1 ? "s" : ""}
-            </span>
-          )}
-          {diaMsg && (
-            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#065F46",
-              background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: 6, padding: "3px 10px" }}>
-              ✅ {diaMsg}
             </span>
           )}
           {actionStatus && (

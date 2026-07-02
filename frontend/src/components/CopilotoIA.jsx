@@ -8,10 +8,9 @@ const COLORES_SEVERIDAD = {
 };
 
 const INTENTS = [
-  { id: "disponibilidad",      label: "¿Quién está disponible?",         placeholder: "Ej: ¿Quién está libre el viernes tarde?" },
-  { id: "explicar_alerta",     label: "Explicar alerta de chofer",        placeholder: "Ej: ¿Por qué hay alerta para el chofer 5?" },
-  { id: "horas_area",          label: "Horas trabajadas por área",        placeholder: "Ej: ¿Cuántas horas trabajó el área norte esta semana?" },
-  { id: "estado_programacion", label: "Estado de una programación",       placeholder: "Ej: ¿Cómo está la programación 3?" },
+  { id: "disponibilidad",      label: "¿Quién está disponible?",    placeholder: "Ej: ¿Quién está libre el viernes tarde en área norte?" },
+  { id: "horas_area",          label: "Horas por área esta semana", placeholder: "Ej: ¿Cuántas horas acumuló el área sur esta semana?" },
+  { id: "estado_programacion", label: "Estado de programación",     placeholder: "Ej: ¿Cómo va la programación de la semana 27?" },
 ];
 
 
@@ -331,7 +330,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
             {tab === "reemplazo" && (
               <div>
                 <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
-                  Selecciona la asignación que necesita cobertura y la IA sugerirá el mejor reemplazo disponible.
+                  Para cuando un chofer avisa con anticipación que no puede asistir. Las asignaciones ⚠️ ya tienen conflicto activo.
                 </p>
                 <label style={estiloLabel}>Asignación</label>
                 {asigOpciones === null ? (
