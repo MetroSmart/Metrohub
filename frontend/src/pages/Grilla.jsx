@@ -25,6 +25,18 @@ const ESTADO_BADGE = {
 
 const emptyForm = { nombre: "", fecha_inicio: "", fecha_fin: "", observaciones: "" };
 
+const GUIA_POR_TIPO = {
+  descanso_insuficiente:  "Revisa los dos turnos consecutivos y cancela o reprograma el que tenga menor prioridad. Asegúrate de que el chofer tenga al menos 8 horas de descanso entre el fin de un turno y el inicio del siguiente.",
+  solapamiento_turno:     "Identifica las dos asignaciones superpuestas. Cancela la de menor prioridad y busca un chofer disponible en el área como reemplazo para cubrir ese horario.",
+  exceso_8h_dia:          "El chofer supera las 8 horas diarias permitidas. Reasigna uno de los turnos del día a otro chofer disponible en el área o ajusta la duración estimada si hay un error de registro.",
+  chofer_no_disponible:   "El chofer tiene una indisponibilidad registrada para esta fecha. Verifica el motivo en el módulo de disponibilidades y asigna un reemplazo del área que esté libre.",
+  licencia_vencida:       "La licencia de conducir está vencida — el chofer no puede operar. Cancela la asignación y busca un reemplazo activo con licencia vigente. Notifica al chofer para que inicie el trámite de renovación.",
+  certif_prot_vencida:    "El certificado de protocolos está vencido. Suspende temporalmente las asignaciones del chofer hasta que renueve el certificado. Coordina el reemplazo con el supervisor del área.",
+  area_incorrecta:        "La asignación está en un área que no corresponde al chofer. Reasigna a un chofer del área correcta o coordina con el supervisor para autorizar la asignación cruzada si es necesario.",
+  bus_no_operativo:       "El bus asignado no está operativo. Asigna otro bus disponible del mismo tipo en el área o deja el campo sin bus si el chofer puede incorporarse a una unidad ya disponible en ruta.",
+  otro:                   "Revisa el caso con el supervisor del área y aplica el protocolo interno correspondiente. Documenta las acciones tomadas en las observaciones de la asignación.",
+};
+
 export default function Grilla({ user, onNav, onLogout, initialFecha }) {
   const [horarios, setHorarios]             = useState([]);
   const [rutas, setRutas]                   = useState([]);
@@ -276,7 +288,8 @@ export default function Grilla({ user, onNav, onLogout, initialFecha }) {
 
   const handleResolver = async (conflictoId, horarioId, conflicto) => {
     setResolving(conflictoId);
-    let sugerenciaIA = null;
+    let sugerencia = null;
+    let esIA = false;
     try {
       const data = await api.post("/api/ia/chat", {
         intent: "resolver_conflicto",
@@ -287,13 +300,14 @@ export default function Grilla({ user, onNav, onLogout, initialFecha }) {
           severidad: conflicto.severidad,
         },
       });
-      sugerenciaIA = data.respuesta || null;
+      if (data.respuesta) { sugerencia = data.respuesta; esIA = true; }
     } catch {
-      // IA no disponible — se muestra el modal igualmente sin sugerencia
+      // IA no disponible — usar guía local por tipo de conflicto
     } finally {
       setResolving(null);
     }
-    setResolverModal({ conflictoId, horarioId, tipo: conflicto.tipo, descripcion: conflicto.descripcion, severidad: conflicto.severidad, sugerenciaIA });
+    if (!sugerencia) sugerencia = GUIA_POR_TIPO[conflicto.tipo] || null;
+    setResolverModal({ conflictoId, horarioId, tipo: conflicto.tipo, descripcion: conflicto.descripcion, severidad: conflicto.severidad, sugerencia, esIA });
   };
 
   const confirmarResolucion = async () => {
@@ -873,18 +887,18 @@ export default function Grilla({ user, onNav, onLogout, initialFecha }) {
               <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#374151", margin: 0, lineHeight: 1.5 }}>
                 {resolverModal.descripcion}
               </p>
-              {resolverModal.sugerenciaIA ? (
-                <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 14px" }}>
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#1D4ED8", marginBottom: 6 }}>
-                    Sugerencia del Copiloto IA
+              {resolverModal.sugerencia && (
+                <div style={{
+                  background: resolverModal.esIA ? "#EFF6FF" : "#F0FDF4",
+                  border: `1px solid ${resolverModal.esIA ? "#BFDBFE" : "#BBF7D0"}`,
+                  borderRadius: 8, padding: "12px 14px",
+                }}>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: resolverModal.esIA ? "#1D4ED8" : "#15803D", marginBottom: 6 }}>
+                    {resolverModal.esIA ? "Sugerencia del Copiloto IA" : "Guía de resolución"}
                   </div>
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#1E3A5F", lineHeight: 1.6 }}>
-                    {resolverModal.sugerenciaIA}
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: resolverModal.esIA ? "#1E3A5F" : "#1A3D2B", lineHeight: 1.6 }}>
+                    {resolverModal.sugerencia}
                   </div>
-                </div>
-              ) : (
-                <div style={{ background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 8, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#6B7280" }}>
-                  Copiloto IA no disponible — puedes resolver el conflicto manualmente.
                 </div>
               )}
               <div style={styles.formActions}>
