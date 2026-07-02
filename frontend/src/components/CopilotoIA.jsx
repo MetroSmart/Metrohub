@@ -63,10 +63,11 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
 
   const limpiarError = () => setError("");
 
-  const cargarAlertas = useCallback(async () => {
+  const cargarAlertas = useCallback(async (force = false) => {
     setCargandoFatiga(true); limpiarError();
     try {
-      const data = await api.get("/api/ia/alertas-fatiga");
+      const url = force ? "/api/ia/alertas-fatiga?force=true" : "/api/ia/alertas-fatiga";
+      const data = await api.get(url);
       setAlertas(data);
     } catch (e) {
       setError(e.message);
@@ -205,7 +206,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                       </div>
                     )}
                   </div>
-                  <button onClick={cargarAlertas} style={estiloBotonSecundario}>
+                  <button onClick={() => cargarAlertas(true)} style={estiloBotonSecundario}>
                     {cargandoFatiga ? "Cargando…" : "↻ Actualizar"}
                   </button>
                 </div>

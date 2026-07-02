@@ -19,7 +19,7 @@ router = APIRouter()
 
 IA_SERVICE_URL = os.getenv("IA_SERVICE_URL", "http://localhost:8001")
 
-_TTL_ALERTAS    = 1800  # 30 minutos
+_TTL_ALERTAS    =  300  # 5 minutos
 _TTL_CHAT       = 3600  # 1 hora por tipo de conflicto
 _TTL_REEMPLAZO  =  600  # 10 minutos por asignación
 _cache: dict[str, tuple[float, dict]] = {}
@@ -153,14 +153,16 @@ async def sugerir_reemplazo(
 
 @router.get("/alertas-fatiga")
 async def alertas_fatiga(
+    force: bool = False,
     db: Session = Depends(get_db),
     usuario: dict = Depends(obtener_usuario_actual),
 ):
     _solo_admin_o_supervisor(usuario)
 
-    cached = _cache_get("alertas_fatiga")
-    if cached:
-        return {k: v for k, v in cached.items() if k != "_ttl"}
+    if not force:
+        cached = _cache_get("alertas_fatiga")
+        if cached:
+            return {k: v for k, v in cached.items() if k != "_ttl"}
 
     alertas_raw = ia_service.detectar_alertas_fatiga(db)
     if not alertas_raw:
