@@ -82,9 +82,19 @@ async def alertas_fatiga(
         return {"total": 0, "alertas": [], "mensaje": "No se detectaron alertas esta semana"}
 
     resultado = await _llamar_ia("/alertas-fatiga", {"alertas": alertas_raw})
+    alertas_ia = resultado.get("alertas", [])
+
+    alertas_final = []
+    for alerta_ia, alerta_raw in zip(alertas_ia, alertas_raw):
+        alertas_final.append({
+            **alerta_ia,
+            "tipo": alerta_raw.get("tipo", ""),
+            "fecha_referencia": alerta_raw.get("fecha_referencia", ""),
+        })
+
     return {
-        "total": len(resultado.get("alertas", [])),
-        "alertas": resultado.get("alertas", []),
+        "total": len(alertas_final),
+        "alertas": alertas_final,
     }
 
 

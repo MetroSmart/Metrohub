@@ -21,7 +21,7 @@ const PARAMS_POR_INTENT = {
   estado_programacion: [{ key: "programacion_id",   label: "ID de la programación" }],
 };
 
-export default function CopilotoIA({ user }) {
+export default function CopilotoIA({ user, onNavToGrilla }) {
   const [abierto,         setAbierto]         = useState(false);
   const [tab,             setTab]             = useState("fatiga");
   const [cargandoFatiga,  setCargandoFatiga]  = useState(false);
@@ -209,6 +209,19 @@ export default function CopilotoIA({ user }) {
                       <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
                         💡 {a.sugerencia}
                       </div>
+                      {a.fecha_referencia && onNavToGrilla && (
+                        <button
+                          onClick={() => { setAbierto(false); onNavToGrilla(a.fecha_referencia); }}
+                          style={{
+                            marginTop: 8, padding: "3px 10px", borderRadius: 6,
+                            border: `1px solid ${c.borde}`, background: "transparent",
+                            color: c.texto, fontSize: 10, cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          Ver en Grilla →
+                        </button>
+                      )}
                     </div>
                   );
                 })}

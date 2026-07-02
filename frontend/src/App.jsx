@@ -92,14 +92,21 @@ export default function App() {
     );
   }
 
+  const [grillaFecha, setGrillaFecha] = useState(null);
+
+  const irAGrilla = (fecha) => {
+    setGrillaFecha(fecha);
+    setPage("grilla");
+  };
+
   const props = { user, onNav: setPage, onLogout: handleLogout };
 
   // CopilotoIA se oculta automáticamente para el rol 'chofer' (lógica interna del componente)
-  const copiloto = user ? <CopilotoIA user={user} /> : null;
+  const copiloto = user ? <CopilotoIA user={user} onNavToGrilla={irAGrilla} /> : null;
 
   if (page === "login")     return <Login onLogin={handleLogin} />;
   if (page === "mis-rutas") return <><MisRutas   {...props} />{copiloto}</>;
-  if (page === "grilla")    return <><Grilla      {...props} />{copiloto}</>;
+  if (page === "grilla")    return <><Grilla      {...props} initialFecha={grillaFecha} />{copiloto}</>;
   if (page === "rutas")     return <><Rutas       {...props} />{copiloto}</>;
   if (page === "choferes")  return <><Choferes    {...props} />{copiloto}</>;
   if (page === "reportes")  return <><Reportes    {...props} />{copiloto}</>;

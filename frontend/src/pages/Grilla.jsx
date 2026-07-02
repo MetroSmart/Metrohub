@@ -25,12 +25,12 @@ const ESTADO_BADGE = {
 
 const emptyForm = { nombre: "", fecha_inicio: "", fecha_fin: "", observaciones: "" };
 
-export default function Grilla({ user, onNav, onLogout }) {
+export default function Grilla({ user, onNav, onLogout, initialFecha }) {
   const [horarios, setHorarios]             = useState([]);
   const [rutas, setRutas]                   = useState([]);
   const [programaciones, setProgramaciones] = useState([]);
   const [rutaId, setRutaId]                 = useState("");
-  const [fecha, setFecha]                   = useState(new Date().toISOString().slice(0, 10));
+  const [fecha, setFecha]                   = useState(initialFecha || new Date().toISOString().slice(0, 10));
   const [selectedProgId, setSelectedProgId] = useState("");
   const [loading, setLoading]               = useState(true);
   const [actionStatus, setActionStatus]     = useState(null);
@@ -66,6 +66,10 @@ export default function Grilla({ user, onNav, onLogout }) {
   const [formAsig, setFormAsig]             = useState({ chofer_id: "", area_id: "", bus_placa: "", notas: "" });
   const [formAsigErr, setFormAsigErr]       = useState("");
   const [formAsigSaving, setFormAsigSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialFecha) setFecha(initialFecha);
+  }, [initialFecha]);
 
   useEffect(() => {
     api.get("/api/rutas?solo_activas=true").then(setRutas).catch(() => {});

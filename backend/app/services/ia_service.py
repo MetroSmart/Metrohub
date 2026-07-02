@@ -221,6 +221,7 @@ def detectar_alertas_fatiga(db: Session) -> list[dict]:
                 "nombres": chofer.nombres,
                 "apellidos": chofer.apellidos,
                 "tipo": "exceso_horas_semana",
+                "fecha_referencia": str(lunes),
                 "detalle": {
                     "horas_asignadas": round(min_semana / 60, 1),
                     "limite_horas": MAX_HORAS_SEMANA_MIN // 60,
@@ -240,6 +241,7 @@ def detectar_alertas_fatiga(db: Session) -> list[dict]:
                 "nombres": chofer.nombres,
                 "apellidos": chofer.apellidos,
                 "tipo": "turnos_noche_consecutivos",
+                "fecha_referencia": str(noches[0].horario.fecha) if noches else str(lunes),
                 "detalle": {
                     "turnos_consecutivos": consec,
                     "limite": MAX_NOCHES_SEGUIDAS,
@@ -257,6 +259,7 @@ def detectar_alertas_fatiga(db: Session) -> list[dict]:
                     "nombres": chofer.nombres,
                     "apellidos": chofer.apellidos,
                     "tipo": "descanso_insuficiente",
+                    "fecha_referencia": str(asigs_ordenadas[i-1].horario.fecha),
                     "detalle": {
                         "descanso_horas": round(gap_min / 60, 1),
                         "minimo_horas": MIN_DESCANSO_MIN // 60,
