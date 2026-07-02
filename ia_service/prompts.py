@@ -58,12 +58,13 @@ def prompt_chat(intent: str, contexto: dict, pregunta: str) -> str:
         desc = contexto.get("descripcion", "")
         return (
             f"{SISTEMA_BASE}\n\n"
-            f"El administrador necesita resolver el siguiente conflicto de programación:\n"
+            f"Conflicto de programación a resolver:\n"
             f"  Tipo: {tipo}\n"
             f"  Severidad: {sev}\n"
             f"  Descripción: {desc}\n\n"
-            f"Proporciona 2-3 pasos concretos y prácticos para resolverlo. "
-            f"Sé directo. Usa párrafos cortos, sin bullets."
+            f"Da exactamente 3 pasos de acción, numerados (1. 2. 3.). "
+            f"Cada paso: máximo una oración, directo y específico al caso. "
+            f"Sin introducción, sin conclusión, sin texto extra. Solo los 3 pasos."
         )
     contexto_texto = json.dumps(contexto, ensure_ascii=False, indent=2)
     return (
