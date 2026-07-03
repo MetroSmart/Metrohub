@@ -284,7 +284,7 @@ async def aplicar_reemplazo(
         resultado_ia = await _llamar_ia("/reemplazo", datos)
         datos_horario = datos.get("horario", {})
 
-    chofer_id_nuevo = resultado_ia.get("chofer_id")
+    chofer_id_nuevo = resultado_ia.get("chofer_id_recomendado")
     if not chofer_id_nuevo:
         raise HTTPException(status_code=502, detail="La IA no pudo determinar un candidato")
 
@@ -314,6 +314,9 @@ async def aplicar_reemplazo(
 
     chofer = db.query(Chofer).filter(Chofer.id == chofer_id_nuevo).first()
     _cache.pop(cache_key, None)
+
+    if not chofer:
+        raise HTTPException(status_code=500, detail="Chofer recomendado no encontrado en la base de datos")
 
     return {
         "asignacion_nueva_id": asig_nueva.id,
@@ -350,6 +353,22 @@ def programar_descanso(
         registrado_por = uid,
     )
     db.add(disp)
+
+    # Liberar los turnos del chofer en esa fecha para que queden "Sin cubrir"
+    asigs_del_dia = (
+        db.query(Asignacion)
+        .join(HorarioServicio, Asignacion.horario_id == HorarioServicio.id)
+        .filter(
+            Asignacion.chofer_id == chofer_id,
+            HorarioServicio.fecha == fecha,
+            Asignacion.estado.in_(["propuesta", "confirmada"]),
+        )
+        .all()
+    )
+    for asig in asigs_del_dia:
+        asig.estado = "cancelada"
+        asig.notas  = (asig.notas or "") + " | Liberado por descanso compensatorio IA"
+
     try:
         db.commit()
     except Exception:
@@ -357,7 +376,12 @@ def programar_descanso(
         raise HTTPException(status_code=409, detail="Ya existe disponibilidad registrada para esa fecha")
 
     _cache.pop("alertas_fatiga", None)
-    return {"mensaje": "Descanso registrado", "fecha": str(fecha), "chofer_id": chofer_id}
+    return {
+        "mensaje":              "Descanso registrado",
+        "fecha":                str(fecha),
+        "chofer_id":            chofer_id,
+        "turnos_liberados":     len(asigs_del_dia),
+    }
 
 
 @router.post("/confirmar-dia")

@@ -104,9 +104,9 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
     const key = `${choferId}_${fecha}`;
     setDescansosAplicados(prev => ({ ...prev, [key]: "cargando" }));
     try {
-      await api.post(`/api/ia/programar-descanso/${choferId}`, { fecha, observaciones: "" });
+      const res = await api.post(`/api/ia/programar-descanso/${choferId}`, { fecha, observaciones: "" });
       setDescansosAplicados(prev => ({ ...prev, [key]: "ok" }));
-      setUltimaAccion({ nombres, apellidos, fecha });
+      setUltimaAccion({ nombres, apellidos, fecha, turnos_liberados: res.turnos_liberados ?? 0 });
       await cargarAlertas(true);
     } catch (e) {
       setDescansosAplicados(prev => ({ ...prev, [key]: false }));
@@ -234,7 +234,7 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                     <span style={{ fontSize: 13, color: "#374151", fontWeight: 600 }}>Alertas de esta semana</span>
                     {alertas?.actualizado_en && !cargandoFatiga && (
                       <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>
-                        hace {Math.round((Date.now() / 1000 - alertas.actualizado_en) / 60)} min · caché 30 min
+                        hace {Math.round((Date.now() / 1000 - alertas.actualizado_en) / 60)} min · caché 5 min
                       </div>
                     )}
                   </div>
@@ -247,13 +247,27 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                   <div style={{
                     background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: 8,
                     padding: "8px 12px", marginBottom: 10, fontSize: 12,
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
                   }}>
-                    <span style={{ color: "#065F46" }}>
-                      ✅ Descanso registrado para <strong>{ultimaAccion.nombres} {ultimaAccion.apellidos}</strong> el {ultimaAccion.fecha}
-                    </span>
-                    <button onClick={() => setUltimaAccion(null)}
-                      style={{ background: "none", border: "none", color: "#6EE7B7", cursor: "pointer", fontSize: 14 }}>×</button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <span style={{ color: "#065F46", lineHeight: 1.5 }}>
+                        ✅ Descanso registrado para <strong>{ultimaAccion.nombres} {ultimaAccion.apellidos}</strong> el {ultimaAccion.fecha}.
+                        {ultimaAccion.turnos_liberados > 0
+                          ? ` ${ultimaAccion.turnos_liberados} turno${ultimaAccion.turnos_liberados > 1 ? "s" : ""} liberado${ultimaAccion.turnos_liberados > 1 ? "s" : ""} — asigna un reemplazo en la Grilla.`
+                          : " Sin turnos activos ese día."}
+                      </span>
+                      <button onClick={() => setUltimaAccion(null)}
+                        style={{ background: "none", border: "none", color: "#6EE7B7", cursor: "pointer", fontSize: 14, flexShrink: 0, marginLeft: 6 }}>×</button>
+                    </div>
+                    {onNavToGrilla && (
+                      <button
+                        onClick={() => { setAbierto(false); onNavToGrilla(ultimaAccion.fecha); }}
+                        style={{
+                          marginTop: 7, padding: "4px 10px", borderRadius: 6, fontSize: 11,
+                          border: "1px solid #059669", background: "#059669", color: "#fff",
+                          cursor: "pointer", fontFamily: "inherit", fontWeight: 600,
+                        }}
+                      >Ver turnos del día en Grilla →</button>
+                    )}
                   </div>
                 )}
                 {cargandoFatiga && <div style={estiloCargando}>Analizando programación…</div>}
@@ -391,8 +405,19 @@ export default function CopilotoIA({ user, onNavToGrilla, reemplazoTrigger }) {
                         borderRadius: 8, padding: "10px 12px" }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: "#065F46" }}>✅ Reemplazo aplicado</div>
                         <div style={{ fontSize: 12, color: "#047857", marginTop: 3 }}>
-                          <strong>{reemplazoAplicado.chofer_reemplazo?.nombres} {reemplazoAplicado.chofer_reemplazo?.apellidos}</strong> asignado al turno. Conflicto cerrado automáticamente.
+                          <strong>{reemplazoAplicado.chofer_reemplazo?.nombres} {reemplazoAplicado.chofer_reemplazo?.apellidos}</strong> ahora cubre
+                          el turno{reemplazoAplicado.horario?.fecha ? ` del ${reemplazoAplicado.horario.fecha}` : ""}. Conflicto cerrado automáticamente.
                         </div>
+                        {onNavToGrilla && reemplazoAplicado.horario?.fecha && (
+                          <button
+                            onClick={() => { setAbierto(false); onNavToGrilla(reemplazoAplicado.horario.fecha); }}
+                            style={{
+                              marginTop: 8, padding: "4px 10px", borderRadius: 6, fontSize: 11,
+                              border: "1px solid #059669", background: "#059669", color: "#fff",
+                              cursor: "pointer", fontFamily: "inherit", fontWeight: 600,
+                            }}
+                          >Ver cambio en Grilla →</button>
+                        )}
                       </div>
                     )}
                   </div>

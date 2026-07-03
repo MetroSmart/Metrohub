@@ -28,22 +28,23 @@ def listar_horarios(db: Session, fecha: Optional[str] = None, ruta_id: Optional[
         chofer_info = None
         asignacion_id = None
         for asig in h.asignaciones:
-            if chofer_info is None and asig.chofer:
+            if chofer_info is None and asig.chofer and asig.estado in ("propuesta", "confirmada"):
                 asignacion_id = asig.id
                 chofer_info = {
                     "id":     asig.chofer.id,
                     "nombre": f"{asig.chofer.nombres} {asig.chofer.apellidos}",
                 }
-            for c in asig.conflictos:
-                if not c.resuelto and conflicto_activo is None:
-                    conflicto_activo = {
-                        "id":            c.id,
-                        "asignacion_id": c.asignacion_id,
-                        "tipo":          c.tipo,
-                        "severidad":     c.severidad,
-                        "descripcion":   c.descripcion,
-                    }
-        bus_placa = next((a.bus_placa for a in h.asignaciones if a.bus_placa), None)
+            if asig.estado in ("propuesta", "confirmada"):
+                for c in asig.conflictos:
+                    if not c.resuelto and conflicto_activo is None:
+                        conflicto_activo = {
+                            "id":            c.id,
+                            "asignacion_id": c.asignacion_id,
+                            "tipo":          c.tipo,
+                            "severidad":     c.severidad,
+                            "descripcion":   c.descripcion,
+                        }
+        bus_placa = next((a.bus_placa for a in h.asignaciones if a.bus_placa and a.estado in ("propuesta", "confirmada")), None)
         resultado.append({
             "id":               h.id,
             "programacion_id":  h.programacion_id,

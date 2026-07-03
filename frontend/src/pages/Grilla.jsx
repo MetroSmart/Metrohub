@@ -305,8 +305,13 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
     try {
       const data = await api.post(`/api/ia/aplicar-reemplazo/${resolverModal.asignacionId}`);
       setResolverModal(m => ({ ...m, aplicandoIA: false, reemplazoAplicado: data }));
+      const nuevoChofer = data.chofer_reemplazo
+        ? { id: data.chofer_reemplazo.id, nombre: `${data.chofer_reemplazo.nombres} ${data.chofer_reemplazo.apellidos}` }
+        : null;
       setHorarios(prev => prev.map(h =>
-        h.id === resolverModal.horarioId ? { ...h, conflicto: null } : h
+        h.id === resolverModal.horarioId
+          ? { ...h, conflicto: null, ...(nuevoChofer && { chofer: nuevoChofer, asignacion_id: data.asignacion_nueva_id }) }
+          : h
       ));
     } catch (e) {
       setResolverModal(m => ({ ...m, aplicandoIA: false }));
@@ -526,7 +531,7 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
               {!loading && horarios.map(h => {
                 const tieneConflicto = !!h.conflicto;
                 return (
-                  <tr key={h.id} style={tieneConflicto ? styles.rowConflicto : {}}>
+                  <tr key={h.id} style={tieneConflicto ? styles.rowConflicto : !h.chofer ? styles.rowSinCubrir : {}}>
                     <td style={styles.td}>
                       <strong style={{ fontFamily: "'Space Mono',monospace", fontSize: 13 }}>
                         {h.hora_salida}
@@ -565,7 +570,13 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
                         )
                         : (
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ color: "#bbb", fontSize: 12 }}>Sin asignar</span>
+                            <span style={{
+                              fontSize: 12, fontWeight: 600, color: "#92400E",
+                              background: "#FEF3C7", border: "1px solid #F59E0B",
+                              borderRadius: 6, padding: "2px 8px",
+                            }}>
+                              ⚠️ Falta cubrir
+                            </span>
                             {(user?.role === "admin_atu" || user?.role === "supervisor_area") && (
                               <button
                                 style={styles.assignBtn}
@@ -609,10 +620,12 @@ export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirR
                         <div style={{ display: "flex", flexDirection: "column", gap: 5, alignItems: "flex-start" }}>
                           <span style={{
                             ...styles.tag,
-                            background: !h.chofer ? "#f0f0f0" : h.activo ? "#EAF3DE" : "#e0e0e0",
-                            color:      !h.chofer ? "#999"    : h.activo ? "#27500A" : "#666",
+                            background: !h.chofer ? "#FEF3C7" : h.activo ? "#EAF3DE" : "#e0e0e0",
+                            color:      !h.chofer ? "#92400E" : h.activo ? "#27500A" : "#666",
+                            border:     !h.chofer ? "1px solid #F59E0B" : "none",
+                            fontWeight: !h.chofer ? 600 : 500,
                           }}>
-                            {!h.chofer ? "Sin cubrir" : h.activo ? "Activo" : "Inactivo"}
+                            {!h.chofer ? "Necesita cobertura" : h.activo ? "Activo" : "Inactivo"}
                           </span>
                           {user?.role === "admin_atu" && (
                             <button
@@ -1045,7 +1058,8 @@ const styles = {
     fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#222",
     padding: "11px 14px", borderBottom: "0.5px solid #f4f4f4", verticalAlign: "top",
   },
-  rowConflicto: { background: "#fff9f9" },
+  rowConflicto:  { background: "#fff9f9" },
+  rowSinCubrir:  { background: "#FFFBEB" },
   choferBadge:  { display: "inline-flex", alignItems: "center", gap: 7 },
   avatar: {
     width: 24, height: 24, borderRadius: "50%", background: "#B5D4F4",

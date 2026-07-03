@@ -30,6 +30,7 @@ export default function App() {
   const [user, setUser]                     = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [grillaFecha, setGrillaFecha]       = useState(null);
+  const [grillaKey, setGrillaKey]           = useState(0);
   const [reemplazoTrigger, setReemplazoTrigger] = useState(null);
 
   useEffect(() => {
@@ -96,6 +97,7 @@ export default function App() {
 
   const irAGrilla = (fecha) => {
     setGrillaFecha(fecha);
+    setGrillaKey(k => k + 1);
     setPage("grilla");
   };
 
@@ -108,7 +110,7 @@ export default function App() {
 
   if (page === "login")     return <Login onLogin={handleLogin} />;
   if (page === "mis-rutas") return <><MisRutas   {...props} />{copiloto}</>;
-  if (page === "grilla")    return <><Grilla      {...props} initialFecha={grillaFecha} onSugerirReemplazo={abrirReemplazo} />{copiloto}</>;
+  if (page === "grilla")    return <><Grilla key={grillaKey} {...props} initialFecha={grillaFecha} onSugerirReemplazo={abrirReemplazo} />{copiloto}</>;
   if (page === "rutas")     return <><Rutas       {...props} />{copiloto}</>;
   if (page === "choferes")  return <><Choferes    {...props} />{copiloto}</>;
   if (page === "reportes")  return <><Reportes    {...props} />{copiloto}</>;

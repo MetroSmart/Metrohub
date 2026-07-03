@@ -153,6 +153,8 @@ def obtener_candidatos_reemplazo(db: Session, asignacion_id: int) -> dict:
     candidatos.sort(key=lambda c: (c["horas_semana"], c["turnos_noche_consecutivos"]))
 
     chofer_ausente = asignacion.chofer
+    if not chofer_ausente:
+        return {}
     return {
         "horario": {
             "fecha": str(horario.fecha),
