@@ -10,6 +10,7 @@ import Usuarios from "./pages/Usuarios";
 import Areas from "./pages/Areas";
 import MisRutas from "./pages/MisRutas";
 import CambioPasswordPrimerIngreso from "./components/CambioPasswordPrimerIngreso";
+import CopilotoIA from "./components/CopilotoIA";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -28,6 +29,9 @@ export default function App() {
   const [page, setPage]                     = useState("login");
   const [user, setUser]                     = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [grillaFecha, setGrillaFecha]       = useState(null);
+  const [grillaKey, setGrillaKey]           = useState(0);
+  const [reemplazoTrigger, setReemplazoTrigger] = useState(null);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -91,16 +95,27 @@ export default function App() {
     );
   }
 
+  const irAGrilla = (fecha) => {
+    setGrillaFecha(fecha);
+    setGrillaKey(k => k + 1);
+    setPage("grilla");
+  };
+
   const props = { user, onNav: setPage, onLogout: handleLogout };
 
-  if (page === "login")          return <Login onLogin={handleLogin} />;
-  if (page === "mis-rutas")      return <MisRutas       {...props} />;
-  if (page === "grilla")         return <Grilla         {...props} />;
-  if (page === "rutas")          return <Rutas          {...props} />;
-  if (page === "choferes")       return <Choferes       {...props} />;
-  if (page === "reportes")       return <Reportes       {...props} />;
-  if (page === "buses")          return <Buses          {...props} />;
-  if (page === "usuarios")       return <Usuarios       {...props} />;
-  if (page === "areas")          return <Areas          {...props} />;
-  return <Dashboard {...props} />;
+  // CopilotoIA se oculta automáticamente para el rol 'chofer' (lógica interna del componente)
+  const abrirReemplazo = (asigId) => setReemplazoTrigger({ asigId, ts: Date.now() });
+
+  const copiloto = user ? <CopilotoIA user={user} onNavToGrilla={irAGrilla} reemplazoTrigger={reemplazoTrigger} /> : null;
+
+  if (page === "login")     return <Login onLogin={handleLogin} />;
+  if (page === "mis-rutas") return <><MisRutas   {...props} />{copiloto}</>;
+  if (page === "grilla")    return <><Grilla key={grillaKey} {...props} initialFecha={grillaFecha} onSugerirReemplazo={abrirReemplazo} />{copiloto}</>;
+  if (page === "rutas")     return <><Rutas       {...props} />{copiloto}</>;
+  if (page === "choferes")  return <><Choferes    {...props} />{copiloto}</>;
+  if (page === "reportes")  return <><Reportes    {...props} />{copiloto}</>;
+  if (page === "buses")     return <><Buses       {...props} />{copiloto}</>;
+  if (page === "usuarios")  return <><Usuarios    {...props} />{copiloto}</>;
+  if (page === "areas")     return <><Areas       {...props} />{copiloto}</>;
+  return <><Dashboard {...props} />{copiloto}</>;
 }

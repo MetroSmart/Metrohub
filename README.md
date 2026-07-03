@@ -21,7 +21,7 @@ Plataforma web de programación inteligente de horarios y asignación de chofere
 - [Uso del sistema](#uso-del-sistema)
 - [Gestión del proyecto — Scrum](#gestión-del-proyecto--scrum)
 - [Estado actual — Sprint 2 (V2)](#estado-actual--sprint-2-v2)
-- [Roadmap — Sprint 3 (Módulo IA)](#roadmap--sprint-3-módulo-ia)
+- [Estado actual — Sprint 3 (Copiloto IA)](#estado-actual--sprint-3-copiloto-ia)
 - [Patrones creacionales](#patrones-creacionales)
 
 ---
@@ -85,7 +85,7 @@ Docente: Prof. Manuel Quispe Torres
 | SQLAlchemy | 2.0 | ORM conectado a PostgreSQL |
 | python-jose | 3.3+ | Autenticación JWT y sesiones |
 | passlib + bcrypt | 1.7+ | Hash de contraseñas (factor >= 12) |
-| Alembic | 1.13+ | Migraciones de base de datos |
+| Alembic | — | Migraciones gestionadas vía `schema.sql` + archivos en `db/migrations/` |
 
 ### Base de datos y caché
 | Tecnología | Versión | Uso |
@@ -93,16 +93,17 @@ Docente: Prof. Manuel Quispe Torres
 | PostgreSQL | 16 | Base de datos principal |
 | Redis | 7+ | Caché de consultas frecuentes |
 
-### Módulo IA *(planificado — Sprint 3)*
-| Tecnología | Uso |
-|------------|-----|
-| OR-Tools / PuLP | Optimización de asignación de choferes (programación lineal entera) |
-| Prophet | Predicción de demanda por ruta, hora y día de la semana |
+### Módulo IA *(Sprint 3 — implementado)*
+| Tecnología | Versión | Uso |
+|------------|---------|-----|
+| Groq API (`llama-3.3-70b-versatile`) | requests 2.x | Modelo LLM para análisis de fatiga, sugerencia de reemplazos y asistente conversacional |
+| FastAPI (microservicio `metrohub_ia`) | 0.111+ | Servicio IA independiente en puerto 8001 |
+| httpx | — | Comunicación interna backend → microservicio IA |
 
 ### DevOps
 | Tecnología | Uso |
 |------------|-----|
-| Docker + Docker Compose | 4 contenedores: backend, frontend, db, redis |
+| Docker + Docker Compose | 5 contenedores: backend, frontend, db, redis, metrohub_ia |
 | GitHub | Control de versiones y gestión de ramas |
 | Jira (Scrum) | Gestión de sprints y backlog |
 
@@ -124,7 +125,7 @@ Capa de Presentación
 Capa de Negocio
 ├── FastAPI 2.0 (patrón MVC)
 ├── Routers: auth, rutas, horarios, choferes, areas, buses, usuarios,
-│            dashboard, conflictos, programaciones, disponibilidad, reportes
+│            dashboard, conflictos, programaciones, disponibilidad, reportes, ia
 ├── Services: lógica de negocio y queries SQLAlchemy
 └── Autenticación JWT + control de roles (admin_atu | supervisor_area | chofer)
 
@@ -132,8 +133,7 @@ Capa de Negocio
 
 Capa de Datos e Inteligencia Artificial
 ├── PostgreSQL 16 (tablas, triggers, vista v_dashboard_kpis)
-├── OR-Tools (optimización de asignación — Sprint 3)
-├── Prophet (predicción de demanda — Sprint 3)
+├── metrohub_ia :8001 (microservicio Groq/Llama — alertas fatiga, reemplazos, chat)
 └── Redis (caché)
 ```
 
@@ -179,10 +179,11 @@ Frontend y Backend coexisten en el mismo repositorio, permitiendo:
 - Control de disponibilidad e indisponibilidades (descanso, vacaciones, médico, etc.)
 - Vista **Mis Rutas** para el chofer con sus asignaciones del día
 
-### RF05 — Optimización con IA *(planificado — Sprint 3)*
-- Predicción de demanda por ruta, hora y día con modelo Prophet
-- Optimización de asignación de choferes y buses con OR-Tools
-- Propuesta automática revisable y aprobable por el Administrador ATU
+### RF05 — Copiloto IA *(Sprint 3 — implementado)*
+- Detección automática de alertas de fatiga en la programación vigente (turnos noche consecutivos, descanso insuficiente, exceso de horas)
+- Sugerencia de reemplazo para una asignación: evalúa candidatos del área y recomienda el óptimo vía Groq (Llama 3.3)
+- Acciones IA activas: aplicar reemplazo en BD, registrar descanso compensatorio y liberar turnos automáticamente
+- Asistente conversacional con contexto de BD en tiempo real (disponibilidad, horas por área, estado de programación)
 
 ### RF06 — Dashboard de Indicadores y Reportes
 - KPIs operativos actualizados desde la BD: rutas activas, choferes disponibles, buses operativos, conflictos pendientes, certificaciones por vencer en 30 días
@@ -215,7 +216,8 @@ MetroHub/
 │   │   │   ├── KpiCard.jsx
 │   │   │   ├── RouteBar.jsx
 │   │   │   ├── AlertPanel.jsx
-│   │   │   └── CambioPasswordPrimerIngreso.jsx
+│   │   │   ├── CambioPasswordPrimerIngreso.jsx
+│   │   │   └── CopilotoIA.jsx        # RF05 — Panel flotante Copiloto IA
 │   │   ├── pages/
 │   │   │   ├── Login.jsx             # RF01 — Autenticación
 │   │   │   ├── Dashboard.jsx         # RF06 — KPIs
@@ -246,8 +248,10 @@ MetroHub/
 │   │   │   ├── usuarios.py
 │   │   │   ├── dashboard.py          # RF06
 │   │   │   ├── conflictos.py
-│   │   │   └── reportes.py           # RF06
+│   │   │   ├── reportes.py           # RF06
+│   │   │   └── ia.py                 # RF05 — Copiloto IA (alertas, reemplazo, descanso)
 │   │   ├── services/
+│   │   │   ├── ia_service.py         # RF05 — Detección fatiga + candidatos reemplazo
 │   │   ├── models/
 │   │   │   ├── area_operativa.py
 │   │   │   ├── usuario.py
@@ -263,10 +267,17 @@ MetroHub/
 │   │   └── main.py                   # API v2.0.0
 │   ├── db/
 │   │   ├── schema.sql
-│   │   ├── seed.sql                  # Datos demo Metropolitano (jun 2026)
+│   │   ├── seed.sql                  # Datos demo Metropolitano (jul 2026)
 │   │   └── migrations/               # 002_accesos_chofer, 003_debe_cambiar_password
 │   └── Dockerfile
 │
+├── ia_service/                        # Microservicio IA (RF05)
+│   ├── main.py                       # FastAPI: /reemplazo, /alertas-fatiga, /chat, /health
+│   ├── groq_client.py                # Cliente HTTP Groq API (llama-3.3-70b-versatile)
+│   ├── prompts.py                    # Construcción de prompts por función
+│   ├── schemas.py                    # Modelos Pydantic del microservicio
+│   ├── requirements.txt
+│   └── Dockerfile
 ├── docker-compose.yml
 └── README.md
 ```
@@ -304,6 +315,7 @@ Los servicios quedan disponibles en:
 | Frontend | http://localhost:5173 |
 | Backend API | http://localhost:8000 |
 | Swagger Docs | http://localhost:8000/docs |
+| Copiloto IA | http://localhost:8001 |
 | PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |
 
@@ -331,13 +343,18 @@ npm run dev
 
 ### Credenciales choferes demo
 
-| Correo | Contraseña | Chofer |
-|--------|------------|--------|
-| jhuaman@metrohub.gob.pe | 44156789 | Juan Manuel Huamán Flores |
-| rcastillo@metrohub.gob.pe | 45892314 | Roberto Castillo Vera |
-| mtorres@metrohub.gob.pe | 43678912 | Miguel Ángel Torres Huanca |
+| Correo | Contraseña | Chofer | Cambio obligatorio |
+|--------|------------|--------|--------------------|
+| jhuaman@metrohub.gob.pe | 44156789 | Juan Manuel Huamán Flores | No |
+| rcastillo@metrohub.gob.pe | 45892314 | Roberto Castillo Vera | No |
+| mtorres@metrohub.gob.pe | 43678912 | Miguel Ángel Torres Huanca | No |
+| pquispe@metrohub.gob.pe | 44156789 | Pedro Quispe Mendoza | **Sí** |
+| csoldevilla@metrohub.gob.pe | 44156789 | Cinthia Soldevilla Ríos | **Sí** |
+| cramos@metrohub.gob.pe | 44156789 | Cesar Ramos Vilca | **Sí** |
+| fhuertas@metrohub.gob.pe | 44156789 | Fernando Huertas Ayala | **Sí** |
+| aparedes@metrohub.gob.pe | 44156789 | Alberto Paredes Yupanqui | **Sí** |
 
-> La contraseña inicial del chofer es su DNI. Los choferes demo no requieren cambio de contraseña. Los choferes **nuevos** registrados desde el panel deben cambiarla en su primer ingreso.
+> Los primeros 3 choferes usan su propio DNI como contraseña. Los 5 choferes con cambio obligatorio usan la contraseña temporal `44156789` y son redirigidos al formulario de cambio en su primer ingreso.
 
 ---
 
@@ -373,8 +390,13 @@ Portal del chofer con sus asignaciones del día (ruta, horario, bus).
 ### 10. Reportes (RF06)
 Exportación PDF/XLSX desde KPIs del dashboard.
 
-### 11. Optimizador IA *(RF05 — Sprint 3)*
-Propuestas automáticas de programación con Prophet y OR-Tools. **No implementado en V2.**
+### 11. Copiloto IA *(RF05 — Sprint 3 — implementado)*
+Panel flotante (botón 🤖) disponible para Admin ATU y Supervisores de Área. Tres funciones:
+- **Alertas de fatiga** — detecta automáticamente turnos noche consecutivos, descanso insuficiente y exceso de horas semanales en la programación vigente.
+- **Sugerencia de reemplazo** — dado el ID de una asignación, selecciona el mejor candidato disponible del área evaluando carga horaria y descanso.
+- **Asistente chat** — responde preguntas sobre disponibilidad, horas por área, estado de programaciones y alertas de choferes específicos.
+
+> Requiere `GROQ_API_KEY` en `.env`. Disponible en [console.groq.com](https://console.groq.com) — plan gratuito disponible.
 
 ---
 
@@ -383,7 +405,7 @@ Propuestas automáticas de programación con Prophet y OR-Tools. **No implementa
 El proyecto se gestiona con metodología Scrum con sprints semanales.
 
 - GitHub: https://github.com/MetroSmart/Metrohub
-- Rama activa de desarrollo: `fixv2`
+- Rama activa de desarrollo: `sprint3`
 - Gestión de backlog: Jira (proyecto SCRUM)
 
 ### Product Backlog (resumen)
@@ -396,7 +418,7 @@ El proyecto se gestiona con metodología Scrum con sprints semanales.
 | SCRUM-14/16/15 | Choferes, asignación, alertas | RF04 | Completado |
 | SCRUM-25 | Dashboard KPIs | RF06 | Completado |
 | SCRUM-26 | Exportación PDF/XLSX | RF06 | Parcial (stubs) |
-| SCRUM-20/21 | Prophet + OR-Tools | RF05 | **Sprint 3** |
+| SCRUM-20/21 | Copiloto IA (Groq/Llama) — alertas, reemplazo, chat, acciones activas | RF05 | **Completado (Sprint 3)** |
 | — | Portal chofer + áreas operativas | RF01/RF04 | Completado (V2) |
 
 ---
@@ -425,36 +447,42 @@ Pendientes menores: exportación PDF/XLSX completa, estaciones (parcial).
 
 ---
 
-## Roadmap — Sprint 3 (Módulo IA)
+## Estado actual — Sprint 3 (Copiloto IA)
 
-**Período planificado:** Junio – Julio 2026  
-**Objetivo:** Implementar el módulo de Inteligencia Artificial (RF05) sobre la base operativa de V2
+**Período:** Junio – Julio 2026  
+**Objetivo:** Implementar el módulo de Inteligencia Artificial (RF05) con Groq (Llama 3.3) sobre la base operativa de V2
 
-### Alcance planificado
+### Componentes implementados
 
 | Componente | Tecnología | Descripción |
 |------------|------------|-------------|
-| **Predicción de demanda** | Prophet (Meta) | Forecast de pasajeros por ruta, hora y día de la semana |
-| **Optimizador de asignación** | OR-Tools (Google) | Propuesta automática de choferes y buses respetando restricciones laborales |
-| **API de propuestas** | FastAPI | Endpoints para generar, revisar y aprobar propuestas IA |
-| **UI Optimizador** | React | Pantalla para que el Admin ATU revise y aplique propuestas a la grilla |
+| **Microservicio IA** | FastAPI + Groq API (`llama-3.3-70b-versatile`) | `metrohub_ia` en puerto 8001 — recibe contexto estructurado y genera respuestas con LLM |
+| **Detección de fatiga** | Python (`ia_service.py`) | Analiza la semana vigente: turnos noche consecutivos, descanso insuficiente, exceso de horas. Filtra choferes con descanso ya registrado |
+| **Sugerencia de reemplazo** | Groq + fallback deterministico | Evalúa candidatos del área por carga horaria y noches consecutivas; fallback si la IA falla |
+| **Acciones IA activas** | FastAPI endpoints + SQLAlchemy | Aplicar reemplazo (escribe asignación en BD), programar descanso (libera turnos del chofer) |
+| **Asistente chat** | Groq (texto libre) | 3 intents: disponibilidad, horas por área, estado de programación |
+| **Panel Copiloto** | React (`CopilotoIA.jsx`) | Botón flotante con 3 tabs; navegación directa a Grilla tras ejecutar acciones IA |
+| **Caché en memoria** | Python dict con TTL | Alertas: 5 min · Reemplazo: 10 min · Chat: 1 h · Bypass forzado con `?force=true` |
 
-### Restricciones que el optimizador respetará
+### Restricciones respetadas
 
-- Máximo 8 horas de jornada por chofer
-- Sin solapamiento de turnos
-- Chofer disponible (sin indisponibilidad registrada)
-- Licencia y certificación Protransporte vigentes
-- Coherencia chofer–bus–área operativa
+- Máximo 8 horas de jornada (alerta `exceso_horas_semana`)
+- Sin solapamiento de turnos ni descanso < 8 h (alerta `descanso_insuficiente`)
+- Máximo 3 turnos noche consecutivos (alerta `turnos_noche_consecutivos`)
+- Candidatos filtrados por área operativa, disponibilidad y solapamiento real
+- Sistema completamente funcional sin módulo IA activo (RNF04 — degradación graceful vía 503)
 
-### Criterios de aceptación Sprint 3
+### Criterios de aceptación — cumplidos
 
-- [ ] Modelo Prophet entrenado con datos históricos de demanda (seed + datos simulados)
-- [ ] Optimizador OR-Tools genera propuesta en <= 30 s (RNF03)
-- [ ] Admin puede aprobar o rechazar propuesta desde la UI
-- [ ] Sistema funcional sin módulo IA activo (RNF04 — degradación graceful)
+- [x] Microservicio `metrohub_ia` contenedorizado, integrado con Docker Compose
+- [x] Alertas de fatiga detectadas en la semana vigente, enriquecidas por Groq
+- [x] Reemplazo sugiere candidato válido y lo aplica en BD; fallback deterministico si Groq falla
+- [x] Descanso compensatorio registra disponibilidad y libera turnos del chofer automáticamente
+- [x] Asistente chat responde 3 intents con contexto de BD en tiempo real
+- [x] Grilla muestra slots liberados como "⚠️ Falta cubrir" con fila destacada
+- [x] Sistema funcional sin `GROQ_API_KEY` (degradación graceful — fallback deterministico)
 
-> El módulo IA **no forma parte de V2**. La versión actual opera de forma completa sin dependencia de modelos de ML.
+> Requiere `GROQ_API_KEY=...` en `.env`. Disponible en [console.groq.com](https://console.groq.com) — plan gratuito disponible.
 
 ---
 
@@ -469,7 +497,7 @@ Integrados en el backend para el curso de patrones de diseño:
 | **Factory Method** | RF06 | `app/export/` | `POST /api/reportes/exportar` |
 | **Abstract Factory** | RF06 | `app/factories/` | export con familia ATU |
 
-Detalle técnico: [`backend/docs/PATRONES_CREACIONALES.md`](backend/docs/PATRONES_CREACIONALES.md).
+Detalle técnico: ver carpetas `app/builders/`, `app/prototypes/`, `app/export/` y `app/factories/` en el backend.
 
 ---
 
@@ -519,4 +547,4 @@ git push origin SCRUM-XX-descripcion-corta
 
 ---
 
-MetroHub **V2.0** · Universidad Nacional de Ingeniería · Lima, Perú · 2026
+MetroHub **V2.0 — Sprint 3** · Universidad Nacional de Ingeniería · Lima, Perú · 2026

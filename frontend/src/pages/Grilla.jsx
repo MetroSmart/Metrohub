@@ -25,18 +25,31 @@ const ESTADO_BADGE = {
 
 const emptyForm = { nombre: "", fecha_inicio: "", fecha_fin: "", observaciones: "" };
 
-export default function Grilla({ user, onNav, onLogout }) {
+const GUIA_POR_TIPO = {
+  descanso_insuficiente:  "Revisa los dos turnos consecutivos y cancela o reprograma el que tenga menor prioridad. Asegúrate de que el chofer tenga al menos 8 horas de descanso entre el fin de un turno y el inicio del siguiente.",
+  solapamiento_turno:     "Identifica las dos asignaciones superpuestas. Cancela la de menor prioridad y busca un chofer disponible en el área como reemplazo para cubrir ese horario.",
+  exceso_8h_dia:          "El chofer supera las 8 horas diarias permitidas. Reasigna uno de los turnos del día a otro chofer disponible en el área o ajusta la duración estimada si hay un error de registro.",
+  chofer_no_disponible:   "El chofer tiene una indisponibilidad registrada para esta fecha. Verifica el motivo en el módulo de disponibilidades y asigna un reemplazo del área que esté libre.",
+  licencia_vencida:       "La licencia de conducir está vencida — el chofer no puede operar. Cancela la asignación y busca un reemplazo activo con licencia vigente. Notifica al chofer para que inicie el trámite de renovación.",
+  certif_prot_vencida:    "El certificado de protocolos está vencido. Suspende temporalmente las asignaciones del chofer hasta que renueve el certificado. Coordina el reemplazo con el supervisor del área.",
+  area_incorrecta:        "La asignación está en un área que no corresponde al chofer. Reasigna a un chofer del área correcta o coordina con el supervisor para autorizar la asignación cruzada si es necesario.",
+  bus_no_operativo:       "El bus asignado no está operativo. Asigna otro bus disponible del mismo tipo en el área o deja el campo sin bus si el chofer puede incorporarse a una unidad ya disponible en ruta.",
+  otro:                   "Revisa el caso con el supervisor del área y aplica el protocolo interno correspondiente. Documenta las acciones tomadas en las observaciones de la asignación.",
+};
+
+export default function Grilla({ user, onNav, onLogout, initialFecha, onSugerirReemplazo }) {
   const [horarios, setHorarios]             = useState([]);
   const [rutas, setRutas]                   = useState([]);
   const [programaciones, setProgramaciones] = useState([]);
   const [rutaId, setRutaId]                 = useState("");
-  const [fecha, setFecha]                   = useState(new Date().toISOString().slice(0, 10));
+  const [fecha, setFecha]                   = useState(initialFecha || new Date().toISOString().slice(0, 10));
   const [selectedProgId, setSelectedProgId] = useState("");
   const [loading, setLoading]               = useState(true);
   const [actionStatus, setActionStatus]     = useState(null);
   const [saving, setSaving]                 = useState(false);
   const [approving, setApproving]           = useState(false);
   const [resolving, setResolving]           = useState(null);
+  const [resolverModal, setResolverModal]   = useState(null);
   const [duplicating, setDuplicating]       = useState(false);
 
   // Modal nueva programación
@@ -65,6 +78,10 @@ export default function Grilla({ user, onNav, onLogout }) {
   const [formAsig, setFormAsig]             = useState({ chofer_id: "", area_id: "", bus_placa: "", notas: "" });
   const [formAsigErr, setFormAsigErr]       = useState("");
   const [formAsigSaving, setFormAsigSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialFecha) setFecha(initialFecha);
+  }, [initialFecha]);
 
   useEffect(() => {
     api.get("/api/rutas?solo_activas=true").then(setRutas).catch(() => {});
@@ -269,13 +286,69 @@ export default function Grilla({ user, onNav, onLogout }) {
     }
   };
 
-  const handleResolver = async (conflictoId, horarioId) => {
+  const handleResolver = (conflictoId, horarioId, conflicto, asignacionId) => {
+    setResolverModal({
+      conflictoId, horarioId, asignacionId,
+      tipo: conflicto.tipo,
+      descripcion: conflicto.descripcion,
+      severidad: conflicto.severidad,
+      sugerencia: GUIA_POR_TIPO[conflicto.tipo] || null,
+      esIA: false,
+      cargandoIA: false,
+      aplicandoIA: false,
+      reemplazoAplicado: null,
+    });
+  };
+
+  const aplicarReemplazoIA = async () => {
+    setResolverModal(m => ({ ...m, aplicandoIA: true }));
+    try {
+      const data = await api.post(`/api/ia/aplicar-reemplazo/${resolverModal.asignacionId}`);
+      setResolverModal(m => ({ ...m, aplicandoIA: false, reemplazoAplicado: data }));
+      const nuevoChofer = data.chofer_reemplazo
+        ? { id: data.chofer_reemplazo.id, nombre: `${data.chofer_reemplazo.nombres} ${data.chofer_reemplazo.apellidos}` }
+        : null;
+      setHorarios(prev => prev.map(h =>
+        h.id === resolverModal.horarioId
+          ? { ...h, conflicto: null, ...(nuevoChofer && { chofer: nuevoChofer, asignacion_id: data.asignacion_nueva_id }) }
+          : h
+      ));
+    } catch (e) {
+      setResolverModal(m => ({ ...m, aplicandoIA: false }));
+      alert(e.message || "No se pudo aplicar el reemplazo");
+    }
+  };
+
+
+  const pedirSugerenciaIA = async () => {
+    setResolverModal(m => ({ ...m, cargandoIA: true }));
+    try {
+      const data = await api.post("/api/ia/chat", {
+        intent: "resolver_conflicto",
+        pregunta: "¿Cómo resuelvo este conflicto?",
+        params: {
+          tipo: resolverModal.tipo,
+          descripcion: resolverModal.descripcion,
+          severidad: resolverModal.severidad,
+        },
+      });
+      if (data.respuesta) {
+        setResolverModal(m => ({ ...m, sugerencia: data.respuesta, esIA: true, cargandoIA: false }));
+      }
+    } catch {
+      setResolverModal(m => ({ ...m, cargandoIA: false }));
+    }
+  };
+
+  const confirmarResolucion = async () => {
+    const { conflictoId, horarioId } = resolverModal;
     setResolving(conflictoId);
     try {
       await api.patch(`/api/conflictos/${conflictoId}/resolver`);
       setHorarios(prev =>
         prev.map(h => h.id === horarioId ? { ...h, conflicto: null } : h)
       );
+      setResolverModal(null);
     } catch {
       alert("No se pudo resolver. Verifica que tengas rol de Administrador ATU.");
     } finally {
@@ -458,7 +531,7 @@ export default function Grilla({ user, onNav, onLogout }) {
               {!loading && horarios.map(h => {
                 const tieneConflicto = !!h.conflicto;
                 return (
-                  <tr key={h.id} style={tieneConflicto ? styles.rowConflicto : {}}>
+                  <tr key={h.id} style={tieneConflicto ? styles.rowConflicto : !h.chofer ? styles.rowSinCubrir : {}}>
                     <td style={styles.td}>
                       <strong style={{ fontFamily: "'Space Mono',monospace", fontSize: 13 }}>
                         {h.hora_salida}
@@ -485,11 +558,25 @@ export default function Grilla({ user, onNav, onLogout }) {
                                 Quitar
                               </button>
                             )}
+                            {(user?.role === "admin_atu" || user?.role === "supervisor_area") && h.asignacion_id && onSugerirReemplazo && (
+                              <button
+                                style={styles.assignBtn}
+                                onClick={() => onSugerirReemplazo(h.asignacion_id)}
+                              >
+                                Reemplazar
+                              </button>
+                            )}
                           </div>
                         )
                         : (
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ color: "#bbb", fontSize: 12 }}>Sin asignar</span>
+                            <span style={{
+                              fontSize: 12, fontWeight: 600, color: "#92400E",
+                              background: "#FEF3C7", border: "1px solid #F59E0B",
+                              borderRadius: 6, padding: "2px 8px",
+                            }}>
+                              ⚠️ Falta cubrir
+                            </span>
                             {(user?.role === "admin_atu" || user?.role === "supervisor_area") && (
                               <button
                                 style={styles.assignBtn}
@@ -523,10 +610,9 @@ export default function Grilla({ user, onNav, onLogout }) {
                           {user?.role === "admin_atu" && (
                             <button
                               style={styles.resolveBtn}
-                              disabled={resolving === h.conflicto.id}
-                              onClick={() => handleResolver(h.conflicto.id, h.id)}
+                                onClick={() => handleResolver(h.conflicto.id, h.id, h.conflicto, h.asignacion_id)}
                             >
-                              {resolving === h.conflicto.id ? "Resolviendo…" : "Resolver"}
+                              Resolver
                             </button>
                           )}
                         </div>
@@ -534,10 +620,12 @@ export default function Grilla({ user, onNav, onLogout }) {
                         <div style={{ display: "flex", flexDirection: "column", gap: 5, alignItems: "flex-start" }}>
                           <span style={{
                             ...styles.tag,
-                            background: !h.chofer ? "#f0f0f0" : h.activo ? "#EAF3DE" : "#e0e0e0",
-                            color:      !h.chofer ? "#999"    : h.activo ? "#27500A" : "#666",
+                            background: !h.chofer ? "#FEF3C7" : h.activo ? "#EAF3DE" : "#e0e0e0",
+                            color:      !h.chofer ? "#92400E" : h.activo ? "#27500A" : "#666",
+                            border:     !h.chofer ? "1px solid #F59E0B" : "none",
+                            fontWeight: !h.chofer ? 600 : 500,
                           }}>
-                            {!h.chofer ? "Sin cubrir" : h.activo ? "Activo" : "Inactivo"}
+                            {!h.chofer ? "Necesita cobertura" : h.activo ? "Activo" : "Inactivo"}
                           </span>
                           {user?.role === "admin_atu" && (
                             <button
@@ -823,6 +911,95 @@ export default function Grilla({ user, onNav, onLogout }) {
           </div>
         </div>
       )}
+
+      {/* Modal resolver conflicto con sugerencia IA */}
+      {resolverModal && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Resolver conflicto</h2>
+              <button style={styles.modalClose} onClick={() => setResolverModal(null)}>×</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ ...styles.tag, ...(SEV_STYLE[resolverModal.severidad] ?? SEV_STYLE.media) }}>
+                  {resolverModal.tipo.replace(/_/g, " ")}
+                </span>
+                <span style={{ ...styles.tag, ...(SEV_STYLE[resolverModal.severidad] ?? SEV_STYLE.media) }}>
+                  {resolverModal.severidad}
+                </span>
+              </div>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#374151", margin: 0, lineHeight: 1.5 }}>
+                {resolverModal.descripcion}
+              </p>
+              {resolverModal.sugerencia && (
+                <div style={{
+                  background: resolverModal.esIA ? "#EFF6FF" : "#F0FDF4",
+                  border: `1px solid ${resolverModal.esIA ? "#BFDBFE" : "#BBF7D0"}`,
+                  borderRadius: 8, padding: "12px 14px",
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: resolverModal.esIA ? "#1D4ED8" : "#15803D" }}>
+                      {resolverModal.esIA ? "Sugerencia del Copiloto IA" : "Guía de resolución"}
+                    </span>
+                    {!resolverModal.esIA && (
+                      <button
+                        onClick={pedirSugerenciaIA}
+                        disabled={resolverModal.cargandoIA}
+                        style={{ fontSize: 10, padding: "2px 8px", borderRadius: 5, border: "1px solid #BFDBFE", background: "#EFF6FF", color: "#1D4ED8", cursor: "pointer", fontFamily: "inherit" }}
+                      >
+                        {resolverModal.cargandoIA ? "Consultando…" : "✨ Pedir análisis IA"}
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: resolverModal.esIA ? "#1E3A5F" : "#1A3D2B", lineHeight: 1.6 }}>
+                    {resolverModal.sugerencia}
+                  </div>
+                </div>
+              )}
+              {/* Botón aplicar reemplazo IA */}
+              {!resolverModal.reemplazoAplicado && ["chofer_no_disponible","descanso_insuficiente","solapamiento_turno"].includes(resolverModal.tipo) && resolverModal.asignacionId && (
+                <button
+                  onClick={aplicarReemplazoIA}
+                  disabled={resolverModal.aplicandoIA}
+                  style={{ ...styles.btnPrimary, width: "100%",
+                    background: resolverModal.aplicandoIA ? "#9CA3AF" : "linear-gradient(135deg, #065F46, #059669)",
+                    opacity: resolverModal.aplicandoIA ? 0.7 : 1 }}
+                >
+                  {resolverModal.aplicandoIA ? "🤖 Buscando y aplicando reemplazo…" : "🤖 Aplicar reemplazo IA"}
+                </button>
+              )}
+
+              {/* Resultado del reemplazo aplicado */}
+              {resolverModal.reemplazoAplicado && (
+                <div style={{ background: "#D1FAE5", border: "1px solid #6EE7B7", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "#065F46" }}>
+                    ✅ Reemplazo aplicado exitosamente
+                  </div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#047857", marginTop: 4 }}>
+                    <strong>{resolverModal.reemplazoAplicado.chofer_reemplazo?.nombres} {resolverModal.reemplazoAplicado.chofer_reemplazo?.apellidos}</strong> ahora cubre el turno. El conflicto fue cerrado automáticamente.
+                  </div>
+                </div>
+              )}
+
+              <div style={styles.formActions}>
+                <button style={styles.btnSecondary} onClick={() => setResolverModal(null)}>
+                  {resolverModal.reemplazoAplicado ? "Cerrar" : "Cancelar"}
+                </button>
+                {!resolverModal.reemplazoAplicado && (
+                  <button
+                    style={{ ...styles.btnPrimary, opacity: resolving === resolverModal.conflictoId ? 0.6 : 1 }}
+                    disabled={resolving === resolverModal.conflictoId}
+                    onClick={confirmarResolucion}
+                  >
+                    {resolving === resolverModal.conflictoId ? "Marcando…" : "Marcar como resuelto"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -881,7 +1058,8 @@ const styles = {
     fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#222",
     padding: "11px 14px", borderBottom: "0.5px solid #f4f4f4", verticalAlign: "top",
   },
-  rowConflicto: { background: "#fff9f9" },
+  rowConflicto:  { background: "#fff9f9" },
+  rowSinCubrir:  { background: "#FFFBEB" },
   choferBadge:  { display: "inline-flex", alignItems: "center", gap: 7 },
   avatar: {
     width: 24, height: 24, borderRadius: "50%", background: "#B5D4F4",

@@ -41,9 +41,24 @@ services:
     depends_on:
       - db
       - redis
+      - ia
     networks:
       - metrohub_net
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  ia:
+    build:
+      context: ./ia_service
+      dockerfile: Dockerfile
+    container_name: metrohub_ia
+    restart: always
+    env_file: .env
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ia_service:/app
+    networks:
+      - metrohub_net
 
   frontend:
     build:

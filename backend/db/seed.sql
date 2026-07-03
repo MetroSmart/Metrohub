@@ -103,14 +103,14 @@ INSERT INTO choferes (dni, nombres, apellidos, fecha_nacimiento, telefono, email
 -- Lima Bus Internacional — id 6-10
 ('43678912', 'Miguel Ángel', 'Torres Huanca',      '1982-05-30', '983210987', 'mtorres@limabus.pe',            2, 'Q67890123', 'A-IIIA', '2026-11-12', '2026-06-20', 'activo',        14),
 ('44987654', 'Cesar',        'Ramos Vilca',        '1990-12-08', '982109876', 'cramos@limabus.pe',             2, 'Q78901234', 'A-IIIC', '2027-08-05', '2026-09-30', 'activo',         5),
-('45123698', 'Walter',       'Gálvez Mamani',      '1984-04-22', '981098765', 'wgalvez@limabus.pe',            2, 'Q89012345', 'A-IIIA', '2027-05-18', '2026-08-14', 'vacaciones',    11),
+('45123698', 'Walter',       'Gálvez Mamani',      '1984-04-22', '981098765', 'wgalvez@limabus.pe',            2, 'Q89012345', 'A-IIIA', '2027-05-18', '2026-08-14', 'activo',        11),
 ('46456789', 'Arturo',       'Napa Marcos',        '1972-08-11', '980987654', 'anapa@limabus.pe',              2, 'Q90123456', 'A-IIIC', '2026-10-30', '2026-12-15', 'activo',        22),
-('43852147', 'Ricardo',      'Suárez Ccopa',       '1987-01-25', '979876543', 'rsuarez@limabus.pe',            2, 'Q01234567', 'A-IIIA', '2027-11-08', '2027-01-22', 'activo',         9),
+('43852147', 'Ricardo',      'Suárez Ccopa',       '1987-01-25', '979876543', 'rsuarez@limabus.pe',            2, 'Q01234567', 'A-IIIB', '2027-11-08', '2027-01-22', 'activo',         9),
 -- Transvial Lima — id 11-15
 ('44963852', 'Fernando',     'Huertas Ayala',      '1981-06-14', '978765432', 'fhuertas@transvial.pe',         3, 'Q11122233', 'A-IIIA', '2026-08-22', '2026-06-25', 'activo',        13),
 ('45741963', 'Víctor',       'Mellado Ramírez',    '1976-10-02', '977654321', 'vmellado@transvial.pe',         3, 'Q22233344', 'A-IIIA', '2027-02-14', '2026-10-18', 'activo',        18),
 ('46258147', 'Eduardo',      'Pérez Condori',      '1989-03-19', '976543210', 'eperez@transvial.pe',           3, 'Q33344455', 'A-IIIC', '2027-07-26', '2026-08-30', 'activo',         7),
-('43159753', 'Hugo',         'Valencia Chávez',    '1978-12-05', '975432109', 'hvalencia@transvial.pe',        3, 'Q44455566', 'A-IIIA', '2026-07-11', '2026-05-02', 'licencia_medica',16),
+('43159753', 'Hugo',         'Valencia Chávez',    '1978-12-05', '975432109', 'hvalencia@transvial.pe',        3, 'Q44455566', 'A-IIIA', '2026-06-20', '2026-05-02', 'licencia_medica',16),
 ('47852963', 'Junior',       'Córdova Fernández',  '1991-08-28', '974321098', 'jcordova@transvial.pe',         3, 'Q55566677', 'A-IIIC', '2028-04-03', '2027-03-15', 'activo',         4),
 -- Perú Masivo — id 16-20
 ('44753159', 'Alberto',      'Paredes Yupanqui',   '1983-11-17', '973210987', 'aparedes@perumasivo.pe',        4, 'Q66677788', 'A-IIIA', '2027-01-29', '2026-06-28', 'activo',        11),
@@ -119,11 +119,22 @@ INSERT INTO choferes (dni, nombres, apellidos, fecha_nacimiento, telefono, email
 ('43951753', 'Enrique',      'Lozano Machaca',     '1974-05-06', '970987654', 'elozano@perumasivo.pe',         4, 'Q99900011', 'A-IIIA', '2026-09-17', '2026-11-25', 'activo',        21),
 ('47159951', 'Jorge Luis',   'Tello Quiñones',     '1988-10-31', '969876543', 'jtello@perumasivo.pe',          4, 'Q00011122', 'A-IIIC', '2027-12-22', '2027-04-30', 'inactivo',       7);
 
--- Accesos al portal del chofer (contraseña demo: DNI de cada chofer)
+-- Chofer 21 — Op. Sur, de vacaciones (completa variedad de estados)
+INSERT INTO choferes (dni, nombres, apellidos, fecha_nacimiento, telefono, email, area_id, numero_licencia, tipo_licencia, fec_vence_licencia, fec_vence_certif_prot, estado, anios_experiencia) VALUES
+('43652871', 'Carmen', 'Villalobos Huanca', '1986-06-03', '968765432', 'cvillalobos@limabus.pe', 2, 'Q11233211', 'A-IIIA', '2027-03-22', '2026-12-10', 'vacaciones', 9);
+
+-- Accesos al portal del chofer
+-- Choferes 1 y 2: contraseña = su propio DNI (sin cambio obligatorio)
+-- Choferes 3,5,7,11,16: contraseña temporal = 44156789 (debe_cambiar_password=TRUE → cambian en primer ingreso)
 INSERT INTO accesos_chofer (chofer_id, email, password_hash, creado_por, debe_cambiar_password) VALUES
-(1, 'jhuaman@metrohub.gob.pe',   '$2b$12$FiMPYw5PdTaBXx45bQxqa.PdSiADlHV5KWLbXO1hjWZh4VM5sxjZG', 2, FALSE),
-(2, 'rcastillo@metrohub.gob.pe', '$2b$12$sOMcxG.6ZHg.QcUoiTu3u.rI/UuV5K//AH4l.VIszVi.XUCZXxO0q', 2, FALSE),
-(6, 'mtorres@metrohub.gob.pe',   '$2b$12$tElheL0UCmjvFEaLFYqw2Ohud6J7LHNP.UD3TvZEjzQUs9MaiNSbq', 3, FALSE);
+(1,  'jhuaman@metrohub.gob.pe',    '$2b$12$FiMPYw5PdTaBXx45bQxqa.PdSiADlHV5KWLbXO1hjWZh4VM5sxjZG', 2, FALSE),
+(2,  'rcastillo@metrohub.gob.pe',  '$2b$12$sOMcxG.6ZHg.QcUoiTu3u.rI/UuV5K//AH4l.VIszVi.XUCZXxO0q', 2, FALSE),
+(3,  'pquispe@metrohub.gob.pe',    '$2b$12$FiMPYw5PdTaBXx45bQxqa.PdSiADlHV5KWLbXO1hjWZh4VM5sxjZG', 2, TRUE),
+(5,  'csoldevilla@metrohub.gob.pe','$2b$12$FiMPYw5PdTaBXx45bQxqa.PdSiADlHV5KWLbXO1hjWZh4VM5sxjZG', 2, TRUE),
+(6,  'mtorres@metrohub.gob.pe',    '$2b$12$tElheL0UCmjvFEaLFYqw2Ohud6J7LHNP.UD3TvZEjzQUs9MaiNSbq', 3, FALSE),
+(7,  'cramos@metrohub.gob.pe',     '$2b$12$FiMPYw5PdTaBXx45bQxqa.PdSiADlHV5KWLbXO1hjWZh4VM5sxjZG', 3, TRUE),
+(11, 'fhuertas@metrohub.gob.pe',   '$2b$12$FiMPYw5PdTaBXx45bQxqa.PdSiADlHV5KWLbXO1hjWZh4VM5sxjZG', 4, TRUE),
+(16, 'aparedes@metrohub.gob.pe',   '$2b$12$FiMPYw5PdTaBXx45bQxqa.PdSiADlHV5KWLbXO1hjWZh4VM5sxjZG', 5, TRUE);
 
 -- -----------------------------------------------------------------------------
 -- 7. BUSES (16 unidades — estados variados)
@@ -150,8 +161,8 @@ INSERT INTO buses (placa, area_id, tipo, anio, capacidad_pasajeros, estado) VALU
 -- 8. PROGRAMACIONES (semanas de prueba en junio 2026)
 -- -----------------------------------------------------------------------------
 INSERT INTO programaciones (nombre, fecha_inicio, fecha_fin, estado, creado_por, observaciones) VALUES
-('Semana 24 — 09 al 15 Jun 2026', '2026-06-09', '2026-06-15', 'borrador', 1, 'Programación en preparación para esta semana'),
-('Semana 25 — 16 al 22 Jun 2026', '2026-06-16', '2026-06-22', 'borrador', 1, 'Borrador anticipado semana siguiente');
+('Semana 24 — 09 al 15 Jun 2026', '2026-06-09', '2026-06-15', 'archivada', 1, 'Semana completada — archivada'),
+('Semana 25 — 16 al 22 Jun 2026', '2026-06-16', '2026-06-22', 'archivada', 1, 'Semana completada — archivada');
 
 -- -----------------------------------------------------------------------------
 -- 9. HORARIOS — lunes 09-jun-2026 (programación id=1, semana vigente)
@@ -207,14 +218,18 @@ INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asi
 (2,  2, 'C1J-986', 1, 'confirmada', 2, 'Turno mañana Ruta A 05:30'),
 (3,  3, 'C2K-334', 1, 'confirmada', 2, 'Turno mañana Ruta A 06:00'),
 (4,  5, 'C1J-985', 1, 'propuesta',  2, 'Bus duplicado — detectar conflicto'),
-(5,  3,  NULL,     1, 'propuesta',  2, 'Sin bus asignado — pendiente'),
+(5,  3,  NULL,     1, 'cancelada',  2, 'Sin bus asignado — turno cancelado por falta de unidad operativa'),
 (11, 6, 'C1L-201', 2, 'confirmada', 3, 'Turno mañana Ruta B 05:00'),
 (12, 7, 'C1L-202', 2, 'confirmada', 3, 'Turno mañana Ruta B 05:30'),
-(19, 9, 'C3A-001', 3, 'confirmada', 4, 'Turno mañana Ruta C 05:00'),
-(20,10, 'C3A-002', 3, 'confirmada', 4, 'Turno mañana Ruta C 05:30'),
-(27,16, 'C5D-701', 4, 'confirmada', 5, 'Turno mañana Expreso 1 06:30'),
-(28,17, 'C5D-702', 4, 'confirmada', 5, 'Turno mañana Expreso 1 13:00'),
-(31,18, 'C5E-890', 4, 'confirmada', 5, 'Turno mañana Expreso 2 05:30');
+(19,12, 'C3A-001', 3, 'confirmada', 4, 'Turno mañana Ruta C 05:00'),
+(20,13, 'C3A-002', 3, 'confirmada', 4, 'Turno mañana Ruta C 05:30'),
+(27,16, 'C5D-701', 4, 'confirmada',  5, 'Turno mañana Expreso 1 06:30'),
+(28,17, 'C5D-702', 4, 'confirmada',  5, 'Turno mañana Expreso 1 13:00'),
+(31,18, 'C5E-890', 4, 'confirmada',  5, 'Turno mañana Expreso 2 05:30');
+
+-- Asignación reemplazada: Juan Huamán tenía el turno 06:00 Ruta A (horario 3) pero se permutó con Pedro Quispe
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas) VALUES
+(3, 1, 'C1J-985', 1, 'reemplazada', 2, 'Turno 06:00 Ruta A reasignado a Pedro Quispe — permuta de turno aprobada 09-Jun');
 
 -- -----------------------------------------------------------------------------
 -- 11. DISPONIBILIDAD — variedad de motivos y choferes (junio 2026)
@@ -247,7 +262,13 @@ INSERT INTO disponibilidad_chofer (chofer_id, fecha, hora_desde, hora_hasta, mot
 -- Enrique Lozano (id=19) — descanso dominical
 (19, '2026-06-14', '00:00', '23:59', 'descanso',      'Descanso dominical programado',                       5),
 -- Jorge Tello (id=20) — inactivo, registrado por admin
-(20, '2026-06-09', '00:00', '23:59', 'otro',          'Chofer inactivo — pendiente renovación contrato',      1);
+(20, '2026-06-09', '00:00', '23:59', 'otro',          'Chofer inactivo — pendiente renovación contrato',      1),
+-- Carmen Villalobos (id=21) — vacaciones semana 27 (semana vigente)
+(21, '2026-06-29', '00:00', '23:59', 'vacaciones',    'Vacaciones anuales aprobadas 29-Jun al 05-Jul 2026',   3),
+(21, '2026-06-30', '00:00', '23:59', 'vacaciones',    'Vacaciones anuales aprobadas 29-Jun al 05-Jul 2026',   3),
+(21, '2026-07-01', '00:00', '23:59', 'vacaciones',    'Vacaciones anuales aprobadas 29-Jun al 05-Jul 2026',   3),
+(21, '2026-07-02', '00:00', '23:59', 'vacaciones',    'Vacaciones anuales aprobadas 29-Jun al 05-Jul 2026',   3),
+(21, '2026-07-03', '00:00', '23:59', 'vacaciones',    'Vacaciones anuales aprobadas 29-Jun al 05-Jul 2026',   3);
 
 -- -----------------------------------------------------------------------------
 -- 12. HORARIOS adicionales — Semana 24 (11-13 Jun, programacion_id=1)
@@ -776,6 +797,459 @@ INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion) VALUES
 (4, 'solapamiento_turno',  'alta',   'Bus C1J-985 asignado simultáneamente a turno 05:00 y 06:30 en Ruta A del 09-Jun-2026. Reasignar unidad.'),
 (5, 'bus_no_operativo',    'media',  'Turno 07:00 Ruta A del 09-Jun sin bus asignado. Pendiente confirmar unidad operativa.'),
 (6, 'certif_prot_vencida', 'media',  'Certif. Protransporte del chofer Miguel Ángel Torres vence el 20-Jun-2026 (12 días). Gestionar renovación.');
+
+-- =============================================================================
+-- 17. PROGRAMACIÓN SEMANA 27 — SEMANA VIGENTE (29-Jun al 05-Jul-2026)
+-- Propósito: datos reales para hoy (01-Jul-2026) que activan las alertas IA
+--   • Chofer 16 (Alberto Paredes) → 4 turnos noche consecutivos  → alerta noche
+--   • Chofer  6 (Miguel Torres)   → turno doble 30-Jun (70 min entre rutas) → alerta descanso
+-- =============================================================================
+
+INSERT INTO programaciones (nombre, fecha_inicio, fecha_fin, estado, creado_por, observaciones) VALUES
+('Semana 27 — 29 Jun al 05 Jul 2026', '2026-06-29', '2026-07-05', 'aprobada', 1,
+ 'Semana activa. Fiestas Patrias fin de semana — operación reforzada sábado 04-Jul');
+
+-- ── Horarios 29-Jun (Lunes) ────────────────────────────────────────────────
+INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, turno, duracion_est_min) VALUES
+(3,1,'2026-06-29','05:00','manana',35),(3,1,'2026-06-29','07:00','manana',45),
+(3,1,'2026-06-29','13:00','tarde', 40),(3,1,'2026-06-29','18:30','tarde', 45),
+(3,2,'2026-06-29','05:00','manana',50),(3,2,'2026-06-29','07:00','manana',55),
+(3,2,'2026-06-29','14:00','tarde', 50),(3,2,'2026-06-29','18:30','tarde', 55),
+(3,3,'2026-06-29','05:30','manana',75),(3,3,'2026-06-29','07:00','manana',80),
+(3,3,'2026-06-29','14:00','tarde', 75),(3,3,'2026-06-29','19:00','tarde', 80),
+(3,4,'2026-06-29','06:00','manana',68),(3,4,'2026-06-29','13:00','tarde', 68),
+(3,4,'2026-06-29','18:00','tarde', 68),
+(3,10,'2026-06-29','23:30','noche',35);   -- noche 1/4 → chofer 16
+
+-- ── Horarios 30-Jun (Martes) ───────────────────────────────────────────────
+INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, turno, duracion_est_min) VALUES
+(3,1,'2026-06-30','05:00','manana',35),(3,1,'2026-06-30','07:00','manana',45),
+(3,1,'2026-06-30','13:00','tarde', 40),(3,1,'2026-06-30','18:30','tarde', 45),
+(3,2,'2026-06-30','05:00','manana',50),(3,2,'2026-06-30','07:00','manana',55),  -- ← doble turno chofer 6
+(3,2,'2026-06-30','14:00','tarde', 50),(3,2,'2026-06-30','18:30','tarde', 55),
+(3,3,'2026-06-30','05:30','manana',75),(3,3,'2026-06-30','07:00','manana',80),
+(3,3,'2026-06-30','14:00','tarde', 75),(3,3,'2026-06-30','19:00','tarde', 80),
+(3,4,'2026-06-30','06:00','manana',68),(3,4,'2026-06-30','13:00','tarde', 68),
+(3,4,'2026-06-30','18:00','tarde', 68),
+(3,10,'2026-06-30','23:30','noche',35);   -- noche 2/4 → chofer 16
+
+-- ── Horarios 01-Jul (Miércoles) ────────────────────────────────────────────
+INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, turno, duracion_est_min) VALUES
+(3,1,'2026-07-01','05:00','manana',35),(3,1,'2026-07-01','07:00','manana',45),
+(3,1,'2026-07-01','13:00','tarde', 40),(3,1,'2026-07-01','18:30','tarde', 45),
+(3,2,'2026-07-01','05:00','manana',50),(3,2,'2026-07-01','07:00','manana',55),
+(3,2,'2026-07-01','14:00','tarde', 50),(3,2,'2026-07-01','18:30','tarde', 55),
+(3,3,'2026-07-01','05:30','manana',75),(3,3,'2026-07-01','07:00','manana',80),
+(3,3,'2026-07-01','14:00','tarde', 75),(3,3,'2026-07-01','19:00','tarde', 80),
+(3,4,'2026-07-01','06:00','manana',68),(3,4,'2026-07-01','13:00','tarde', 68),
+(3,4,'2026-07-01','18:00','tarde', 68),
+(3,10,'2026-07-01','23:30','noche',35);   -- noche 3/4 → chofer 16
+
+-- ── Horarios 02-Jul (Jueves) ───────────────────────────────────────────────
+INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, turno, duracion_est_min) VALUES
+(3,1,'2026-07-02','05:00','manana',35),(3,1,'2026-07-02','07:00','manana',45),
+(3,1,'2026-07-02','13:00','tarde', 40),(3,1,'2026-07-02','18:30','tarde', 45),
+(3,2,'2026-07-02','05:00','manana',50),(3,2,'2026-07-02','07:00','manana',55),
+(3,2,'2026-07-02','14:00','tarde', 50),(3,2,'2026-07-02','18:30','tarde', 55),
+(3,3,'2026-07-02','05:30','manana',75),(3,3,'2026-07-02','07:00','manana',80),
+(3,3,'2026-07-02','14:00','tarde', 75),(3,3,'2026-07-02','19:00','tarde', 80),
+(3,4,'2026-07-02','06:00','manana',68),(3,4,'2026-07-02','13:00','tarde', 68),
+(3,4,'2026-07-02','18:00','tarde', 68),
+(3,10,'2026-07-02','23:30','noche',35);   -- noche 4/4 → ALERTA fatiga chofer 16
+
+-- ── Horarios 03-Jul (Viernes) ──────────────────────────────────────────────
+INSERT INTO horarios_servicio (programacion_id, ruta_id, fecha, hora_salida, turno, duracion_est_min) VALUES
+(3,1,'2026-07-03','05:00','manana',35),(3,1,'2026-07-03','07:00','manana',45),
+(3,1,'2026-07-03','13:00','tarde', 40),(3,1,'2026-07-03','18:30','tarde', 45),
+(3,2,'2026-07-03','05:00','manana',50),(3,2,'2026-07-03','07:00','manana',55),
+(3,2,'2026-07-03','14:00','tarde', 50),(3,2,'2026-07-03','18:30','tarde', 55),
+(3,3,'2026-07-03','05:30','manana',75),(3,3,'2026-07-03','07:00','manana',80),
+(3,3,'2026-07-03','14:00','tarde', 75),
+(3,4,'2026-07-03','06:00','manana',68),(3,4,'2026-07-03','13:00','tarde', 68),
+(3,4,'2026-07-03','18:00','tarde', 68);
+
+-- ── Asignaciones 29-Jun (Lunes) ────────────────────────────────────────────
+-- Ruta A (área 1)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,1,'C1J-985',1,'confirmada',2,'Ruta A mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-29' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,3,'C2K-334',1,'confirmada',2,'Ruta A mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-29' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,2,'C1J-986',1,'confirmada',2,'Ruta A tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-29' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,5,'C1J-985',1,'confirmada',2,'Ruta A tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-29' AND h.hora_salida='18:30:00';
+-- Ruta B (área 2)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,6,'C1L-201',2,'confirmada',3,'Ruta B mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-29' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,7,'C1L-202',2,'confirmada',3,'Ruta B mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-29' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,8,'C1M-450',2,'confirmada',3,'Ruta B tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-29' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,9,'C1L-201',2,'confirmada',3,'Ruta B tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-29' AND h.hora_salida='18:30:00';
+-- Ruta C (área 3)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,11,'C3A-001',3,'confirmada',4,'Ruta C mañana 05:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-29' AND h.hora_salida='05:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,12,'C3A-002',3,'confirmada',4,'Ruta C mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-29' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,13,'C4B-556',3,'confirmada',4,'Ruta C tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-29' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,15,'C3A-001',3,'confirmada',4,'Ruta C tarde 19:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-29' AND h.hora_salida='19:00:00';
+-- Expreso 1 (área 4)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,17,'C5D-701',4,'confirmada',5,'Expreso 1 mañana 06:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-06-29' AND h.hora_salida='06:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,18,'C5D-702',4,'confirmada',5,'Expreso 1 tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-06-29' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,19,'C5E-890',4,'confirmada',5,'Expreso 1 tarde 18:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-06-29' AND h.hora_salida='18:00:00';
+-- Ruta Nocturna 29-Jun → chofer 16 (turno noche 1/4)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,16,'C5D-701',4,'confirmada',5,'Ruta Nocturna — turno noche 1/4' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=10 AND h.fecha='2026-06-29' AND h.hora_salida='23:30:00';
+
+-- ── Asignaciones 30-Jun (Martes) ───────────────────────────────────────────
+-- Ruta A
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,2,'C1J-985',1,'confirmada',2,'Ruta A mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-30' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,1,'C2K-334',1,'confirmada',2,'Ruta A mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-30' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,3,'C1J-986',1,'confirmada',2,'Ruta A tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-30' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,5,'C1J-985',1,'confirmada',2,'Ruta A tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-06-30' AND h.hora_salida='18:30:00';
+-- ⚠️ Ruta B: chofer 6 hace 05:00 (50 min, termina 05:50) y 07:00 → 70 min de descanso → ALERTA
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,6,'C1L-201',2,'confirmada',3,'Ruta B mañana 05:00 (turno doble)' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-30' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,6,'C1L-202',2,'confirmada',3,'Ruta B mañana 07:00 (descanso insuficiente 70 min)' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-30' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,7,'C1M-450',2,'confirmada',3,'Ruta B tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-30' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,9,'C1L-201',2,'confirmada',3,'Ruta B tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-06-30' AND h.hora_salida='18:30:00';
+-- Ruta C
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,11,'C3A-001',3,'confirmada',4,'Ruta C mañana 05:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-30' AND h.hora_salida='05:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,15,'C3A-002',3,'confirmada',4,'Ruta C mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-30' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,12,'C4B-556',3,'confirmada',4,'Ruta C tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-30' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,13,'C3A-001',3,'confirmada',4,'Ruta C tarde 19:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-06-30' AND h.hora_salida='19:00:00';
+-- Expreso 1
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,17,'C5D-701',4,'confirmada',5,'Expreso 1 mañana 06:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-06-30' AND h.hora_salida='06:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,18,'C5D-702',4,'confirmada',5,'Expreso 1 tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-06-30' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,19,'C5E-890',4,'confirmada',5,'Expreso 1 tarde 18:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-06-30' AND h.hora_salida='18:00:00';
+-- Ruta Nocturna 30-Jun → chofer 16 (turno noche 2/4)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,16,'C5D-701',4,'confirmada',5,'Ruta Nocturna — turno noche 2/4' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=10 AND h.fecha='2026-06-30' AND h.hora_salida='23:30:00';
+
+-- ── Asignaciones 01-Jul (Miércoles) ────────────────────────────────────────
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,3,'C1J-985',1,'confirmada',2,'Ruta A mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-01' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,2,'C2K-334',1,'confirmada',2,'Ruta A mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-01' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,1,'C1J-986',1,'confirmada',2,'Ruta A tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-01' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,5,'C1J-985',1,'confirmada',2,'Ruta A tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-01' AND h.hora_salida='18:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,8,'C1L-201',2,'confirmada',3,'Ruta B mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-01' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,9,'C1L-202',2,'confirmada',3,'Ruta B mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-01' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,7,'C1M-450',2,'confirmada',3,'Ruta B tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-01' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,6,'C1L-201',2,'confirmada',3,'Ruta B tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-01' AND h.hora_salida='18:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,12,'C3A-001',3,'confirmada',4,'Ruta C mañana 05:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-01' AND h.hora_salida='05:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,13,'C3A-002',3,'confirmada',4,'Ruta C mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-01' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,15,'C4B-556',3,'confirmada',4,'Ruta C tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-01' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,11,'C3A-001',3,'confirmada',4,'Ruta C tarde 19:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-01' AND h.hora_salida='19:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,18,'C5D-701',4,'confirmada',5,'Expreso 1 mañana 06:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-01' AND h.hora_salida='06:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,17,'C5D-702',4,'confirmada',5,'Expreso 1 tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-01' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,19,'C5E-890',4,'confirmada',5,'Expreso 1 tarde 18:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-01' AND h.hora_salida='18:00:00';
+-- Ruta Nocturna 01-Jul → chofer 16 (turno noche 3/4)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,16,'C5D-701',4,'confirmada',5,'Ruta Nocturna — turno noche 3/4' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=10 AND h.fecha='2026-07-01' AND h.hora_salida='23:30:00';
+
+-- ── Asignaciones 02-Jul (Jueves) ───────────────────────────────────────────
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,1,'C1J-985',1,'confirmada',2,'Ruta A mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-02' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,3,'C2K-334',1,'confirmada',2,'Ruta A mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-02' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,2,'C1J-986',1,'confirmada',2,'Ruta A tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-02' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,5,'C1J-985',1,'confirmada',2,'Ruta A tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-02' AND h.hora_salida='18:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,9,'C1L-201',2,'confirmada',3,'Ruta B mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-02' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,6,'C1L-202',2,'confirmada',3,'Ruta B mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-02' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,8,'C1M-450',2,'confirmada',3,'Ruta B tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-02' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,7,'C1L-201',2,'confirmada',3,'Ruta B tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-02' AND h.hora_salida='18:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,13,'C3A-001',3,'confirmada',4,'Ruta C mañana 05:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-02' AND h.hora_salida='05:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,15,'C3A-002',3,'confirmada',4,'Ruta C mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-02' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,11,'C4B-556',3,'confirmada',4,'Ruta C tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-02' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,12,'C3A-001',3,'confirmada',4,'Ruta C tarde 19:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-02' AND h.hora_salida='19:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,19,'C5D-701',4,'confirmada',5,'Expreso 1 mañana 06:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-02' AND h.hora_salida='06:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,18,'C5D-702',4,'confirmada',5,'Expreso 1 tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-02' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,17,'C5E-890',4,'confirmada',5,'Expreso 1 tarde 18:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-02' AND h.hora_salida='18:00:00';
+-- ⚠️ Ruta Nocturna 02-Jul → chofer 16 (turno noche 4/4 — ALERTA fatiga acumulada)
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,16,'C5D-701',4,'confirmada',5,'Ruta Nocturna — turno noche 4/4 (riesgo fatiga)' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=10 AND h.fecha='2026-07-02' AND h.hora_salida='23:30:00';
+
+-- ── Asignaciones 03-Jul (Viernes) ──────────────────────────────────────────
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,2,'C1J-985',1,'confirmada',2,'Ruta A mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-03' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,1,'C2K-334',1,'confirmada',2,'Ruta A mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-03' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,3,'C1J-986',1,'confirmada',2,'Ruta A tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-03' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,5,'C1J-985',1,'confirmada',2,'Ruta A tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=1 AND h.fecha='2026-07-03' AND h.hora_salida='18:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,6,'C1L-201',2,'confirmada',3,'Ruta B mañana 05:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-03' AND h.hora_salida='05:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,8,'C1L-202',2,'confirmada',3,'Ruta B mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-03' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,10,'C1M-450',2,'confirmada',3,'Ruta B tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-03' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,7,'C1L-201',2,'confirmada',3,'Ruta B tarde 18:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=2 AND h.fecha='2026-07-03' AND h.hora_salida='18:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,15,'C3A-001',3,'confirmada',4,'Ruta C mañana 05:30' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-03' AND h.hora_salida='05:30:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,11,'C3A-002',3,'confirmada',4,'Ruta C mañana 07:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-03' AND h.hora_salida='07:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,13,'C4B-556',3,'confirmada',4,'Ruta C tarde 14:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=3 AND h.fecha='2026-07-03' AND h.hora_salida='14:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,17,'C5D-701',4,'confirmada',5,'Expreso 1 mañana 06:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-03' AND h.hora_salida='06:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,19,'C5D-702',4,'confirmada',5,'Expreso 1 tarde 13:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-03' AND h.hora_salida='13:00:00';
+INSERT INTO asignaciones (horario_id,chofer_id,bus_placa,area_id,estado,asignado_por,notas)
+SELECT h.id,18,'C5E-890',4,'confirmada',5,'Expreso 1 tarde 18:00' FROM horarios_servicio h
+WHERE h.programacion_id=3 AND h.ruta_id=4 AND h.fecha='2026-07-03' AND h.hora_salida='18:00:00';
+
+-- ── Conflictos detectados semana 27 ────────────────────────────────────────
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion) VALUES
+(
+  (SELECT a.id FROM asignaciones a
+   JOIN horarios_servicio h ON a.horario_id = h.id
+   WHERE a.chofer_id = 6 AND h.programacion_id = 3
+     AND h.fecha = '2026-06-30' AND h.hora_salida = '07:00:00' LIMIT 1),
+  'descanso_insuficiente', 'alta',
+  'Miguel Ángel Torres asignado a dos rutas el 30-Jun-2026 con solo 70 min de descanso entre turnos (05:00-05:50 → 07:00). Mínimo requerido: 8 horas.'
+),
+(
+  (SELECT a.id FROM asignaciones a
+   JOIN horarios_servicio h ON a.horario_id = h.id
+   WHERE a.chofer_id = 16 AND h.programacion_id = 3
+     AND h.fecha = '2026-07-02' AND h.hora_salida = '23:30:00' LIMIT 1),
+  'otro', 'alta',
+  'Alberto Paredes Yupanqui acumula 4 turnos noche consecutivos (29-Jun al 02-Jul). Riesgo de fatiga severa — se recomienda descanso nocturno obligatorio el 03-Jul.'
+);
+
+-- =============================================================================
+-- 18. ASIGNACIONES CANCELADAS — choferes no disponibles (referencia para conflictos)
+-- =============================================================================
+-- Hugo Valencia (id=14, licencia_medica, area 3) — cancelada por baja médica
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
+SELECT h.id, 14, NULL, 3, 'cancelada', 4, 'Cancelada — chofer en licencia médica postoperatoria'
+FROM horarios_servicio h
+WHERE h.programacion_id = 1 AND h.ruta_id = 3
+  AND h.fecha = '2026-06-11' AND h.hora_salida = '19:00:00' LIMIT 1;
+
+-- Luis Gonzales (id=4, suspendido, area 1) — cancelada por suspensión
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
+SELECT h.id, 4, NULL, 1, 'cancelada', 1, 'Cancelada — chofer suspendido por incidente disciplinario (exp. #142)'
+FROM horarios_servicio h
+WHERE h.programacion_id = 1 AND h.ruta_id = 1
+  AND h.fecha = '2026-06-11' AND h.hora_salida = '18:30:00' LIMIT 1;
+
+-- Roberto Castillo (id=2) — tenía cita médica 07:00-12:00 el 11-Jun pero fue asignado por error (chofer_no_disponible)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
+SELECT h.id, 2, 'C1J-986', 1, 'cancelada', 2, 'Cancelada — chofer tenía cita médica 07:00-12:00 registrada (asignación por error)'
+FROM horarios_servicio h
+WHERE h.programacion_id = 1 AND h.ruta_id = 1
+  AND h.fecha = '2026-06-11' AND h.hora_salida = '07:00:00' LIMIT 1;
+
+-- Chofer 3 (Pedro Quispe, area 1) asignado erróneamente a Ruta C (area 3) el 12-Jun (area_incorrecta)
+INSERT INTO asignaciones (horario_id, chofer_id, bus_placa, area_id, estado, asignado_por, notas)
+SELECT h.id, 3, 'C3A-001', 3, 'cancelada', 2, 'Cancelada — chofer de área Norte asignado por error a ruta de área Mantenimiento'
+FROM horarios_servicio h
+WHERE h.programacion_id = 1 AND h.ruta_id = 3
+  AND h.fecha = '2026-06-12' AND h.hora_salida = '07:00:00' LIMIT 1;
+
+-- =============================================================================
+-- 19. CONFLICTOS ADICIONALES (completan variedad de tipos y severidades)
+-- =============================================================================
+
+-- certif_prot_vencida CRITICA: chofer 11 (Fernando Huertas) certif venció 25-Jun y sigue asignado
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion)
+SELECT a.id, 'certif_prot_vencida', 'critica',
+  'Fernando Huertas Ayala opera con certificado Protransporte VENCIDO desde 25-Jun-2026. Suspender asignaciones hasta renovación urgente.'
+FROM asignaciones a
+JOIN horarios_servicio h ON a.horario_id = h.id
+WHERE a.chofer_id = 11 AND h.programacion_id = 3
+  AND h.fecha = '2026-07-01' AND h.hora_salida = '05:30:00'
+LIMIT 1;
+
+-- licencia_vencida ALTA: chofer 14 (Hugo Valencia) licencia venció 20-Jun-2026
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion)
+SELECT a.id, 'licencia_vencida', 'alta',
+  'Hugo Valencia Chávez — licencia de conducir clase A-IIIA vencida el 20-Jun-2026. En licencia médica actualmente; gestionar renovación antes de reintegro.'
+FROM asignaciones a WHERE a.chofer_id = 14 AND a.estado = 'cancelada' LIMIT 1;
+
+-- baja BAJA: aviso temprano — certif de Roberto Castillo vence en 9 días
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion)
+SELECT a.id, 'certif_prot_vencida', 'baja',
+  'Roberto Castillo Vera — certificado Protransporte vence el 10-Jul-2026 (9 días). Iniciar trámite de renovación con anticipación.'
+FROM asignaciones a
+JOIN horarios_servicio h ON a.horario_id = h.id
+WHERE a.chofer_id = 2 AND h.programacion_id = 3
+  AND h.fecha = '2026-06-29' AND h.hora_salida = '13:00:00'
+LIMIT 1;
+
+-- chofer_no_disponible ALTA: Roberto Castillo asignado en horario de cita médica 11-Jun
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion)
+SELECT a.id, 'chofer_no_disponible', 'alta',
+  'Roberto Castillo Vera tenía cita médica registrada el 11-Jun-2026 de 07:00 a 12:00, pero fue asignado al turno 07:00 Ruta A. Asignación cancelada tras detección del conflicto.'
+FROM asignaciones a
+JOIN horarios_servicio h ON a.horario_id = h.id
+WHERE a.chofer_id = 2 AND a.estado = 'cancelada'
+  AND h.programacion_id = 1 AND h.fecha = '2026-06-11' AND h.hora_salida = '07:00:00' LIMIT 1;
+
+-- area_incorrecta ALTA: chofer de área Norte asignado a Ruta C (área Mantenimiento) el 12-Jun
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion)
+SELECT a.id, 'area_incorrecta', 'alta',
+  'Pedro Quispe Mendoza (Área Norte) fue asignado erróneamente a Ruta C del 12-Jun-2026, que corresponde al Área de Mantenimiento de Flota. Asignación cancelada.'
+FROM asignaciones a
+JOIN horarios_servicio h ON a.horario_id = h.id
+WHERE a.chofer_id = 3 AND a.estado = 'cancelada'
+  AND h.programacion_id = 1 AND h.ruta_id = 3 AND h.fecha = '2026-06-12' LIMIT 1;
+
+-- exceso_8h_dia MEDIA: chofer 17 (Daniel Rojas) cubrió turno extra en semana 25 superando 8h en un día
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion)
+SELECT a.id, 'exceso_8h_dia', 'media',
+  'Daniel Rojas Limachi superó el límite de 8 horas el 19-Jun-2026 al cubrir turno de emergencia adicional (Expreso 1 mañana + tarde + cobertura nocturna). Total: 9.8h en el día.'
+FROM asignaciones a
+JOIN horarios_servicio h ON a.horario_id = h.id
+WHERE a.chofer_id = 17 AND h.programacion_id = 2
+  AND h.fecha = '2026-06-19' AND h.hora_salida = '13:00:00' LIMIT 1;
+
+-- otro MEDIA: chofer 4 (Luis Gonzales) con certif vencida y suspensión activa — pendiente resolución disciplinaria
+INSERT INTO conflictos (asignacion_id, tipo, severidad, descripcion)
+SELECT a.id, 'otro', 'media',
+  'Luis Alberto Gonzales Pariona — suspensión disciplinaria activa (exp. #142) con certificado Protransporte también vencido (18-May-2026). Resolución pendiente antes de cualquier reintegro.'
+FROM asignaciones a WHERE a.chofer_id = 4 AND a.estado = 'cancelada' LIMIT 1;
+
+-- =============================================================================
+-- 19. PROGRAMACIONES ADICIONALES (completan variedad de estados)
+-- =============================================================================
+
+-- Semana 26: en revisión (Jun 22-28, semana de Fiestas Patrias)
+INSERT INTO programaciones (nombre, fecha_inicio, fecha_fin, estado, creado_por, observaciones) VALUES
+('Semana 26 — 22 al 28 Jun 2026', '2026-06-22', '2026-06-28', 'revision', 2,
+ 'En revisión — operación reducida semana de Fiestas Patrias. Pendiente aprobación supervisor.');
+
+-- Semana 28: borrador (Jul 6-12, próxima semana de planificación)
+INSERT INTO programaciones (nombre, fecha_inicio, fecha_fin, estado, creado_por, observaciones) VALUES
+('Semana 28 — 06 al 12 Jul 2026', '2026-07-06', '2026-07-12', 'borrador', 2,
+ 'En elaboración — pendiente completar turnos noche y expreso. Sin asignar aún.');
 
 -- =============================================================================
 -- VERIFICACIÓN
