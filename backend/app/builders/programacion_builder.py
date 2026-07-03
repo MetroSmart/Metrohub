@@ -85,7 +85,7 @@ class ProgramacionBuilder:
         return self
 
     def _validar_asignacion(self, horario: HorarioServicio, datos: AsignacionCrear) -> None:
-        from app.services.horario_service import detectar_solapamiento, calcular_horas_dia
+        from app.services.horario_validacion import detectar_solapamiento, calcular_horas_dia
         hora = str(horario.hora_salida)[:5]
         if detectar_solapamiento(
             self._db,
