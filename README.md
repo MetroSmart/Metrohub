@@ -96,7 +96,7 @@ Docente: Prof. Manuel Quispe Torres
 ### Módulo IA *(Sprint 3 — implementado)*
 | Tecnología | Versión | Uso |
 |------------|---------|-----|
-| Google Gemini (`gemini-2.0-flash`) | google-generativeai 0.8.3 | Modelo LLM para análisis de fatiga, sugerencia de reemplazos y asistente conversacional |
+| Groq API (`llama-3.3-70b-versatile`) | requests 2.x | Modelo LLM para análisis de fatiga, sugerencia de reemplazos y asistente conversacional |
 | FastAPI (microservicio `metrohub_ia`) | 0.111+ | Servicio IA independiente en puerto 8001 |
 | httpx | — | Comunicación interna backend → microservicio IA |
 
@@ -133,7 +133,7 @@ Capa de Negocio
 
 Capa de Datos e Inteligencia Artificial
 ├── PostgreSQL 16 (tablas, triggers, vista v_dashboard_kpis)
-├── metrohub_ia :8001 (microservicio Gemini — alertas fatiga, reemplazos, chat)
+├── metrohub_ia :8001 (microservicio Groq/Llama — alertas fatiga, reemplazos, chat)
 └── Redis (caché)
 ```
 
@@ -181,8 +181,9 @@ Frontend y Backend coexisten en el mismo repositorio, permitiendo:
 
 ### RF05 — Copiloto IA *(Sprint 3 — implementado)*
 - Detección automática de alertas de fatiga en la programación vigente (turnos noche consecutivos, descanso insuficiente, exceso de horas)
-- Sugerencia de reemplazo para una asignación: evalúa candidatos del área y recomienda el óptimo vía Gemini
-- Asistente conversacional con contexto de BD en tiempo real (disponibilidad, horas, estado de programación, alertas por chofer)
+- Sugerencia de reemplazo para una asignación: evalúa candidatos del área y recomienda el óptimo vía Groq (Llama 3.3)
+- Acciones IA activas: aplicar reemplazo en BD, registrar descanso compensatorio y liberar turnos automáticamente
+- Asistente conversacional con contexto de BD en tiempo real (disponibilidad, horas por área, estado de programación)
 
 ### RF06 — Dashboard de Indicadores y Reportes
 - KPIs operativos actualizados desde la BD: rutas activas, choferes disponibles, buses operativos, conflictos pendientes, certificaciones por vencer en 30 días
@@ -385,7 +386,7 @@ Panel flotante (botón 🤖) disponible para Admin ATU y Supervisores de Área. 
 - **Sugerencia de reemplazo** — dado el ID de una asignación, selecciona el mejor candidato disponible del área evaluando carga horaria y descanso.
 - **Asistente chat** — responde preguntas sobre disponibilidad, horas por área, estado de programaciones y alertas de choferes específicos.
 
-> Requiere `GEMINI_API_KEY` en `.env`. Funciona con la cuenta gratuita de Google AI Studio.
+> Requiere `GROQ_API_KEY` en `.env`. Disponible en [console.groq.com](https://console.groq.com) — plan gratuito disponible.
 
 ---
 
@@ -394,7 +395,7 @@ Panel flotante (botón 🤖) disponible para Admin ATU y Supervisores de Área. 
 El proyecto se gestiona con metodología Scrum con sprints semanales.
 
 - GitHub: https://github.com/MetroSmart/Metrohub
-- Rama activa de desarrollo: `fixv2`
+- Rama activa de desarrollo: `sprint3`
 - Gestión de backlog: Jira (proyecto SCRUM)
 
 ### Product Backlog (resumen)
@@ -407,7 +408,7 @@ El proyecto se gestiona con metodología Scrum con sprints semanales.
 | SCRUM-14/16/15 | Choferes, asignación, alertas | RF04 | Completado |
 | SCRUM-25 | Dashboard KPIs | RF06 | Completado |
 | SCRUM-26 | Exportación PDF/XLSX | RF06 | Parcial (stubs) |
-| SCRUM-20/21 | Copiloto IA (Gemini) — alertas, reemplazo, chat | RF05 | **Completado (Sprint 3)** |
+| SCRUM-20/21 | Copiloto IA (Groq/Llama) — alertas, reemplazo, chat, acciones activas | RF05 | **Completado (Sprint 3)** |
 | — | Portal chofer + áreas operativas | RF01/RF04 | Completado (V2) |
 
 ---
@@ -439,17 +440,19 @@ Pendientes menores: exportación PDF/XLSX completa, estaciones (parcial).
 ## Estado actual — Sprint 3 (Copiloto IA)
 
 **Período:** Junio – Julio 2026  
-**Objetivo:** Implementar el módulo de Inteligencia Artificial (RF05) con Gemini sobre la base operativa de V2
+**Objetivo:** Implementar el módulo de Inteligencia Artificial (RF05) con Groq (Llama 3.3) sobre la base operativa de V2
 
 ### Componentes implementados
 
 | Componente | Tecnología | Descripción |
 |------------|------------|-------------|
-| **Microservicio IA** | FastAPI + Gemini 2.0 Flash | `metrohub_ia` en puerto 8001 — recibe contexto estructurado y genera respuestas con LLM |
-| **Detección de fatiga** | Python (ia_service.py) | Analiza la semana vigente: turnos noche consecutivos, descanso insuficiente, exceso de horas |
-| **Sugerencia de reemplazo** | Gemini + fallback deterministico | Evalúa candidatos del área por carga horaria y noches consecutivas; fallback si la IA falla |
-| **Asistente chat** | Gemini (texto libre) | 4 intents: disponibilidad, explicar alerta, horas por área, estado de programación |
-| **Panel Copiloto** | React (`CopilotoIA.jsx`) | Botón flotante con 3 tabs; estados de carga independientes por función |
+| **Microservicio IA** | FastAPI + Groq API (`llama-3.3-70b-versatile`) | `metrohub_ia` en puerto 8001 — recibe contexto estructurado y genera respuestas con LLM |
+| **Detección de fatiga** | Python (`ia_service.py`) | Analiza la semana vigente: turnos noche consecutivos, descanso insuficiente, exceso de horas. Filtra choferes con descanso ya registrado |
+| **Sugerencia de reemplazo** | Groq + fallback deterministico | Evalúa candidatos del área por carga horaria y noches consecutivas; fallback si la IA falla |
+| **Acciones IA activas** | FastAPI endpoints + SQLAlchemy | Aplicar reemplazo (escribe asignación en BD), programar descanso (libera turnos del chofer) |
+| **Asistente chat** | Groq (texto libre) | 3 intents: disponibilidad, horas por área, estado de programación |
+| **Panel Copiloto** | React (`CopilotoIA.jsx`) | Botón flotante con 3 tabs; navegación directa a Grilla tras ejecutar acciones IA |
+| **Caché en memoria** | Python dict con TTL | Alertas: 5 min · Reemplazo: 10 min · Chat: 1 h · Bypass forzado con `?force=true` |
 
 ### Restricciones respetadas
 
@@ -462,12 +465,14 @@ Pendientes menores: exportación PDF/XLSX completa, estaciones (parcial).
 ### Criterios de aceptación — cumplidos
 
 - [x] Microservicio `metrohub_ia` contenedorizado, integrado con Docker Compose
-- [x] Alertas de fatiga detectadas en la semana vigente, enriquecidas por Gemini
-- [x] Reemplazo sugiere candidato válido; fallback deterministico si Gemini falla
-- [x] Asistente chat responde los 4 intents con contexto de BD en tiempo real
-- [x] Sistema funcional sin `GEMINI_API_KEY` (degradación graceful, error 503)
+- [x] Alertas de fatiga detectadas en la semana vigente, enriquecidas por Groq
+- [x] Reemplazo sugiere candidato válido y lo aplica en BD; fallback deterministico si Groq falla
+- [x] Descanso compensatorio registra disponibilidad y libera turnos del chofer automáticamente
+- [x] Asistente chat responde 3 intents con contexto de BD en tiempo real
+- [x] Grilla muestra slots liberados como "⚠️ Falta cubrir" con fila destacada
+- [x] Sistema funcional sin `GROQ_API_KEY` (degradación graceful — fallback deterministico)
 
-> Requiere `GEMINI_API_KEY=...` en `.env` (cuenta gratuita Google AI Studio).
+> Requiere `GROQ_API_KEY=...` en `.env`. Disponible en [console.groq.com](https://console.groq.com) — plan gratuito disponible.
 
 ---
 
@@ -532,4 +537,4 @@ git push origin SCRUM-XX-descripcion-corta
 
 ---
 
-MetroHub **V2.0** · Universidad Nacional de Ingeniería · Lima, Perú · 2026
+MetroHub **V2.0 — Sprint 3** · Universidad Nacional de Ingeniería · Lima, Perú · 2026

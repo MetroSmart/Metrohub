@@ -6,7 +6,7 @@ from schemas import (
     ChatRequest, ChatResponse,
 )
 from prompts import prompt_reemplazo, prompt_alertas_fatiga, prompt_chat
-from gemini_client import generar_texto, generar_json
+from groq_client import generar_texto, generar_json
 
 app = FastAPI(title="MetroHub IA Service", version="1.0.0")
 
