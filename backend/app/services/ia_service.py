@@ -171,6 +171,17 @@ def obtener_candidatos_reemplazo(db: Session, asignacion_id: int) -> dict:
     }
 
 
+def ids_candidatos_validos(datos: dict) -> set[int]:
+    return {c["chofer_id"] for c in datos.get("candidatos", [])}
+
+
+def mejor_candidato_deterministico(datos: dict) -> dict | None:
+    candidatos = datos.get("candidatos") or []
+    if not candidatos:
+        return None
+    return min(candidatos, key=lambda c: (c["horas_semana"], c["turnos_noche_consecutivos"]))
+
+
 # ── 2. Detección de alertas de fatiga ────────────────────────────────────────
 
 def _max_consecutivos_noche(asignaciones_noche: list) -> int:

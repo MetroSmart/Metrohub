@@ -59,9 +59,45 @@ def _solo_admin_o_supervisor(usuario: dict):
         raise HTTPException(status_code=403, detail="Acceso no autorizado")
 
 
+def _verificar_area_asignacion(usuario: dict, asig: Asignacion):
+    if usuario["rol"] == "supervisor_area" and asig.area_id != usuario.get("area_id"):
+        raise HTTPException(
+            status_code=403,
+            detail="Solo puede operar asignaciones de su área operativa",
+        )
+
+
+def _verificar_area_chofer(usuario: dict, db: Session, chofer_id: int):
+    if usuario["rol"] != "supervisor_area":
+        return
+    row = db.execute(
+        text("SELECT area_id FROM choferes WHERE id = :id"), {"id": chofer_id}
+    ).fetchone()
+    if not row or row[0] != usuario.get("area_id"):
+        raise HTTPException(
+            status_code=403,
+            detail="Solo puede operar choferes de su área operativa",
+        )
+
+
+def _filtrar_alertas_por_area(db: Session, usuario: dict, alertas: list[dict]) -> list[dict]:
+    if usuario["rol"] != "supervisor_area":
+        return alertas
+    area_id = usuario.get("area_id")
+    if area_id is None:
+        return []
+    chofer_ids = {
+        c.id
+        for c in db.query(Chofer).filter(Chofer.area_id == area_id).all()
+    }
+    return [a for a in alertas if a.get("chofer_id") in chofer_ids]
+
+
 def _usuario_id(db: Session, email: str) -> int:
     row = db.execute(text("SELECT id FROM usuarios WHERE email = :e"), {"e": email}).fetchone()
-    return row[0] if row else 1
+    if not row:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    return row[0]
 
 
 async def _llamar_ia(path: str, payload: dict) -> dict:
@@ -111,6 +147,9 @@ async def asignaciones_selector(
     )
 
     asigs_validas = [a for a in asigs if a.chofer and a.horario]
+    if usuario["rol"] == "supervisor_area":
+        area_id = usuario.get("area_id")
+        asigs_validas = [a for a in asigs_validas if a.area_id == area_id]
     asig_ids = [a.id for a in asigs_validas]
 
     conflictos_ids = {
@@ -151,6 +190,11 @@ async def sugerir_reemplazo(
 ):
     _solo_admin_o_supervisor(usuario)
 
+    asig = db.query(Asignacion).filter(Asignacion.id == asignacion_id).first()
+    if not asig:
+        raise HTTPException(status_code=404, detail="Asignación no encontrada")
+    _verificar_area_asignacion(usuario, asig)
+
     cache_key = f"reemplazo_{asignacion_id}"
     cached = _cache_get(cache_key)
     if cached:
@@ -186,6 +230,7 @@ async def alertas_fatiga(
             return {k: v for k, v in cached.items() if k != "_ttl"}
 
     alertas_raw = ia_service.detectar_alertas_fatiga(db)
+    alertas_raw = _filtrar_alertas_por_area(db, usuario, alertas_raw)
     if not alertas_raw:
         result = {"total": 0, "alertas": [], "actualizado_en": int(time.time())}
         _cache_set("alertas_fatiga", result, _TTL_ALERTAS)
@@ -270,53 +315,95 @@ async def aplicar_reemplazo(
     asig_old = db.query(Asignacion).filter(Asignacion.id == asignacion_id).first()
     if not asig_old:
         raise HTTPException(status_code=404, detail="Asignación no encontrada")
+    _verificar_area_asignacion(usuario, asig_old)
 
-    # Reutiliza caché de sugerir-reemplazo si ya existe
+    if asig_old.estado not in ("propuesta", "confirmada"):
+        raise HTTPException(
+            status_code=400,
+            detail="La asignación no está activa para reemplazo",
+        )
+
     cache_key = f"reemplazo_{asignacion_id}"
+
+    # Revalidar candidatos en tiempo real antes de escribir en BD
+    datos = ia_service.obtener_candidatos_reemplazo(db, asignacion_id)
+    if not datos or not datos.get("candidatos"):
+        raise HTTPException(status_code=404, detail="No hay candidatos disponibles para reemplazo")
+
+    candidatos_ids = ia_service.ids_candidatos_validos(datos)
+    datos_horario = datos["horario"]
+    resultado_ia: dict = {}
+    chofer_id_nuevo = None
+
     cached = _cache_get(cache_key)
     if cached:
-        resultado_ia = cached.get("recomendacion_ia", {})
-        datos_horario = cached.get("horario", {})
-    else:
-        datos = ia_service.obtener_candidatos_reemplazo(db, asignacion_id)
-        if not datos or not datos.get("candidatos"):
-            raise HTTPException(status_code=404, detail="No hay candidatos disponibles para reemplazo")
-        resultado_ia = await _llamar_ia("/reemplazo", datos)
-        datos_horario = datos.get("horario", {})
+        cached_id = cached.get("recomendacion_ia", {}).get("chofer_id_recomendado")
+        if cached_id in candidatos_ids:
+            chofer_id_nuevo = cached_id
+            resultado_ia = cached.get("recomendacion_ia", {})
 
-    chofer_id_nuevo = resultado_ia.get("chofer_id_recomendado")
-    if not chofer_id_nuevo:
-        raise HTTPException(status_code=502, detail="La IA no pudo determinar un candidato")
+    if chofer_id_nuevo is None:
+        resultado_ia = await _llamar_ia("/reemplazo", datos)
+        chofer_id_nuevo = resultado_ia.get("chofer_id_recomendado")
+
+    if chofer_id_nuevo not in candidatos_ids:
+        mejor = ia_service.mejor_candidato_deterministico(datos)
+        if not mejor:
+            raise HTTPException(status_code=404, detail="No hay candidatos disponibles para reemplazo")
+        chofer_id_nuevo = mejor["chofer_id"]
+        resultado_ia = {
+            "chofer_id_recomendado": chofer_id_nuevo,
+            "recomendacion": (
+                resultado_ia.get("recomendacion")
+                or "Reasignado por menor carga horaria (el candidato IA ya no está disponible)."
+            ),
+        }
+
+    chofer = (
+        db.query(Chofer)
+        .filter(Chofer.id == chofer_id_nuevo, Chofer.estado == "activo")
+        .first()
+    )
+    if not chofer:
+        raise HTTPException(
+            status_code=404,
+            detail="El chofer recomendado no está disponible",
+        )
+    if chofer.area_id != asig_old.area_id:
+        raise HTTPException(
+            status_code=400,
+            detail="El chofer recomendado no pertenece al área de la asignación",
+        )
 
     uid = _usuario_id(db, usuario["email"])
 
-    asig_old.estado = "reemplazada"
+    try:
+        asig_old.estado = "reemplazada"
 
-    asig_nueva = Asignacion(
-        horario_id   = asig_old.horario_id,
-        chofer_id    = chofer_id_nuevo,
-        bus_placa    = asig_old.bus_placa,
-        area_id      = asig_old.area_id,
-        estado       = "confirmada",
-        asignado_por = uid,
-        notas        = f"Reemplazo automático IA — asignación original #{asignacion_id}",
-    )
-    db.add(asig_nueva)
+        asig_nueva = Asignacion(
+            horario_id   = asig_old.horario_id,
+            chofer_id    = chofer_id_nuevo,
+            bus_placa    = asig_old.bus_placa,
+            area_id      = asig_old.area_id,
+            estado       = "confirmada",
+            asignado_por = uid,
+            notas        = f"Reemplazo automático IA — asignación original #{asignacion_id}",
+        )
+        db.add(asig_nueva)
 
-    for conf in asig_old.conflictos:
-        if not conf.resuelto:
-            conf.resuelto          = True
-            conf.resuelto_por      = uid
-            conf.fecha_resolucion  = dt.datetime.utcnow()
+        for conf in asig_old.conflictos:
+            if not conf.resuelto:
+                conf.resuelto          = True
+                conf.resuelto_por      = uid
+                conf.fecha_resolucion  = dt.datetime.utcnow()
 
-    db.commit()
-    db.refresh(asig_nueva)
+        db.commit()
+        db.refresh(asig_nueva)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="No se pudo aplicar el reemplazo")
 
-    chofer = db.query(Chofer).filter(Chofer.id == chofer_id_nuevo).first()
     _cache.pop(cache_key, None)
-
-    if not chofer:
-        raise HTTPException(status_code=500, detail="Chofer recomendado no encontrado en la base de datos")
 
     return {
         "asignacion_nueva_id": asig_nueva.id,
@@ -339,6 +426,7 @@ def programar_descanso(
 ):
     """Registra un día de descanso para el chofer a partir de una alerta de fatiga."""
     _solo_admin_o_supervisor(usuario)
+    _verificar_area_chofer(usuario, db, chofer_id)
 
     fecha = dt.date.fromisoformat(body.fecha)
     uid   = _usuario_id(db, usuario["email"])
@@ -365,6 +453,13 @@ def programar_descanso(
         )
         .all()
     )
+    if usuario["rol"] == "supervisor_area":
+        area_id = usuario.get("area_id")
+        if any(a.area_id != area_id for a in asigs_del_dia):
+            raise HTTPException(
+                status_code=403,
+                detail="Solo puede liberar turnos de asignaciones de su área operativa",
+            )
     for asig in asigs_del_dia:
         asig.estado = "cancelada"
         asig.notas  = (asig.notas or "") + " | Liberado por descanso compensatorio IA"
@@ -403,6 +498,9 @@ def confirmar_dia_ia(
         .filter(HorarioServicio.fecha == fecha, Asignacion.estado == "propuesta")
         .all()
     )
+    if usuario["rol"] == "supervisor_area":
+        area_id = usuario.get("area_id")
+        propuestas = [a for a in propuestas if a.area_id == area_id]
 
     if not propuestas:
         return {"confirmadas": 0, "omitidas": 0, "detalles_omitidas": [],
