@@ -85,7 +85,7 @@ Docente: Prof. Manuel Quispe Torres
 | SQLAlchemy | 2.0 | ORM conectado a PostgreSQL |
 | python-jose | 3.3+ | Autenticación JWT y sesiones |
 | passlib + bcrypt | 1.7+ | Hash de contraseñas (factor >= 12) |
-| Alembic | 1.13+ | Migraciones de base de datos |
+| Alembic | — | Migraciones gestionadas vía `schema.sql` + archivos en `db/migrations/` |
 
 ### Base de datos y caché
 | Tecnología | Versión | Uso |
@@ -125,7 +125,7 @@ Capa de Presentación
 Capa de Negocio
 ├── FastAPI 2.0 (patrón MVC)
 ├── Routers: auth, rutas, horarios, choferes, areas, buses, usuarios,
-│            dashboard, conflictos, programaciones, disponibilidad, reportes
+│            dashboard, conflictos, programaciones, disponibilidad, reportes, ia
 ├── Services: lógica de negocio y queries SQLAlchemy
 └── Autenticación JWT + control de roles (admin_atu | supervisor_area | chofer)
 
@@ -216,7 +216,8 @@ MetroHub/
 │   │   │   ├── KpiCard.jsx
 │   │   │   ├── RouteBar.jsx
 │   │   │   ├── AlertPanel.jsx
-│   │   │   └── CambioPasswordPrimerIngreso.jsx
+│   │   │   ├── CambioPasswordPrimerIngreso.jsx
+│   │   │   └── CopilotoIA.jsx        # RF05 — Panel flotante Copiloto IA
 │   │   ├── pages/
 │   │   │   ├── Login.jsx             # RF01 — Autenticación
 │   │   │   ├── Dashboard.jsx         # RF06 — KPIs
@@ -247,8 +248,10 @@ MetroHub/
 │   │   │   ├── usuarios.py
 │   │   │   ├── dashboard.py          # RF06
 │   │   │   ├── conflictos.py
-│   │   │   └── reportes.py           # RF06
+│   │   │   ├── reportes.py           # RF06
+│   │   │   └── ia.py                 # RF05 — Copiloto IA (alertas, reemplazo, descanso)
 │   │   ├── services/
+│   │   │   ├── ia_service.py         # RF05 — Detección fatiga + candidatos reemplazo
 │   │   ├── models/
 │   │   │   ├── area_operativa.py
 │   │   │   ├── usuario.py
@@ -264,10 +267,17 @@ MetroHub/
 │   │   └── main.py                   # API v2.0.0
 │   ├── db/
 │   │   ├── schema.sql
-│   │   ├── seed.sql                  # Datos demo Metropolitano (jun 2026)
+│   │   ├── seed.sql                  # Datos demo Metropolitano (jul 2026)
 │   │   └── migrations/               # 002_accesos_chofer, 003_debe_cambiar_password
 │   └── Dockerfile
 │
+├── ia_service/                        # Microservicio IA (RF05)
+│   ├── main.py                       # FastAPI: /reemplazo, /alertas-fatiga, /chat, /health
+│   ├── groq_client.py                # Cliente HTTP Groq API (llama-3.3-70b-versatile)
+│   ├── prompts.py                    # Construcción de prompts por función
+│   ├── schemas.py                    # Modelos Pydantic del microservicio
+│   ├── requirements.txt
+│   └── Dockerfile
 ├── docker-compose.yml
 └── README.md
 ```
@@ -487,7 +497,7 @@ Integrados en el backend para el curso de patrones de diseño:
 | **Factory Method** | RF06 | `app/export/` | `POST /api/reportes/exportar` |
 | **Abstract Factory** | RF06 | `app/factories/` | export con familia ATU |
 
-Detalle técnico: [`backend/docs/PATRONES_CREACIONALES.md`](backend/docs/PATRONES_CREACIONALES.md).
+Detalle técnico: ver carpetas `app/builders/`, `app/prototypes/`, `app/export/` y `app/factories/` en el backend.
 
 ---
 
