@@ -89,6 +89,49 @@ export const mockBuses = [
   { placa: "DEF-456", tipo: "convencional", area_id: 2, estado: "operativo" },
 ];
 
+// ── Seeds del Copiloto IA (RF05) ────────────────────────────────────
+export const mockAlertasFatiga = {
+  total: 1,
+  alertas: [
+    {
+      chofer_id: 7, nombres: "Juan", apellidos: "Pérez García",
+      tipo: "descanso_insuficiente", severidad: "media",
+      alerta: "Menos de 10h entre turnos el " + isoOffset(1),
+      sugerencia: "Reprograma el turno de la mañana o asigna un reemplazo.",
+      fecha_referencia: isoOffset(1),
+    },
+  ],
+  actualizado_en: Math.floor(Date.now() / 1000),
+};
+
+export const mockAsigSelector = [
+  { asignacion_id: 501, label: "Juan Pérez García — Mañana · SIT-1", tiene_problema: false },
+  { asignacion_id: 502, label: "Rosa Quispe Mamani — Tarde · SIT-1", tiene_problema: true },
+];
+
+export const mockSugerenciaReemplazo = {
+  asignacion_id: 502,
+  horario: { turno: "tarde", fecha: isoOffset(0), ruta_nombre: "SIT-1" },
+  chofer_ausente: { id: 9, nombres: "Rosa", apellidos: "Quispe Mamani" },
+  candidatos_evaluados: 3,
+  recomendacion_ia: {
+    recomendacion: "Juan Pérez García tiene la menor carga horaria y licencia vigente.",
+    chofer_id_recomendado: 7,
+  },
+};
+
+export const mockAplicarReemplazo = {
+  asignacion_nueva_id: 900,
+  chofer_reemplazo: { id: 7, nombres: "Juan", apellidos: "Pérez García" },
+  recomendacion: "Reasignado por menor carga horaria.",
+  horario: { fecha: isoOffset(0) },
+};
+
+export const mockChatRespuesta = {
+  intent: "disponibilidad",
+  respuesta: "Hay 2 choferes disponibles el viernes tarde en el área norte.",
+};
+
 // ── Handlers por defecto (solo lecturas felices) ───────────────────
 // Las escrituras y los casos de error se sobreescriben por test con server.use(...)
 export const handlers = [
@@ -144,4 +187,18 @@ export const handlers = [
 
   http.get(`${API}/api/buses`, () =>
     HttpResponse.json({ total: mockBuses.length, buses: mockBuses })),
+
+  // Copiloto IA (RF05)
+  http.get(`${API}/api/ia/alertas-fatiga`, () => HttpResponse.json(mockAlertasFatiga)),
+  http.get(`${API}/api/ia/asignaciones-selector`, () => HttpResponse.json(mockAsigSelector)),
+  http.post(`${API}/api/ia/sugerir-reemplazo/:id`, () => HttpResponse.json(mockSugerenciaReemplazo)),
+  http.post(`${API}/api/ia/aplicar-reemplazo/:id`, () => HttpResponse.json(mockAplicarReemplazo)),
+  http.post(`${API}/api/ia/programar-descanso/:choferId`, async ({ request, params }) => {
+    const body = await request.json();
+    return HttpResponse.json({
+      mensaje: "Descanso registrado", fecha: body.fecha,
+      chofer_id: Number(params.choferId), turnos_liberados: 1,
+    });
+  }),
+  http.post(`${API}/api/ia/chat`, () => HttpResponse.json(mockChatRespuesta)),
 ];
