@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "../../test/server.js";
+import { mockAplicarReemplazo, mockChatRespuesta } from "../../test/handlers.js";
 import Grilla from "../../pages/Grilla.jsx";
 
 const ADMIN = { role: "admin_atu", name: "Root Metrohub" };
@@ -20,8 +21,19 @@ const HORARIO_CONFLICTO = {
   },
 };
 
-function setup(user = ADMIN) {
-  return render(<Grilla user={user} onNav={() => {}} onLogout={() => {}} />);
+// tipo elegible para "Aplicar reemplazo IA" (chofer_no_disponible / descanso_insuficiente / solapamiento_turno)
+const HORARIO_CONFLICTO_IA = {
+  id: 14, ruta_id: 1, fecha: HOY, hora_salida: "09:00", turno: "manana",
+  duracion_est_min: 90, activo: true, asignacion_id: 503,
+  chofer: { id: 9, nombre: "Rosa Quispe" },
+  conflicto: {
+    id: 6, tipo: "solapamiento_turno", severidad: "alta",
+    descripcion: "Turno solapado con otra asignación del área",
+  },
+};
+
+function setup(user = ADMIN, extraProps = {}) {
+  return render(<Grilla user={user} onNav={() => {}} onLogout={() => {}} {...extraProps} />);
 }
 
 afterEach(() => {
@@ -37,7 +49,7 @@ describe("Grilla (RF04/RF05 — programación de horarios)", () => {
     expect(screen.getByDisplayValue(/Semana actual/)).toBeInTheDocument();
     expect(screen.getByText("borrador")).toBeInTheDocument();
     expect(screen.getByText("Juan Pérez")).toBeInTheDocument();
-    expect(screen.getByText("Sin asignar")).toBeInTheDocument();
+    expect(screen.getByText("⚠️ Falta cubrir")).toBeInTheDocument();
     expect(screen.getByText("Mañana")).toBeInTheDocument();
     expect(screen.getByText("Tarde")).toBeInTheDocument();
     expect(screen.getAllByText("SIT-1").length).toBeGreaterThanOrEqual(2);
@@ -60,6 +72,9 @@ describe("Grilla (RF04/RF05 — programación de horarios)", () => {
     expect(screen.getByText("1 conflicto")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Resolver" }));
+    expect(await screen.findByText("Resolver conflicto")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Marcar como resuelto" }));
 
     await vi.waitFor(() =>
       expect(screen.queryByText("Conflicto")).not.toBeInTheDocument(),
@@ -116,7 +131,7 @@ describe("Grilla (RF04/RF05 — programación de horarios)", () => {
     await vi.waitFor(() =>
       expect(screen.queryByText("Juan Pérez")).not.toBeInTheDocument(),
     );
-    expect(screen.getAllByText("Sin asignar")).toHaveLength(2);
+    expect(screen.getAllByText("⚠️ Falta cubrir")).toHaveLength(2);
   });
 
   it("aprueba la programación y actualiza su estado", async () => {
@@ -267,5 +282,70 @@ describe("Grilla (RF04/RF05 — programación de horarios)", () => {
     expect(screen.queryByRole("button", { name: "Duplicar semana" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "+ Agregar horario" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Eliminar horario" })).not.toBeInTheDocument();
+  });
+
+  it("el botón Reemplazar notifica a onSugerirReemplazo con la asignación", async () => {
+    const onSugerirReemplazo = vi.fn();
+    const user = userEvent.setup();
+    setup(ADMIN, { onSugerirReemplazo });
+    await screen.findByText("Juan Pérez");
+
+    await user.click(screen.getByRole("button", { name: "Reemplazar" }));
+
+    expect(onSugerirReemplazo).toHaveBeenCalledWith(501);
+  });
+
+  it("pide análisis IA en el modal de resolver conflicto y aplica el reemplazo sugerido", async () => {
+    server.use(
+      http.get(`${API}/api/horarios`, () =>
+        HttpResponse.json({ total: 1, horarios: [HORARIO_CONFLICTO_IA] }),
+      ),
+    );
+    const user = userEvent.setup();
+    setup();
+    await screen.findByText("09:00");
+
+    await user.click(screen.getByRole("button", { name: "Resolver" }));
+    expect(await screen.findByText("Guía de resolución")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "✨ Pedir análisis IA" }));
+    expect(await screen.findByText("Sugerencia del Copiloto IA")).toBeInTheDocument();
+    expect(screen.getByText(mockChatRespuesta.respuesta)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "🤖 Aplicar reemplazo IA" }));
+
+    expect(await screen.findByText("✅ Reemplazo aplicado exitosamente")).toBeInTheDocument();
+    expect(screen.getByText(
+      `${mockAplicarReemplazo.chofer_reemplazo.nombres} ${mockAplicarReemplazo.chofer_reemplazo.apellidos}`,
+      { selector: "strong" },
+    )).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+    expect(screen.queryByText("Conflicto")).not.toBeInTheDocument();
+  });
+
+  it("muestra un error si no se puede aplicar el reemplazo IA", async () => {
+    vi.spyOn(window, "alert").mockImplementation(() => {});
+    server.use(
+      http.get(`${API}/api/horarios`, () =>
+        HttpResponse.json({ total: 1, horarios: [HORARIO_CONFLICTO_IA] }),
+      ),
+      http.post(`${API}/api/ia/aplicar-reemplazo/503`, () =>
+        new HttpResponse(JSON.stringify({ detail: "No hay candidatos disponibles para reemplazo" }), {
+          status: 404, headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    setup();
+    await screen.findByText("09:00");
+
+    await user.click(screen.getByRole("button", { name: "Resolver" }));
+    await user.click(screen.getByRole("button", { name: "🤖 Aplicar reemplazo IA" }));
+
+    await vi.waitFor(() =>
+      expect(window.alert).toHaveBeenCalledWith("No hay candidatos disponibles para reemplazo"),
+    );
+    expect(screen.getByRole("button", { name: "🤖 Aplicar reemplazo IA" })).toBeInTheDocument();
   });
 });
