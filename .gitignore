@@ -16,3 +16,6 @@ htmlcov/
 coverage/
 backend/htmlcov/
 frontend/coverage/
+
+# Presentaciones generadas
+ppt/
