@@ -98,10 +98,6 @@ def test_crear_horario(db_session, programacion, ruta):
     assert h.duracion_est_min == 120
 
 
-# BUG conocido (reportado, pendiente de corregir): programacion_builder.py usa
-# detectar_solapamiento/calcular_horas_dia sin importarlos → NameError en build_asignacion.
-@pytest.mark.xfail(reason="bug: import faltante en programacion_builder._validar_asignacion",
-                   strict=True, raises=NameError)
 def test_crear_asignacion(db_session, programacion, ruta, chofer_norte, usuario_admin, area_norte):
     h = _horario(db_session, programacion, ruta)
     datos = AsignacionCrear(horario_id=h.id, chofer_id=chofer_norte.id, area_id=area_norte.id)
