@@ -139,25 +139,8 @@ def actualizar_estado_programacion(
     return {"programacion_id": programacion_id, "estado": prog.estado}
 
 
-@router.get("/{horario_id}")
-def obtener_horario(horario_id: int, db: Session = Depends(get_db),
-                    usuario: dict = Depends(obtener_usuario_actual)):
-    horario = horario_service.obtener_horario(db, horario_id)
-    if not horario:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Horario {horario_id} no encontrado")
-    return horario
-
-
-@router.delete("/{horario_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_horario(horario_id: int, db: Session = Depends(get_db),
-                     usuario: dict = Depends(obtener_usuario_actual)):
-    _solo_admin(usuario)
-    if not horario_service.eliminar_horario(db, horario_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Horario {horario_id} no encontrado")
-
-
+# Nota: las rutas literales (/asignaciones) deben declararse ANTES que las
+# paramétricas (/{horario_id}) para que FastAPI no las ensombrezca.
 @router.get("/asignaciones")
 def listar_asignaciones(
     horario_id: Optional[int] = None,
@@ -185,6 +168,25 @@ def listar_asignaciones(
             for a in asignaciones
         ],
     }
+
+
+@router.get("/{horario_id}")
+def obtener_horario(horario_id: int, db: Session = Depends(get_db),
+                    usuario: dict = Depends(obtener_usuario_actual)):
+    horario = horario_service.obtener_horario(db, horario_id)
+    if not horario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Horario {horario_id} no encontrado")
+    return horario
+
+
+@router.delete("/{horario_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_horario(horario_id: int, db: Session = Depends(get_db),
+                     usuario: dict = Depends(obtener_usuario_actual)):
+    _solo_admin(usuario)
+    if not horario_service.eliminar_horario(db, horario_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Horario {horario_id} no encontrado")
 
 
 @router.post("/asignaciones", status_code=status.HTTP_201_CREATED)

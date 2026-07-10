@@ -86,10 +86,6 @@ def test_conflictos_pendientes_ok(client, auth_admin_headers):
     assert resp.json()["total_conflictos"] == 0
 
 
-# BUG de ruteo reportado: GET /{horario_id} (declarado antes) ensombrece a
-# GET /asignaciones, así que este endpoint queda inalcanzable y responde 422.
-@pytest.mark.xfail(reason="bug: la ruta /asignaciones queda ensombrecida por /{horario_id}",
-                   strict=True)
 def test_listar_asignaciones_ok(client, auth_admin_headers, asignacion):
     resp = client.get("/api/horarios/asignaciones", headers=auth_admin_headers)
     assert resp.status_code == 200
