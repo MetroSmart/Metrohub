@@ -57,7 +57,8 @@ describe("Reportes (RF07)", () => {
     expect(
       await screen.findByText("Reporte PDF descargado correctamente."),
     ).toBeInTheDocument();
-    expect(body).toEqual({ formato: "pdf", usar_familia_atu: true });
+    const hoy = new Date().toISOString().slice(0, 10);
+    expect(body).toEqual({ formato: "pdf", usar_familia_atu: true, fecha: hoy });
     expect(URL.createObjectURL).toHaveBeenCalled();
     expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
   });
